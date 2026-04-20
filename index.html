@@ -339,6 +339,12 @@ tr.tr td.tdl{background:#EDE0A0!important;text-transform:uppercase;letter-spacin
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════════════
+// VERSÃO: v2-nav-copy (com addNavKeys + copyColumn + _arr)
+// ═══════════════════════════════════════════════════════════════
+window.__ECCOFORTE_VERSION = 'v2-nav-copy';
+console.log('🔥 ECCOFORTE carregado — versão:', window.__ECCOFORTE_VERSION);
+
 // ── FIREBASE ──────────────────────────────────────────────────
 var firebaseConfig = {
   apiKey: "AIzaSyAlQEtx3-ym5qslFDYTyJEOELHI_puaJfk",
@@ -638,7 +644,10 @@ function mkCell(arr,mi,isR,dec,cb){
     scheduleSave();
   });
   td.appendChild(inp);
-  cellReg.set(inp,{arr:arr,mi:mi,isR:isR,dec:dec,cb:cb});
+  // armazena referência direta para copy column
+  inp._arr=arr;inp._mi=mi;inp._isR=isR;inp._dec=dec;inp._cb=cb;
+  // navegação por teclado
+  addNavKeys(inp);
   return td;
 }
 function mkRO(val,isR,dec,cls,cellId){
@@ -674,9 +683,6 @@ function mkThead(tbl){
   var td=document.createElement('th');td.className='thd';tr.appendChild(td);
 }
 
-// ── CELL REGISTRY (WeakMap para copy column) ──────────────────
-var cellReg=new WeakMap();
-
 // ── COPY COLUMN ───────────────────────────────────────────────
 function copyColumn(tbl,srcColIdx,dstColIdx){
   var tbody=tbl.querySelector('tbody');if(!tbody)return;
@@ -685,69 +691,71 @@ function copyColumn(tbl,srcColIdx,dstColIdx){
     if(srcColIdx>=row.cells.length||dstColIdx>=row.cells.length)return;
     var src=row.cells[srcColIdx].querySelector('.ci:not([readonly])');
     var dst=row.cells[dstColIdx].querySelector('.ci:not([readonly])');
-    if(!src||!dst)return;
-    var sd=cellReg.get(src);var dd=cellReg.get(dst);
-    if(!sd||!dd)return;
-    var val=sd.arr[sd.mi];
+    if(!src||!dst||!src._arr||!dst._arr)return;
+    var val=src._arr[src._mi];
     if(val===null||val===undefined)return;
-    dd.arr[dd.mi]=val;
-    dst.value=dd.isR?fR(val,dd.dec):fN(val,dd.dec);
-    setHeat(dst.parentElement,val,dd.arr,dd.mi);
-    if(dd.cb)dd.cb();
+    dst._arr[dst._mi]=val;
+    dst.value=dst._isR?fR(val,dst._dec):fN(val,dst._dec);
+    setHeat(dst.parentElement,val,dst._arr,dst._mi);
+    if(dst._cb)dst._cb();
     changed=true;
   });
-  if(changed)scheduleSave();
+  if(changed){scheduleSave();alert('Coluna copiada!');}
 }
 
-// ── KEYBOARD NAVIGATION ───────────────────────────────────────
-function parentTag(el,tag){while(el&&el.tagName!==tag)el=el.parentElement;return el;}
+// ── KEYBOARD NAVIGATION — adicionado direto em mkCell ─────────
+// (ver addNavKeys abaixo)
+function addNavKeys(inp){
+  inp.addEventListener('keydown',function(e){
+    if(e.key!=='Enter'&&e.key!=='ArrowDown'&&e.key!=='ArrowUp'&&
+       e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
 
-document.addEventListener('keydown',function(e){
-  var inp=e.target;
-  if(!inp.classList||!inp.classList.contains('ci')||inp.readOnly)return;
-  var td=parentTag(inp,'TD');
-  var tr=parentTag(inp,'TR');
-  if(!td||!tr)return;
-  var tbody=tr.parentElement;
-  if(!tbody||tbody.tagName!=='TBODY')return;
-  var rows=Array.from(tbody.rows);
-  var rowIdx=rows.indexOf(tr);
-  var colIdx=Array.from(tr.cells).indexOf(td);
+    var thisTd=inp.parentElement;
+    var thisTr=thisTd.parentElement;
+    var tbody=thisTr.parentElement;
+    if(!tbody||tbody.tagName!=='TBODY')return;
 
-  function goTo(rIdx,cIdx){
-    if(rIdx<0||rIdx>=rows.length)return false;
-    var cell=rows[rIdx].cells[cIdx];if(!cell)return false;
-    var t=cell.querySelector('.ci:not([readonly])');if(!t)return false;
-    setTimeout(function(){t.focus();t.select();},20);
-    return true;
-  }
+    // find column index
+    var colIdx=0;
+    for(var i=0;i<thisTr.cells.length;i++){if(thisTr.cells[i]===thisTd){colIdx=i;break;}}
+    // find row index
+    var rows=tbody.rows;
+    var rowIdx=-1;
+    for(var i=0;i<rows.length;i++){if(rows[i]===thisTr){rowIdx=i;break;}}
+    if(rowIdx===-1)return;
 
-  if(e.key==='Enter'){
-    e.preventDefault();
-    inp.blur(); // real blur — salva valor via listener
-    for(var r=rowIdx+1;r<rows.length;r++){if(goTo(r,colIdx))return;}
-  }
-  if(e.key==='ArrowDown'){
-    e.preventDefault();
-    for(var r=rowIdx+1;r<rows.length;r++){if(goTo(r,colIdx))return;}
-  }
-  if(e.key==='ArrowUp'){
-    e.preventDefault();
-    for(var r=rowIdx-1;r>=0;r--){if(goTo(r,colIdx))return;}
-  }
-  if(e.key==='ArrowRight'&&inp.selectionStart===inp.value.length){
-    for(var c=colIdx+1;c<tr.cells.length;c++){
-      var t=tr.cells[c].querySelector('.ci:not([readonly])');
-      if(t){e.preventDefault();(function(x){setTimeout(function(){x.focus();x.select();},20);})(t);return;}
+    function moveTo(rIdx,cIdx){
+      if(rIdx<0||rIdx>=rows.length)return false;
+      var row=rows[rIdx];
+      if(row.style.display==='none')return false;
+      if(cIdx<0||cIdx>=row.cells.length)return false;
+      var t=row.cells[cIdx].querySelector('.ci:not([readonly])');
+      if(!t)return false;
+      e.preventDefault();
+      if(e.key==='Enter')inp.blur();
+      (function(target){setTimeout(function(){target.focus();target.select();},30);})(t);
+      return true;
     }
-  }
-  if(e.key==='ArrowLeft'&&inp.selectionStart===0){
-    for(var c=colIdx-1;c>=0;c--){
-      var t=tr.cells[c].querySelector('.ci:not([readonly])');
-      if(t){e.preventDefault();(function(x){setTimeout(function(){x.focus();x.select();},20);})(t);return;}
+
+    if(e.key==='Enter'||e.key==='ArrowDown'){
+      for(var r=rowIdx+1;r<rows.length;r++){if(moveTo(r,colIdx))return;}
+      if(e.key==='Enter'){e.preventDefault();inp.blur();}
     }
-  }
-});
+    if(e.key==='ArrowUp'){
+      for(var r=rowIdx-1;r>=0;r--){if(moveTo(r,colIdx))return;}
+    }
+    if(e.key==='ArrowRight'&&inp.selectionStart===inp.value.length){
+      for(var c=colIdx+1;c<thisTr.cells.length;c++){
+        if(moveTo(rowIdx,c))return;
+      }
+    }
+    if(e.key==='ArrowLeft'&&inp.selectionStart===0){
+      for(var c=colIdx-1;c>=0;c--){
+        if(moveTo(rowIdx,c))return;
+      }
+    }
+  });
+}
 
 // ── SEC HEAD ──────────────────────────────────────────────────
 function mkSecHead(sec,title,sub,badgeId){
