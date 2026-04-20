@@ -78,15 +78,23 @@ body{background:var(--bg);color:var(--tx);font-family:var(--mono);font-size:12px
 
 /* TABLE */
 table{border-collapse:collapse;width:max-content;table-layout:fixed}
-/* COPY COLUMN BUTTON */
+
+/* COPY COLUMN BUTTON — sempre visível no hover do TH */
 .col-copy-btn{
-  display:none;background:var(--ambm);border:none;border-radius:2px;
+  display:none;
+  background:var(--ambm);border:none;border-radius:2px;
   color:#fff;font-size:9px;font-family:var(--head);font-weight:700;
-  padding:1px 4px;cursor:pointer;margin-left:4px;vertical-align:middle;
-  line-height:1.4;transition:background .1s;
+  padding:1px 5px;cursor:pointer;margin-left:4px;vertical-align:middle;
+  line-height:1.5;transition:background .1s;white-space:nowrap;
+  position:relative;z-index:5;
 }
-thead th:hover .col-copy-btn{display:inline-block}
 .col-copy-btn:hover{background:var(--amb)}
+/* Mostrar o botão quando o TH recebe hover (inclui hover em elementos filhos) */
+thead th:hover > .col-copy-btn,
+thead th:focus-within > .col-copy-btn{
+  display:inline-block;
+}
+
 thead th{position:sticky;top:0;z-index:10;background:var(--sf2);font-family:var(--head);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);height:30px;padding:0 6px;border-bottom:2px solid var(--bd2);text-align:right;white-space:nowrap;width:var(--col);min-width:var(--col)}
 thead th.thl{position:sticky;top:0;left:0;z-index:20;background:var(--sf2);text-align:left;padding-left:14px;width:var(--lbl);min-width:var(--lbl);border-right:2px solid var(--bd2)}
 thead th.thd{width:var(--del);min-width:var(--del);padding:0;border-right:none}
@@ -198,9 +206,24 @@ tr.tr td.tdl{background:#EDE0A0!important;text-transform:uppercase;letter-spacin
 .chpw-head{font-family:var(--head);font-weight:800;font-size:15px;letter-spacing:.05em;text-transform:uppercase;padding:16px 20px 12px;border-bottom:1px solid var(--bd);color:var(--amb)}
 .chpw-body{padding:16px 20px}
 .chpw-foot{padding:10px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end}
+
+/* TOAST de feedback para cópia de coluna */
+#col-copy-toast{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  background:#1E1C18;color:var(--ambm);
+  font-family:var(--head);font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  padding:9px 18px;border-radius:5px;border:1px solid var(--ambm);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  opacity:0;pointer-events:none;
+  transition:opacity .2s;
+}
+#col-copy-toast.show{opacity:1;}
 </style>
 </head>
 <body>
+
+<!-- TOAST -->
+<div id="col-copy-toast"></div>
 
 <!-- LOADING -->
 <div class="loading-bg" id="loading-bg">
@@ -340,9 +363,12 @@ tr.tr td.tdl{background:#EDE0A0!important;text-transform:uppercase;letter-spacin
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-// VERSÃO: v2-nav-copy (com addNavKeys + copyColumn + _arr)
+// VERSÃO: v3-nav-copy-fix
+// Melhorias:
+//  1. Enter navega para o campo abaixo na mesma coluna (corrigido)
+//  2. Botão "→" no cabeçalho copia coluna para a próxima (com toast)
 // ═══════════════════════════════════════════════════════════════
-window.__ECCOFORTE_VERSION = 'v2-nav-copy';
+window.__ECCOFORTE_VERSION = 'v3-nav-copy-fix';
 console.log('🔥 ECCOFORTE carregado — versão:', window.__ECCOFORTE_VERSION);
 
 // ── FIREBASE ──────────────────────────────────────────────────
@@ -583,6 +609,16 @@ function setHeat(td,val,arr,mi){
 function unit2Label(code,vol){if(!code)return '';if(code==='SC25')return 'SC 25kg';return 'BD '+(vol||18)+'lt';}
 function unit2Vol(code,vol){if(!code)return null;if(code==='SC25')return 25;return parseFloat(vol)||18;}
 
+// ── TOAST ─────────────────────────────────────────────────────
+var toastTimer=null;
+function showToast(msg){
+  var el=document.getElementById('col-copy-toast');
+  el.textContent=msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove('show');},2200);
+}
+
 // ── CALC ──────────────────────────────────────────────────────
 function calcProduct(p,mi){
   var totalVol=0,totalCostR=0;
@@ -626,6 +662,73 @@ function refreshResult(pi){
   });
 }
 
+// ── KEYBOARD NAVIGATION ───────────────────────────────────────
+// Enter ou ArrowDown → próxima linha editável na mesma coluna
+// ArrowUp            → linha anterior na mesma coluna
+// ArrowRight (no fim)→ próxima coluna editável na mesma linha
+// ArrowLeft (no início)→ coluna anterior editável na mesma linha
+function addNavKeys(inp){
+  inp.addEventListener('keydown',function(e){
+    var isEnter     = e.key==='Enter';
+    var isDown      = e.key==='ArrowDown';
+    var isUp        = e.key==='ArrowUp';
+    var isRight     = e.key==='ArrowRight';
+    var isLeft      = e.key==='ArrowLeft';
+    if(!isEnter&&!isDown&&!isUp&&!isRight&&!isLeft) return;
+
+    // só activa setas horizontais quando cursor está na borda do texto
+    if(isRight && inp.selectionStart!==inp.value.length) return;
+    if(isLeft  && inp.selectionStart!==0)                return;
+
+    var thisTd  = inp.parentElement;
+    var thisTr  = thisTd.parentElement;
+    var tbody   = thisTr.parentElement;
+    if(!tbody || tbody.tagName!=='TBODY') return;
+
+    // índice da coluna atual
+    var colIdx=0;
+    for(var i=0;i<thisTr.cells.length;i++){if(thisTr.cells[i]===thisTd){colIdx=i;break;}}
+
+    // índice da linha atual
+    var rows=tbody.rows;
+    var rowIdx=-1;
+    for(var i=0;i<rows.length;i++){if(rows[i]===thisTr){rowIdx=i;break;}}
+    if(rowIdx===-1) return;
+
+    // tenta mover para uma célula editável e retorna true se conseguiu
+    function moveTo(rIdx,cIdx){
+      if(rIdx<0||rIdx>=rows.length) return false;
+      var row=rows[rIdx];
+      if(row.style.display==='none') return false;
+      if(cIdx<0||cIdx>=row.cells.length) return false;
+      var t=row.cells[cIdx].querySelector('.ci:not([readonly])');
+      if(!t) return false;
+      e.preventDefault();
+      // Salva o valor do campo atual antes de mover
+      // (disparar blur garante que o valor seja persistido)
+      inp.blur();
+      setTimeout(function(){t.focus();t.select();},30);
+      return true;
+    }
+
+    if(isEnter||isDown){
+      // desce na mesma coluna
+      for(var r=rowIdx+1;r<rows.length;r++){if(moveTo(r,colIdx))return;}
+      // se não achou próxima linha, só confirma (blur) sem navegar
+      if(isEnter){e.preventDefault();inp.blur();}
+    }
+    if(isUp){
+      for(var r=rowIdx-1;r>=0;r--){if(moveTo(r,colIdx))return;}
+    }
+    if(isRight){
+      for(var c=colIdx+1;c<thisTr.cells.length;c++){if(moveTo(rowIdx,c))return;}
+    }
+    if(isLeft){
+      for(var c=colIdx-1;c>=0;c--){if(moveTo(rowIdx,c))return;}
+    }
+  });
+}
+
 // ── CELL ──────────────────────────────────────────────────────
 function mkCell(arr,mi,isR,dec,cb){
   isR=isR!==false;dec=dec!==undefined?dec:2;
@@ -644,12 +747,13 @@ function mkCell(arr,mi,isR,dec,cb){
     scheduleSave();
   });
   td.appendChild(inp);
-  // armazena referência direta para copy column
+  // referências para copyColumn
   inp._arr=arr;inp._mi=mi;inp._isR=isR;inp._dec=dec;inp._cb=cb;
   // navegação por teclado
   addNavKeys(inp);
   return td;
 }
+
 function mkRO(val,isR,dec,cls,cellId){
   var td=document.createElement('td');td.classList.add(cls||'ro');
   var inp=document.createElement('input');inp.type='text';inp.className='ci';inp.readOnly=true;
@@ -665,16 +769,19 @@ function mkThead(tbl){
   MS.forEach(function(m,i){
     var t=document.createElement('th');
     if(i===CUR)t.classList.add('thc');
-    // month label
+    // label do mês
     var span=document.createElement('span');span.textContent=m;
     t.appendChild(span);
-    // copy-to-next button
+    // botão copiar → próxima coluna (aparece no hover do TH via CSS)
     if(i<11){
       var cb=document.createElement('button');
-      cb.className='col-copy-btn';cb.title='Copiar '+m+' → '+MS[i+1];cb.textContent='→';
+      cb.className='col-copy-btn';
+      cb.title='Copiar '+m+' → '+MS[i+1];
+      cb.textContent='→ '+MS[i+1];
+      // i+1 = índice DOM da coluna (0=label, 1=JAN, ...)
       cb.onclick=(function(colIdx){return function(e){
         e.stopPropagation();
-        copyColumn(tbl,colIdx+1,colIdx+2); // +1 because col 0 is label
+        copyColumn(tbl, colIdx+1, colIdx+2);
       };})(i);
       t.appendChild(cb);
     }
@@ -684,77 +791,31 @@ function mkThead(tbl){
 }
 
 // ── COPY COLUMN ───────────────────────────────────────────────
+// srcColIdx / dstColIdx são índices DOM (0=label, 1=JAN, ..., 12=DEZ)
 function copyColumn(tbl,srcColIdx,dstColIdx){
   var tbody=tbl.querySelector('tbody');if(!tbody)return;
-  var changed=false;
+  var count=0;
   Array.from(tbody.rows).forEach(function(row){
     if(srcColIdx>=row.cells.length||dstColIdx>=row.cells.length)return;
-    var src=row.cells[srcColIdx].querySelector('.ci:not([readonly])');
-    var dst=row.cells[dstColIdx].querySelector('.ci:not([readonly])');
-    if(!src||!dst||!src._arr||!dst._arr)return;
-    var val=src._arr[src._mi];
+    var srcInp=row.cells[srcColIdx].querySelector('.ci:not([readonly])');
+    var dstInp=row.cells[dstColIdx].querySelector('.ci:not([readonly])');
+    if(!srcInp||!dstInp||!srcInp._arr||!dstInp._arr)return;
+    var val=srcInp._arr[srcInp._mi];
     if(val===null||val===undefined)return;
-    dst._arr[dst._mi]=val;
-    dst.value=dst._isR?fR(val,dst._dec):fN(val,dst._dec);
-    setHeat(dst.parentElement,val,dst._arr,dst._mi);
-    if(dst._cb)dst._cb();
-    changed=true;
+    dstInp._arr[dstInp._mi]=val;
+    dstInp.value=dstInp._isR?fR(val,dstInp._dec):fN(val,dstInp._dec);
+    setHeat(dstInp.parentElement,val,dstInp._arr,dstInp._mi);
+    if(dstInp._cb)dstInp._cb();
+    count++;
   });
-  if(changed){scheduleSave();alert('Coluna copiada!');}
-}
-
-// ── KEYBOARD NAVIGATION — adicionado direto em mkCell ─────────
-// (ver addNavKeys abaixo)
-function addNavKeys(inp){
-  inp.addEventListener('keydown',function(e){
-    if(e.key!=='Enter'&&e.key!=='ArrowDown'&&e.key!=='ArrowUp'&&
-       e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
-
-    var thisTd=inp.parentElement;
-    var thisTr=thisTd.parentElement;
-    var tbody=thisTr.parentElement;
-    if(!tbody||tbody.tagName!=='TBODY')return;
-
-    // find column index
-    var colIdx=0;
-    for(var i=0;i<thisTr.cells.length;i++){if(thisTr.cells[i]===thisTd){colIdx=i;break;}}
-    // find row index
-    var rows=tbody.rows;
-    var rowIdx=-1;
-    for(var i=0;i<rows.length;i++){if(rows[i]===thisTr){rowIdx=i;break;}}
-    if(rowIdx===-1)return;
-
-    function moveTo(rIdx,cIdx){
-      if(rIdx<0||rIdx>=rows.length)return false;
-      var row=rows[rIdx];
-      if(row.style.display==='none')return false;
-      if(cIdx<0||cIdx>=row.cells.length)return false;
-      var t=row.cells[cIdx].querySelector('.ci:not([readonly])');
-      if(!t)return false;
-      e.preventDefault();
-      if(e.key==='Enter')inp.blur();
-      (function(target){setTimeout(function(){target.focus();target.select();},30);})(t);
-      return true;
-    }
-
-    if(e.key==='Enter'||e.key==='ArrowDown'){
-      for(var r=rowIdx+1;r<rows.length;r++){if(moveTo(r,colIdx))return;}
-      if(e.key==='Enter'){e.preventDefault();inp.blur();}
-    }
-    if(e.key==='ArrowUp'){
-      for(var r=rowIdx-1;r>=0;r--){if(moveTo(r,colIdx))return;}
-    }
-    if(e.key==='ArrowRight'&&inp.selectionStart===inp.value.length){
-      for(var c=colIdx+1;c<thisTr.cells.length;c++){
-        if(moveTo(rowIdx,c))return;
-      }
-    }
-    if(e.key==='ArrowLeft'&&inp.selectionStart===0){
-      for(var c=colIdx-1;c>=0;c--){
-        if(moveTo(rowIdx,c))return;
-      }
-    }
-  });
+  if(count>0){
+    scheduleSave();
+    var srcName=MS[srcColIdx-1];
+    var dstName=MS[dstColIdx-1];
+    showToast('✓ '+count+' células copiadas: '+srcName+' → '+dstName);
+  }else{
+    showToast('Nenhum valor para copiar em '+MS[srcColIdx-1]);
+  }
 }
 
 // ── SEC HEAD ──────────────────────────────────────────────────
