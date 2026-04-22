@@ -368,7 +368,7 @@ tr.tr td.tdl{background:#EDE0A0!important;text-transform:uppercase;letter-spacin
 //  1. Enter navega para o campo abaixo na mesma coluna (corrigido)
 //  2. Botão "→" no cabeçalho copia coluna para a próxima (com toast)
 // ═══════════════════════════════════════════════════════════════
-window.__ECCOFORTE_VERSION = 'v7-tbody-fix';
+window.__ECCOFORTE_VERSION = 'v8-insertrow-fix';
 console.log('🔥 ECCOFORTE carregado — versão:', window.__ECCOFORTE_VERSION);
 
 // ── FIREBASE ──────────────────────────────────────────────────
@@ -769,7 +769,8 @@ function mkRO(val,isR,dec,cls,cellId){
 // ── THEAD ─────────────────────────────────────────────────────
 function mkThead(tbl){
   var th=tbl.createTHead(),tr=th.insertRow();
-  tbl.createTBody(); // garante que tbody existe antes de inserir linhas
+  var tbody=tbl.createTBody(); // garante que tbody existe
+  tbl._tbody=tbody; // armazena referência para uso nas funções de linha
   var la=document.createElement('th');la.className='thl';la.textContent='Item';tr.appendChild(la);
   MS.forEach(function(m,i){
     var t=document.createElement('th');
@@ -847,7 +848,7 @@ function bSimple(sid,key,title,sub,badgeId,hasTot,isR){
   var gw=document.createElement('div');gw.className='gw';
   var tbl=document.createElement('table');mkThead(tbl);
   DATA[key].forEach(function(row,ri){
-    var tr=tbl.insertRow();
+    var tr=tbl._tbody.insertRow();
     var tl=document.createElement('td');tl.className='tdl';
     tl.innerHTML=row.u?row.n+' <span class="utag">· '+row.u+'</span>':row.n;
     tl.addEventListener('dblclick',function(){
@@ -865,7 +866,7 @@ function bSimple(sid,key,title,sub,badgeId,hasTot,isR){
     td.appendChild(b);tr.appendChild(td);
   });
   if(hasTot){
-    var tr=tbl.insertRow();tr.className='tr';
+    var tr=tbl._tbody.insertRow();tr.className='tr';
     var tl=document.createElement('td');tl.className='tdl';tl.textContent='TOTAL';tr.appendChild(tl);
     MS.forEach(function(_,mi){var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');td.id=key+'-t'+mi;tr.appendChild(td);});
     var tdx=document.createElement('td');tdx.className='tdd';tr.appendChild(tdx);
@@ -888,7 +889,7 @@ function bComp(){
 
   COMP.forEach(function(p,pi){
     var par='c'+pi;
-    var htr=tbl.insertRow();htr.className='ph';
+    var htr=tbl._tbody.insertRow();htr.className='ph';
     var hl=document.createElement('td');hl.className='tdl';
     var wrap=document.createElement('div');wrap.className='ph-lbl';
     var tog=document.createElement('button');tog.className='ptog';tog.textContent=p.ex?'▼':'▶';
@@ -906,11 +907,11 @@ function bComp(){
     hdb.onclick=function(){COMP.splice(pi,1);bComp();scheduleSave();};hdl.appendChild(hdb);htr.appendChild(hdl);
 
     function sgRow(label){
-      var r=tbl.insertRow();r.className='sg-hdr';r.dataset.par=par;if(!p.ex)r.style.display='none';
+      var r=tbl._tbody.insertRow();r.className='sg-hdr';r.dataset.par=par;if(!p.ex)r.style.display='none';
       var td=document.createElement('td');td.className='tdl';td.colSpan=14;td.textContent=label;r.appendChild(td);
     }
     function ingRow(ing,ii,cls){
-      var tr=tbl.insertRow();tr.className=cls;tr.dataset.par=par;if(!p.ex)tr.style.display='none';
+      var tr=tbl._tbody.insertRow();tr.className=cls;tr.dataset.par=par;if(!p.ex)tr.style.display='none';
       var tl=document.createElement('td');tl.className='tdl';
       var fl=document.createElement('button');fl.className='flag';fl.textContent=ing.emb?'📦':'✅';
       fl.onclick=(function(theIng,theTr,theFl){return function(){
@@ -932,7 +933,7 @@ function bComp(){
     sgRow('── Embalagem (não soma volume) ──');
     p.i.forEach(function(ing,ii){if(ing.emb)ingRow(ing,ii,'emb');});
 
-    var aitr=tbl.insertRow();aitr.dataset.par=par;if(!p.ex)aitr.style.display='none';
+    var aitr=tbl._tbody.insertRow();aitr.dataset.par=par;if(!p.ex)aitr.style.display='none';
     aitr.style.borderBottom='1px dashed var(--bd)';
     var aitd=document.createElement('td');aitd.colSpan=14;aitd.style.padding='4px 14px';
     var aib=document.createElement('button');aib.className='ab';aib.style.cssText='font-size:10px;padding:3px 10px';
@@ -943,7 +944,7 @@ function bComp(){
     sgRow('── Equipe Operacional ──');
     p.staff.forEach(function(si){
       var mo=DATA.mo[si];if(!mo)return;
-      var tr=tbl.insertRow();tr.className='staff-r';tr.dataset.par=par;if(!p.ex)tr.style.display='none';
+      var tr=tbl._tbody.insertRow();tr.className='staff-r';tr.dataset.par=par;if(!p.ex)tr.style.display='none';
       var tl=document.createElement('td');tl.className='tdl';
       tl.innerHTML='<span style="color:var(--mu);font-size:11px">👤</span> '+mo.n;
       tr.appendChild(tl);
@@ -951,7 +952,7 @@ function bComp(){
       var dtd=document.createElement('td');dtd.className='tdd';tr.appendChild(dtd);
     });
 
-    var moTr=tbl.insertRow();moTr.className='res-sub';moTr.dataset.par=par;if(!p.ex)moTr.style.display='none';
+    var moTr=tbl._tbody.insertRow();moTr.className='res-sub';moTr.dataset.par=par;if(!p.ex)moTr.style.display='none';
     var moL=document.createElement('td');moL.className='tdl';moL.textContent='Total MO / mês';moTr.appendChild(moL);
     MS.forEach(function(_,mi){
       var cop=p.staff.reduce(function(s,si){return s+(DATA.mo[si]?lkv(DATA.mo[si].v,mi):0);},0);
@@ -959,13 +960,13 @@ function bComp(){
     });
     var modtd=document.createElement('td');modtd.className='tdd';moTr.appendChild(modtd);
 
-    var prdTr=tbl.insertRow();prdTr.className='staff-r';prdTr.dataset.par=par;if(!p.ex)prdTr.style.display='none';
+    var prdTr=tbl._tbody.insertRow();prdTr.className='staff-r';prdTr.dataset.par=par;if(!p.ex)prdTr.style.display='none';
     var prdL=document.createElement('td');prdL.className='tdl';prdL.innerHTML='Produtividade <span class="utag">'+p.u+'/mês</span>';
     prdTr.appendChild(prdL);MS.forEach(function(_,mi){prdTr.appendChild(mkCell(p.prod,mi,false,0,function(){refreshResult(pi);}));});
     var pdtd=document.createElement('td');pdtd.className='tdd';prdTr.appendChild(pdtd);
 
     if(p.tipo==='solvente'){
-      var denTr=tbl.insertRow();denTr.className='staff-r';denTr.dataset.par=par;if(!p.ex)denTr.style.display='none';
+      var denTr=tbl._tbody.insertRow();denTr.className='staff-r';denTr.dataset.par=par;if(!p.ex)denTr.style.display='none';
       var denL=document.createElement('td');denL.className='tdl';denL.textContent='Fator Densidade (kg→lt)';denTr.appendChild(denL);
       MS.forEach(function(_,mi){
         var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');
@@ -987,7 +988,7 @@ function bComp(){
     ];
     if(p.unit2)resRows.push({lbl:'➤ Produto Final / '+unit2Label(p.unit2,p.vol2),fn:function(c){return c.final2;},isR:true,dec:4,cls:'res',ri:5});
     resRows.forEach(function(row){
-      var rtr=tbl.insertRow();rtr.className=row.cls;rtr.dataset.par=par;if(!p.ex)rtr.style.display='none';
+      var rtr=tbl._tbody.insertRow();rtr.className=row.cls;rtr.dataset.par=par;if(!p.ex)rtr.style.display='none';
       var rtl=document.createElement('td');rtl.className='tdl';rtl.textContent=row.lbl;rtr.appendChild(rtl);
       MS.forEach(function(_,mi){
         var c=calcProduct(p,mi);var val=row.fn(c);
