@@ -334,9 +334,9 @@ tr.sg-tog-hdr:hover td.tdl{background:#DEDAD2!important;border-right:2px solid v
 </div>
 
 <div class="page">
-  <div class="grp" id="g-custos">
+  <div class="grp collapsed" id="g-custos">
     <div class="grp-head" onclick="toggleGrp('g-custos')">
-      <span class="grp-tog" id="g-custos-tog">▼</span>
+      <span class="grp-tog cl" id="g-custos-tog">▼</span>
       <span class="grp-title">Custos Base</span>
       <span class="grp-sub">Mão de Obra · ADM</span>
     </div>
@@ -345,9 +345,9 @@ tr.sg-tog-hdr:hover td.tdl{background:#DEDAD2!important;border-right:2px solid v
       <div id="adm" class="sec"></div>
     </div>
   </div>
-  <div class="grp" id="g-insumos">
+  <div class="grp collapsed" id="g-insumos">
     <div class="grp-head" onclick="toggleGrp('g-insumos')">
-      <span class="grp-tog" id="g-insumos-tog">▼</span>
+      <span class="grp-tog cl" id="g-insumos-tog">▼</span>
       <span class="grp-title">Insumos</span>
       <span class="grp-sub">Matéria-Prima · Frete</span>
     </div>
@@ -356,9 +356,9 @@ tr.sg-tog-hdr:hover td.tdl{background:#DEDAD2!important;border-right:2px solid v
       <div id="frete" class="sec"></div>
     </div>
   </div>
-  <div class="grp" id="g-producao">
+  <div class="grp collapsed" id="g-producao">
     <div class="grp-head" onclick="toggleGrp('g-producao')">
-      <span class="grp-tog" id="g-producao-tog">▼</span>
+      <span class="grp-tog cl" id="g-producao-tog">▼</span>
       <span class="grp-title">Produção</span>
       <span class="grp-sub">Composição · Produção Real</span>
     </div>
@@ -470,7 +470,7 @@ function defaultData(){
 }
 function defaultComp(){
   return [
-    {n:'Extrudado Branco',u:'KG',tipo:'extrudado',ex:true,
+    {n:'Extrudado Branco',u:'KG',tipo:'extrudado',ex:false,
      staff:[0,1,2,3,4],prod:p2(138000,138000),den:1,vol2:25,unit2:'SC25',
      i:[
        {n:'Resina Termoplástica',u:'KG',mid:14,fid:14,emb:false,v:p2(170,170)},
@@ -482,7 +482,7 @@ function defaultComp(){
        {n:'Pallet',              u:'UN',mid:18,fid:18,emb:true, v:p2(1,1)},
        {n:'Film Strech',         u:'KG',mid:19,fid:19,emb:true, v:p2(2,2)},
      ]},
-    {n:'Base Solvente Branco',u:'LT',tipo:'solvente',ex:true,
+    {n:'Base Solvente Branco',u:'LT',tipo:'solvente',ex:false,
      staff:[0,1,2],prod:p2(82800,82800),den:1.5,vol2:18,unit2:'BD18',
      i:[
        {n:'Resina Acrílica 38%', u:'KG',mid:0, fid:0, emb:false,v:p2(230,230)},
@@ -1143,13 +1143,18 @@ document.getElementById('modal').addEventListener('click',function(e){if(e.targe
 
 // ── BUILD ALL ─────────────────────────────────────────────────
 function buildAll(){
-  bSimple('mo',   'mo',   'Mão de Obra',         'Equipe de fábrica — salários base mensais',          'moB', true,  true);
-  bSimple('adm',  'adm',  'ADM',                 'Despesas fixas administrativas',                     'admB',true,  true);
+  bSimple('mo',   'mo',   'Mão de Obra',         'Equipe de fábrica — salários base mensais',          null,  true,  true);
+  bSimple('adm',  'adm',  'ADM',                 'Despesas fixas administrativas',                     null,  true,  true);
   bSimple('mp',   'mp',   'Matéria-Prima',       'Preço de compra por unidade — acompanhamento anual', null,  false, true);
   bSimple('frete','frete','Frete Matéria-Prima', 'Custo de frete por kg / lt / un',                    null,  false, true);
   bComp();
   bSimple('pest', 'pest', 'Produção Real do Item','Apontamento mensal de quantidade produzida',         null,  false, false);
   refreshTots();
+  // Colapsar todas as subseções ao iniciar
+  ['mo','adm','mp','frete','comp','pest'].forEach(function(id){
+    var sec=document.getElementById(id);
+    if(sec){sec.classList.add('collapsed');var tog=sec.querySelector('.stog');if(tog)tog.textContent='▶';}
+  });
 }
 </script>
 </body>
