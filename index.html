@@ -927,13 +927,22 @@ function bComp(){
       var r=tbl._tbody.insertRow();
       r.className='sg-tog-hdr';r.dataset.par=par;
       if(!p.ex)r.style.display='none';
-      var td=document.createElement('td');td.className='tdl';td.colSpan=14;
+      // tdl sticky — mesma estrutura de todas as linhas da tabela
+      var tdl=document.createElement('td');tdl.className='tdl';
       var iconEl=document.createElement('span');
       iconEl.className='sg-tog-icon'+(p._sg[sgKey]===false?' cl':'');
       iconEl.textContent='▼';
-      td.appendChild(iconEl);
-      td.appendChild(document.createTextNode(' '+icon+' '+label));
-      r.appendChild(td);
+      tdl.appendChild(iconEl);
+      tdl.appendChild(document.createTextNode(' '+icon+' '+label));
+      r.appendChild(tdl);
+      // células vazias para os 12 meses
+      MS.forEach(function(_,mi){
+        var td=document.createElement('td');
+        if(mi===CUR)td.classList.add('tdc');
+        r.appendChild(td);
+      });
+      // coluna delete vazia
+      var tdd=document.createElement('td');tdd.className='tdd';r.appendChild(tdd);
       r.onclick=function(){
         var open=p._sg[sgKey]!==false;
         p._sg[sgKey]=!open;
