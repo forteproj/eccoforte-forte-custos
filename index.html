@@ -669,23 +669,27 @@ function refreshResult(pi){
 // ArrowLeft (no início)→ coluna anterior editável na mesma linha
 function addNavKeys(inp){
   inp.addEventListener('keydown',function(e){
-    var isEnter     = e.key==='Enter';
-    var isDown      = e.key==='ArrowDown';
-    var isUp        = e.key==='ArrowUp';
-    var isRight     = e.key==='ArrowRight';
-    var isLeft      = e.key==='ArrowLeft';
+    var isEnter = e.key==='Enter';
+    var isDown  = e.key==='ArrowDown';
+    var isUp    = e.key==='ArrowUp';
+    var isRight = e.key==='ArrowRight';
+    var isLeft  = e.key==='ArrowLeft';
     if(!isEnter&&!isDown&&!isUp&&!isRight&&!isLeft) return;
 
-    // só activa setas horizontais quando cursor está na borda do texto
+    // setas horizontais só agem quando cursor está na borda do texto
     if(isRight && inp.selectionStart!==inp.value.length) return;
     if(isLeft  && inp.selectionStart!==0)                return;
 
-    var thisTd  = inp.parentElement;
-    var thisTr  = thisTd.parentElement;
-    var tbody   = thisTr.parentElement;
+    // sempre bloqueia o comportamento padrão dessas teclas dentro da tabela
+    e.preventDefault();
+    e.stopPropagation(); // impede o listener global de Enter (doLogin)
+
+    var thisTd = inp.parentElement;
+    var thisTr = thisTd.parentElement;
+    var tbody  = thisTr.parentElement;
     if(!tbody || tbody.tagName!=='TBODY') return;
 
-    // índice da coluna atual
+    // índice DOM da coluna atual
     var colIdx=0;
     for(var i=0;i<thisTr.cells.length;i++){if(thisTr.cells[i]===thisTd){colIdx=i;break;}}
 
@@ -693,9 +697,9 @@ function addNavKeys(inp){
     var rows=tbody.rows;
     var rowIdx=-1;
     for(var i=0;i<rows.length;i++){if(rows[i]===thisTr){rowIdx=i;break;}}
-    if(rowIdx===-1) return;
+    if(rowIdx===-1){inp.blur();return;}
 
-    // tenta mover para uma célula editável e retorna true se conseguiu
+    // encontra o input destino e move o foco para ele
     function moveTo(rIdx,cIdx){
       if(rIdx<0||rIdx>=rows.length) return false;
       var row=rows[rIdx];
@@ -703,30 +707,26 @@ function addNavKeys(inp){
       if(cIdx<0||cIdx>=row.cells.length) return false;
       var t=row.cells[cIdx].querySelector('.ci:not([readonly])');
       if(!t) return false;
-      e.preventDefault();
-      // Salva o valor do campo atual antes de mover
-      // (disparar blur garante que o valor seja persistido)
+      // primeiro persiste o valor atual via blur, depois move
       inp.blur();
-      setTimeout(function(){t.focus();t.select();},30);
+      setTimeout(function(){t.focus();t.select();},20);
       return true;
     }
 
     if(isEnter||isDown){
-      // desce na mesma coluna
       for(var r=rowIdx+1;r<rows.length;r++){if(moveTo(r,colIdx))return;}
-      // se não achou próxima linha, só confirma (blur) sem navegar
-      if(isEnter){e.preventDefault();inp.blur();}
+      inp.blur(); // última linha: só confirma
     }
-    if(isUp){
+    else if(isUp){
       for(var r=rowIdx-1;r>=0;r--){if(moveTo(r,colIdx))return;}
     }
-    if(isRight){
+    else if(isRight){
       for(var c=colIdx+1;c<thisTr.cells.length;c++){if(moveTo(rowIdx,c))return;}
     }
-    if(isLeft){
+    else if(isLeft){
       for(var c=colIdx-1;c>=0;c--){if(moveTo(rowIdx,c))return;}
     }
-  });
+  },true); // useCapture=true garante que captura antes de qualquer outro listener
 }
 
 // ── CELL ──────────────────────────────────────────────────────
