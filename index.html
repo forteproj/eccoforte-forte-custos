@@ -663,10 +663,9 @@ function refreshResult(pi){
 }
 
 // ── KEYBOARD NAVIGATION ───────────────────────────────────────
-// Enter ou ArrowDown → próxima linha editável na mesma coluna
-// ArrowUp            → linha anterior na mesma coluna
-// ArrowRight (no fim)→ próxima coluna editável na mesma linha
-// ArrowLeft (no início)→ coluna anterior editável na mesma linha
+// Navegação: Enter/ArrowDown = próxima linha mesma coluna (mesmo _mi)
+//            ArrowUp         = linha anterior mesma coluna
+//            ArrowRight/Left = próximo/anterior mês na mesma linha
 function addNavKeys(inp){
   inp.addEventListener('keydown',function(e){
     var isEnter = e.key==='Enter';
@@ -676,57 +675,58 @@ function addNavKeys(inp){
     var isLeft  = e.key==='ArrowLeft';
     if(!isEnter&&!isDown&&!isUp&&!isRight&&!isLeft) return;
 
-    // setas horizontais só agem quando cursor está na borda do texto
+    // setas horizontais só agem na borda do texto
     if(isRight && inp.selectionStart!==inp.value.length) return;
     if(isLeft  && inp.selectionStart!==0)                return;
 
-    // sempre bloqueia o comportamento padrão dessas teclas dentro da tabela
     e.preventDefault();
-    e.stopPropagation(); // impede o listener global de Enter (doLogin)
+    e.stopPropagation();
 
-    var thisTd = inp.parentElement;
-    var thisTr = thisTd.parentElement;
+    var thisTr = inp.parentElement.parentElement;
     var tbody  = thisTr.parentElement;
     if(!tbody || tbody.tagName!=='TBODY') return;
 
-    // índice DOM da coluna atual
-    var colIdx=0;
-    for(var i=0;i<thisTr.cells.length;i++){if(thisTr.cells[i]===thisTd){colIdx=i;break;}}
+    var rows   = tbody.rows;
+    var thisMi = inp._mi; // índice do mês (0=JAN … 11=DEZ) — mais confiável que colIdx DOM
 
     // índice da linha atual
-    var rows=tbody.rows;
     var rowIdx=-1;
     for(var i=0;i<rows.length;i++){if(rows[i]===thisTr){rowIdx=i;break;}}
     if(rowIdx===-1){inp.blur();return;}
 
-    // encontra o input destino e move o foco para ele
-    function moveTo(rIdx,cIdx){
-      if(rIdx<0||rIdx>=rows.length) return false;
+    // encontra input na linha rIdx que tenha _mi === targetMi
+    function findInRow(rIdx, targetMi){
+      if(rIdx<0||rIdx>=rows.length) return null;
       var row=rows[rIdx];
-      if(row.style.display==='none') return false;
-      if(cIdx<0||cIdx>=row.cells.length) return false;
-      var t=row.cells[cIdx].querySelector('.ci:not([readonly])');
-      if(!t) return false;
-      // primeiro persiste o valor atual via blur, depois move
+      if(row.style.display==='none') return null;
+      var all=row.querySelectorAll('.ci:not([readonly])');
+      for(var j=0;j<all.length;j++){if(all[j]._mi===targetMi)return all[j];}
+      return null;
+    }
+
+    // move foco para um input alvo
+    function goTo(target){
+      if(!target) return false;
       inp.blur();
-      setTimeout(function(){t.focus();t.select();},20);
+      setTimeout(function(){target.focus();target.select();},20);
       return true;
     }
 
     if(isEnter||isDown){
-      for(var r=rowIdx+1;r<rows.length;r++){if(moveTo(r,colIdx))return;}
-      inp.blur(); // última linha: só confirma
+      for(var r=rowIdx+1;r<rows.length;r++){if(goTo(findInRow(r,thisMi)))return;}
+      inp.blur(); // última linha: confirma e fica
     }
     else if(isUp){
-      for(var r=rowIdx-1;r>=0;r--){if(moveTo(r,colIdx))return;}
+      for(var r=rowIdx-1;r>=0;r--){if(goTo(findInRow(r,thisMi)))return;}
     }
     else if(isRight){
-      for(var c=colIdx+1;c<thisTr.cells.length;c++){if(moveTo(rowIdx,c))return;}
+      // próximo mês na mesma linha
+      for(var m=thisMi+1;m<=11;m++){if(goTo(findInRow(rowIdx,m)))return;}
     }
     else if(isLeft){
-      for(var c=colIdx-1;c>=0;c--){if(moveTo(rowIdx,c))return;}
+      for(var m=thisMi-1;m>=0;m--){if(goTo(findInRow(rowIdx,m)))return;}
     }
-  },true); // useCapture=true garante que captura antes de qualquer outro listener
+  },true);
 }
 
 // ── CELL ──────────────────────────────────────────────────────
