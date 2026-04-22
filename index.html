@@ -368,7 +368,7 @@ tr.tr td.tdl{background:#EDE0A0!important;text-transform:uppercase;letter-spacin
 //  1. Enter navega para o campo abaixo na mesma coluna (corrigido)
 //  2. Botão "→" no cabeçalho copia coluna para a próxima (com toast)
 // ═══════════════════════════════════════════════════════════════
-window.__ECCOFORTE_VERSION = 'v5-thead-fix';
+window.__ECCOFORTE_VERSION = 'v6-rowIdx-fix';
 console.log('🔥 ECCOFORTE carregado — versão:', window.__ECCOFORTE_VERSION);
 
 // ── FIREBASE ──────────────────────────────────────────────────
@@ -690,14 +690,13 @@ function addNavKeys(inp){
     if(!tbody) return;
 
     var rows   = tbody.rows;
-    var thisMi = inp._mi; // índice do mês (0=JAN … 11=DEZ) — mais confiável que colIdx DOM
+    var thisMi = inp._mi; // índice do mês (0=JAN … 11=DEZ)
 
-    // índice da linha atual
+    // índice da linha atual no tbody (-1 se vier do thead)
     var rowIdx=-1;
     for(var i=0;i<rows.length;i++){if(rows[i]===thisTr){rowIdx=i;break;}}
-    if(rowIdx===-1){inp.blur();return;}
 
-    // encontra input na linha rIdx que tenha _mi === targetMi
+    // encontra input na linha rIdx com mesmo _mi
     function findInRow(rIdx, targetMi){
       if(rIdx<0||rIdx>=rows.length) return null;
       var row=rows[rIdx];
@@ -715,19 +714,21 @@ function addNavKeys(inp){
       return true;
     }
 
+    // se rowIdx==-1 o input está no THEAD: Enter vai para a primeira linha do tbody
     if(isEnter||isDown){
-      for(var r=rowIdx+1;r<rows.length;r++){if(goTo(findInRow(r,thisMi)))return;}
-      inp.blur(); // última linha: confirma e fica
+      var startRow = rowIdx===-1 ? 0 : rowIdx+1;
+      for(var r=startRow;r<rows.length;r++){if(goTo(findInRow(r,thisMi)))return;}
+      inp.blur();
     }
     else if(isUp){
+      if(rowIdx===-1){inp.blur();return;}
       for(var r=rowIdx-1;r>=0;r--){if(goTo(findInRow(r,thisMi)))return;}
     }
     else if(isRight){
-      // próximo mês na mesma linha
-      for(var m=thisMi+1;m<=11;m++){if(goTo(findInRow(rowIdx,m)))return;}
+      for(var m=thisMi+1;m<=11;m++){if(goTo(findInRow(rowIdx===-1?0:rowIdx,m)))return;}
     }
     else if(isLeft){
-      for(var m=thisMi-1;m>=0;m--){if(goTo(findInRow(rowIdx,m)))return;}
+      for(var m=thisMi-1;m>=0;m--){if(goTo(findInRow(rowIdx===-1?0:rowIdx,m)))return;}
     }
   },true);
 }
