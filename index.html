@@ -207,6 +207,14 @@ tr.tr td.tdl{background:#EDE0A0!important;text-transform:uppercase;letter-spacin
 .chpw-body{padding:16px 20px}
 .chpw-foot{padding:10px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end}
 
+/* SUB-GROUP TOGGLE dentro de produto na Composição */
+tr.sg-tog-hdr td{background:#E8E5DE!important;height:26px;border-bottom:1px solid var(--bd2);cursor:pointer;user-select:none}
+tr.sg-tog-hdr td.tdl{background:#E8E5DE!important;font-family:var(--head);font-weight:700;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--txs);padding-left:14px;}
+tr.sg-tog-hdr:hover td{background:#DEDAD2!important}
+tr.sg-tog-hdr:hover td.tdl{background:#DEDAD2!important}
+.sg-tog-icon{color:var(--amb);font-size:11px;margin-right:6px;display:inline-block;transition:transform .12s}
+.sg-tog-icon.cl{transform:rotate(-90deg)}
+
 /* TOAST de feedback para cópia de coluna */
 #col-copy-toast{
   position:fixed;bottom:24px;right:24px;z-index:9999;
@@ -889,13 +897,21 @@ function bComp(){
 
   COMP.forEach(function(p,pi){
     var par='c'+pi;
+    if(!p._sg)p._sg={ing:true,emb:true,eq:true,res:true};
+
+    // ── Cabeçalho do produto ──
     var htr=tbl._tbody.insertRow();htr.className='ph';
     var hl=document.createElement('td');hl.className='tdl';
     var wrap=document.createElement('div');wrap.className='ph-lbl';
     var tog=document.createElement('button');tog.className='ptog';tog.textContent=p.ex?'▼':'▶';
     tog.onclick=function(){
       p.ex=!p.ex;tog.textContent=p.ex?'▼':'▶';
-      tbl.querySelectorAll('[data-par="'+par+'"]').forEach(function(r){r.style.display=p.ex?'':'none';});
+      tbl.querySelectorAll('[data-par="'+par+'"]').forEach(function(r){
+        if(!p.ex){r.style.display='none';return;}
+        if(r.dataset.alwaysvis==='1'){r.style.display='';return;}
+        var sg=r.dataset.sg;
+        r.style.display=(sg&&p._sg[sg]===false)?'none':'';
+      });
     };
     var nm=document.createElement('span');nm.className='ph-name';nm.textContent=p.n+'  ·  '+p.u;
     var tp=document.createElement('span');tp.className='ph-type';tp.textContent=p.tipo==='extrudado'?'🧱 Extrudado':'🪣 Solvente';
@@ -906,17 +922,39 @@ function bComp(){
     var hdb=document.createElement('button');hdb.className='db';hdb.textContent='✕';
     hdb.onclick=function(){COMP.splice(pi,1);bComp();scheduleSave();};hdl.appendChild(hdb);htr.appendChild(hdl);
 
-    function sgRow(label){
-      var r=tbl._tbody.insertRow();r.className='sg-hdr';r.dataset.par=par;if(!p.ex)r.style.display='none';
-      var td=document.createElement('td');td.className='tdl';td.colSpan=14;td.textContent=label;r.appendChild(td);
+    // ── Helper: cria linha de sub-grupo toggle ──
+    function mkSgTogRow(label,sgKey,icon){
+      var r=tbl._tbody.insertRow();
+      r.className='sg-tog-hdr';r.dataset.par=par;
+      if(!p.ex)r.style.display='none';
+      var td=document.createElement('td');td.className='tdl';td.colSpan=14;
+      var iconEl=document.createElement('span');
+      iconEl.className='sg-tog-icon'+(p._sg[sgKey]===false?' cl':'');
+      iconEl.textContent='▼';
+      td.appendChild(iconEl);
+      td.appendChild(document.createTextNode(' '+icon+' '+label));
+      r.appendChild(td);
+      r.onclick=function(){
+        var open=p._sg[sgKey]!==false;
+        p._sg[sgKey]=!open;
+        iconEl.classList.toggle('cl',open);
+        tbl.querySelectorAll('[data-par="'+par+'"][data-sg="'+sgKey+'"]').forEach(function(row){
+          if(!p.ex)return;
+          row.style.display=open?'none':'';
+        });
+      };
+      return r;
     }
-    function ingRow(ing,ii,cls){
-      var tr=tbl._tbody.insertRow();tr.className=cls;tr.dataset.par=par;if(!p.ex)tr.style.display='none';
+
+    // ── Helper: linha de ingrediente ──
+    function ingRow(ing,ii,cls,sgKey){
+      var tr=tbl._tbody.insertRow();tr.className=cls;tr.dataset.par=par;tr.dataset.sg=sgKey;
+      tr.style.display=(p.ex&&p._sg[sgKey]!==false)?'':'none';
       var tl=document.createElement('td');tl.className='tdl';
       var fl=document.createElement('button');fl.className='flag';fl.textContent=ing.emb?'📦':'✅';
       fl.onclick=(function(theIng,theTr,theFl){return function(){
         theIng.emb=!theIng.emb;theFl.textContent=theIng.emb?'📦':'✅';
-        theTr.className=theIng.emb?'emb':'ir';theTr.dataset.par=par;if(!p.ex)theTr.style.display='none';
+        theTr.className=theIng.emb?'emb':'ir';theTr.dataset.par=par;
         bComp();scheduleSave();
       };})(ing,tr,fl);
       tl.appendChild(fl);tl.appendChild(document.createTextNode(' '+ing.n+(ing.u?' · '+ing.u:'')));
@@ -928,12 +966,17 @@ function bComp(){
       idl.appendChild(idb);tr.appendChild(idl);
     }
 
-    sgRow('── Ingredientes (somam volume) ──');
-    p.i.forEach(function(ing,ii){if(!ing.emb)ingRow(ing,ii,'ir');});
-    sgRow('── Embalagem (não soma volume) ──');
-    p.i.forEach(function(ing,ii){if(ing.emb)ingRow(ing,ii,'emb');});
+    // ─── SUB-GRUPO: INGREDIENTES ───
+    mkSgTogRow('Ingredientes','ing','🌿');
+    p.i.forEach(function(ing,ii){if(!ing.emb)ingRow(ing,ii,'ir','ing');});
 
-    var aitr=tbl._tbody.insertRow();aitr.dataset.par=par;if(!p.ex)aitr.style.display='none';
+    // ─── SUB-GRUPO: EMBALAGENS ───
+    mkSgTogRow('Embalagens','emb','📦');
+    p.i.forEach(function(ing,ii){if(ing.emb)ingRow(ing,ii,'emb','emb');});
+
+    // Botão adicionar ingrediente
+    var aitr=tbl._tbody.insertRow();aitr.dataset.par=par;aitr.dataset.sg='emb';
+    aitr.style.display=(p.ex&&p._sg['emb']!==false)?'':'none';
     aitr.style.borderBottom='1px dashed var(--bd)';
     var aitd=document.createElement('td');aitd.colSpan=14;aitd.style.padding='4px 14px';
     var aib=document.createElement('button');aib.className='ab';aib.style.cssText='font-size:10px;padding:3px 10px';
@@ -941,10 +984,12 @@ function bComp(){
     aib.onclick=function(){p.i.push({n:'Novo',u:'KG',mid:-1,fid:-1,emb:false,v:n12()});bComp();scheduleSave();};
     aitd.appendChild(aib);aitr.appendChild(aitd);
 
-    sgRow('── Equipe Operacional ──');
+    // ─── SUB-GRUPO: EQUIPE OPERACIONAL ───
+    mkSgTogRow('Equipe Operacional','eq','👥');
     p.staff.forEach(function(si){
       var mo=DATA.mo[si];if(!mo)return;
-      var tr=tbl._tbody.insertRow();tr.className='staff-r';tr.dataset.par=par;if(!p.ex)tr.style.display='none';
+      var tr=tbl._tbody.insertRow();tr.className='staff-r';tr.dataset.par=par;tr.dataset.sg='eq';
+      tr.style.display=(p.ex&&p._sg['eq']!==false)?'':'none';
       var tl=document.createElement('td');tl.className='tdl';
       tl.innerHTML='<span style="color:var(--mu);font-size:11px">👤</span> '+mo.n;
       tr.appendChild(tl);
@@ -952,7 +997,8 @@ function bComp(){
       var dtd=document.createElement('td');dtd.className='tdd';tr.appendChild(dtd);
     });
 
-    var moTr=tbl._tbody.insertRow();moTr.className='res-sub';moTr.dataset.par=par;if(!p.ex)moTr.style.display='none';
+    var moTr=tbl._tbody.insertRow();moTr.className='res-sub';moTr.dataset.par=par;moTr.dataset.sg='eq';
+    moTr.style.display=(p.ex&&p._sg['eq']!==false)?'':'none';
     var moL=document.createElement('td');moL.className='tdl';moL.textContent='Total MO / mês';moTr.appendChild(moL);
     MS.forEach(function(_,mi){
       var cop=p.staff.reduce(function(s,si){return s+(DATA.mo[si]?lkv(DATA.mo[si].v,mi):0);},0);
@@ -960,13 +1006,15 @@ function bComp(){
     });
     var modtd=document.createElement('td');modtd.className='tdd';moTr.appendChild(modtd);
 
-    var prdTr=tbl._tbody.insertRow();prdTr.className='staff-r';prdTr.dataset.par=par;if(!p.ex)prdTr.style.display='none';
-    var prdL=document.createElement('td');prdL.className='tdl';prdL.innerHTML='Produtividade <span class="utag">'+p.u+'/mês</span>';
-    prdTr.appendChild(prdL);MS.forEach(function(_,mi){prdTr.appendChild(mkCell(p.prod,mi,false,0,function(){refreshResult(pi);}));});
+    var prdTr=tbl._tbody.insertRow();prdTr.className='staff-r';prdTr.dataset.par=par;prdTr.dataset.sg='eq';
+    prdTr.style.display=(p.ex&&p._sg['eq']!==false)?'':'none';
+    var prdL=document.createElement('td');prdL.className='tdl';prdL.innerHTML='Produtividade <span class="utag">'+p.u+'/mês</span>';prdTr.appendChild(prdL);
+    MS.forEach(function(_,mi){prdTr.appendChild(mkCell(p.prod,mi,false,0,function(){refreshResult(pi);}));});
     var pdtd=document.createElement('td');pdtd.className='tdd';prdTr.appendChild(pdtd);
 
     if(p.tipo==='solvente'){
-      var denTr=tbl._tbody.insertRow();denTr.className='staff-r';denTr.dataset.par=par;if(!p.ex)denTr.style.display='none';
+      var denTr=tbl._tbody.insertRow();denTr.className='staff-r';denTr.dataset.par=par;denTr.dataset.sg='eq';
+      denTr.style.display=(p.ex&&p._sg['eq']!==false)?'':'none';
       var denL=document.createElement('td');denL.className='tdl';denL.textContent='Fator Densidade (kg→lt)';denTr.appendChild(denL);
       MS.forEach(function(_,mi){
         var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');
@@ -978,17 +1026,20 @@ function bComp(){
       var ddt=document.createElement('td');ddt.className='tdd';denTr.appendChild(ddt);
     }
 
-    sgRow('── Resultado calculado ──');
+    // ─── SUB-GRUPO: RESULTADO CALCULADO ───
+    mkSgTogRow('Resultado Calculado','res','📊');
     var resRows=[
-      {lbl:'Volume lote ('+p.u+')',     fn:function(c){return c.vol;},    isR:false,dec:2, cls:'res-sub',ri:0},
-      {lbl:'Custo MP / '+p.u,           fn:function(c){return c.mpUnit;}, isR:true, dec:4, cls:'res-sub',ri:1},
-      {lbl:'Custo MO total / mês',      fn:function(c){return c.cop;},    isR:true, dec:2, cls:'res-sub',ri:2},
-      {lbl:'Custo MO / '+p.u,           fn:function(c){return c.copUnit;},isR:true, dec:4, cls:'res-sub',ri:3},
-      {lbl:'➤ Produto Final / '+p.u,    fn:function(c){return c.final;},  isR:true, dec:4, cls:'res',    ri:4},
+      {lbl:'Volume lote ('+p.u+')',fn:function(c){return c.vol;},    isR:false,dec:2,cls:'res-sub',ri:0,av:false},
+      {lbl:'Custo MP / '+p.u,      fn:function(c){return c.mpUnit;}, isR:true, dec:4,cls:'res-sub',ri:1,av:false},
+      {lbl:'Custo MO total / mês', fn:function(c){return c.cop;},    isR:true, dec:2,cls:'res-sub',ri:2,av:false},
+      {lbl:'Custo MO / '+p.u,      fn:function(c){return c.copUnit;},isR:true, dec:4,cls:'res-sub',ri:3,av:false},
+      {lbl:'➤ Produto Final / '+p.u,fn:function(c){return c.final;}, isR:true, dec:4,cls:'res',    ri:4,av:true},
     ];
-    if(p.unit2)resRows.push({lbl:'➤ Produto Final / '+unit2Label(p.unit2,p.vol2),fn:function(c){return c.final2;},isR:true,dec:4,cls:'res',ri:5});
+    if(p.unit2)resRows.push({lbl:'➤ Produto Final / '+unit2Label(p.unit2,p.vol2),fn:function(c){return c.final2;},isR:true,dec:4,cls:'res',ri:5,av:true});
     resRows.forEach(function(row){
-      var rtr=tbl._tbody.insertRow();rtr.className=row.cls;rtr.dataset.par=par;if(!p.ex)rtr.style.display='none';
+      var rtr=tbl._tbody.insertRow();rtr.className=row.cls;rtr.dataset.par=par;
+      if(row.av){rtr.dataset.alwaysvis='1';}else{rtr.dataset.sg='res';}
+      rtr.style.display=(p.ex&&(row.av||p._sg['res']!==false))?'':'none';
       var rtl=document.createElement('td');rtl.className='tdl';rtl.textContent=row.lbl;rtr.appendChild(rtl);
       MS.forEach(function(_,mi){
         var c=calcProduct(p,mi);var val=row.fn(c);
