@@ -209,9 +209,9 @@ tr.tr td.tdl{background:#EDE0A0!important;text-transform:uppercase;letter-spacin
 
 /* SUB-GROUP TOGGLE dentro de produto na Composição */
 tr.sg-tog-hdr td{background:#E8E5DE!important;height:26px;border-bottom:1px solid var(--bd2);cursor:pointer;user-select:none}
-tr.sg-tog-hdr td.tdl{background:#E8E5DE!important;font-family:var(--head);font-weight:700;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--txs);padding-left:14px;}
+tr.sg-tog-hdr td.tdl{background:#E8E5DE!important;font-family:var(--head);font-weight:700;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--txs);padding-left:14px;border-right:2px solid var(--bd2)!important;width:var(--lbl)!important;min-width:var(--lbl)!important;}
 tr.sg-tog-hdr:hover td{background:#DEDAD2!important}
-tr.sg-tog-hdr:hover td.tdl{background:#DEDAD2!important}
+tr.sg-tog-hdr:hover td.tdl{background:#DEDAD2!important;border-right:2px solid var(--bd2)!important}
 .sg-tog-icon{color:var(--amb);font-size:11px;margin-right:6px;display:inline-block;transition:transform .12s}
 .sg-tog-icon.cl{transform:rotate(-90deg)}
 
@@ -929,6 +929,7 @@ function bComp(){
       if(!p.ex)r.style.display='none';
       // tdl sticky — mesma estrutura de todas as linhas da tabela
       var tdl=document.createElement('td');tdl.className='tdl';
+      tdl.style.height='26px';
       var iconEl=document.createElement('span');
       iconEl.className='sg-tog-icon'+(p._sg[sgKey]===false?' cl':'');
       iconEl.textContent='▼';
