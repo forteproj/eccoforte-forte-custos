@@ -424,14 +424,24 @@ tr.sg-tog-hdr:hover td.tdl{background:#DEDAD2!important;border-right:2px solid v
 </div>
 
 <div class="page" id="page-qexec" style="display:none">
-  <div class="grp collapsed" id="g-qexec">
-    <div class="grp-head" onclick="toggleGrp('g-qexec')">
-      <span class="grp-tog cl" id="g-qexec-tog">▼</span>
+  <div class="grp collapsed" id="g-qexec-dia">
+    <div class="grp-head" onclick="toggleGrp('g-qexec-dia')">
+      <span class="grp-tog cl" id="g-qexec-dia-tog">▼</span>
       <span class="grp-title">Execução Dia</span>
       <span class="grp-sub">Aplicação M²/Unid por equipe</span>
     </div>
     <div class="grp-body">
-      <div id="qexec" class="sec"></div>
+      <div id="qexec-dia" class="sec"></div>
+    </div>
+  </div>
+  <div class="grp collapsed" id="g-qexec-mes">
+    <div class="grp-head" onclick="toggleGrp('g-qexec-mes')">
+      <span class="grp-tog cl" id="g-qexec-mes-tog">▼</span>
+      <span class="grp-title">Execução Mês</span>
+      <span class="grp-sub">Execução Dia × Fator Dia</span>
+    </div>
+    <div class="grp-body">
+      <div id="qexec-mes" class="sec"></div>
     </div>
   </div>
 </div>
@@ -485,7 +495,8 @@ var PAGES = [
     id: 'qexec',
     label: 'Qntd Execução',
     sections: [
-      {label:'Execução Dia', anchor:'g-qexec'},
+      {label:'Execução Dia', anchor:'g-qexec-dia'},
+      {label:'Execução Mês', anchor:'g-qexec-mes'},
     ]
   }
 ];
@@ -1668,12 +1679,11 @@ function openMofMembroModal(equipe){
 function closeMofMbModal(){var m=document.getElementById('mof-mb-modal');if(m)m.remove();}
 
 // ── QEXEC: BUILD ─────────────────────────────────────────────
-function bQexec(){
-  var sec=document.getElementById('qexec');sec.innerHTML='';
+function bQexecDia(){
+  var sec=document.getElementById('qexec-dia');sec.innerHTML='';
   mkSecHead(sec,'Execução Dia Forte','Aplicação M²/Unid por equipe — grade anual editável',null);
   var body=document.createElement('div');body.className='sb';
 
-  // ── TABELA 1: Execução Dia ──
   var gw=document.createElement('div');gw.className='gw';
   var tbl=document.createElement('table');mkThead(tbl);
 
@@ -1695,30 +1705,30 @@ function bQexec(){
     var db=document.createElement('button');db.className='db';db.textContent='✕';
     db.onclick=(function(idx){return function(){
       if(!confirm('Remover "'+QEXEC.items[idx].n+'"?'))return;
-      QEXEC.items.splice(idx,1);bQexec();scheduleSave();
+      QEXEC.items.splice(idx,1);bQexecDia();bQexecMes();scheduleSave();
     };})(ri);
     tdd.appendChild(db);tr.appendChild(tdd);
   });
 
   gw.appendChild(tbl);body.appendChild(gw);
 
-  // Botão adicionar
   var aa=document.createElement('div');aa.className='aa';
   var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span>＋</span> Adicionar Item';
   ab.onclick=function(){openQexecModal();};
   aa.appendChild(ab);body.appendChild(aa);
+  sec.appendChild(body);
+}
 
-  // ── SEPARADOR + TABELA 2: Execução Mês ──
-  var sep=document.createElement('div');sep.style.cssText='margin:24px 0 8px 0;border-top:2px solid var(--bd2);padding-top:12px';
-  var sepH=document.createElement('div');sepH.className='st';sepH.textContent='Execução Mês';
-  var sepS=document.createElement('div');sepS.className='ss';sepS.textContent='Execução Dia × Fator Dia = Total Mês';
-  sep.appendChild(sepH);sep.appendChild(sepS);body.appendChild(sep);
+function bQexecMes(){
+  var sec=document.getElementById('qexec-mes');sec.innerHTML='';
+  mkSecHead(sec,'Execução Mês','Execução Dia × Fator Dia = Total Mês',null);
+  var body=document.createElement('div');body.className='sb';
 
-  var gw2=document.createElement('div');gw2.className='gw';
-  var tbl2=document.createElement('table');mkThead(tbl2);
+  var gw=document.createElement('div');gw.className='gw';
+  var tbl=document.createElement('table');mkThead(tbl);
 
-  // ── Linha Fator Dia (editável) ──
-  var ftr=tbl2._tbody.insertRow();ftr.className='tr';
+  // Linha Fator Dia (editável)
+  var ftr=tbl._tbody.insertRow();ftr.className='tr';
   var ftl=document.createElement('td');ftl.className='tdl';ftl.style.fontWeight='800';
   ftl.textContent='FATOR DIA';ftr.appendChild(ftl);
   MS.forEach(function(_,mi){
@@ -1726,9 +1736,9 @@ function bQexec(){
   });
   var fdd=document.createElement('td');fdd.className='tdd';ftr.appendChild(fdd);
 
-  // ── Linhas de resultado (read-only: exec_dia × fator_dia) ──
+  // Linhas de resultado (read-only)
   QEXEC.items.forEach(function(item,ri){
-    var tr=tbl2._tbody.insertRow();tr.className='ir';
+    var tr=tbl._tbody.insertRow();tr.className='ir';
     var tdl=document.createElement('td');tdl.className='tdl';
     var lbl=document.createElement('span');lbl.style.cssText='font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--amb)';
     lbl.textContent=item.n;
@@ -1747,7 +1757,7 @@ function bQexec(){
     var tdd=document.createElement('td');tdd.className='tdd';tr.appendChild(tdd);
   });
 
-  gw2.appendChild(tbl2);body.appendChild(gw2);
+  gw.appendChild(tbl);body.appendChild(gw);
   sec.appendChild(body);
 }
 
@@ -1786,7 +1796,7 @@ function createQexec(){
   var val=parseFloat(document.getElementById('qe-val').value)||0;
   var arr=n12();arr[0]=val;
   QEXEC.items.push({n:nome,u:unid,v:arr});
-  closeQexecModal();bQexec();scheduleSave();
+  closeQexecModal();bQexecDia();bQexecMes();scheduleSave();
 }
 
 // ── BUILD ALL ─────────────────────────────────────────────────
@@ -1802,9 +1812,10 @@ function buildAll(){
   bMofFuncoes();
   bMofEquipes();
   // QEXEC
-  bQexec();
+  bQexecDia();
+  bQexecMes();
   // Colapsar todas as subseções ao iniciar
-  ['mo','adm','mp','frete','comp','pest','mof-funcoes','mof-equipes','qexec'].forEach(function(id){
+  ['mo','adm','mp','frete','comp','pest','mof-funcoes','mof-equipes','qexec-dia','qexec-mes'].forEach(function(id){
     var sec=document.getElementById(id);
     if(sec){sec.classList.add('collapsed');var tog=sec.querySelector('.stog');if(tog)tog.textContent='▶';}
   });
