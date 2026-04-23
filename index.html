@@ -142,6 +142,8 @@ td.ro{background:var(--sf2)!important;color:var(--mu)!important}
 td.ro .ci{color:var(--mu);cursor:default}
 td.ro-val{background:#F0EDE4!important;font-weight:600}
 td.ro-val .ci{color:var(--amb);font-weight:600;cursor:default}
+td.has-f{position:relative}
+td.has-f::after{content:'';position:absolute;top:2px;right:2px;width:0;height:0;border-left:5px solid transparent;border-top:5px solid var(--ambm);opacity:.7}
 .db{opacity:0;cursor:pointer;background:none;border:none;border-radius:2px;color:#A03030;font-size:13px;line-height:1;padding:2px 5px}
 tr:hover .db{opacity:1}.db:hover{background:rgba(160,30,30,.1)}
 
@@ -886,12 +888,42 @@ document.addEventListener('keydown',function(e){
 function fR(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v))return '';return 'R$ '+Number(v).toFixed(d).replace('.',',');}
 function fN(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v))return '';return Number(v).toFixed(d).replace('.',',');}
 function pV(s){return parseFloat(String(s).replace(/R\$\s*/,'').replace(',','.'));}
-function lastKnown(arr,mi){for(var i=mi-1;i>=0;i--){if(arr[i]!==null&&arr[i]!==undefined)return arr[i];}return null;}
-function lkv(arr,mi){var v=arr[mi];if(v!==null&&v!==undefined)return v;return lastKnown(arr,mi)||0;}
+
+// ── FÓRMULAS (estilo Excel) ──────────────────────────────────
+function evalFormula(expr){
+  if(!expr||typeof expr!=='string') return NaN;
+  expr=expr.replace(/,/g,'.').replace(/\s/g,'');
+  expr=expr.replace(/([\d.]+)%/g,'($1/100)');
+  if(!/^[0-9+\-*/.()]+$/.test(expr)) return NaN;
+  try{return Function('"use strict";return ('+expr+')')();}catch(e){return NaN;}
+}
+function isFormula(s){
+  if(!s||typeof s!=='string') return false;
+  var clean=s.replace(/,/g,'.').replace(/\s/g,'');
+  return /[+\-*/%()]/.test(clean) && !/^-?[\d.,]+$/.test(clean);
+}
+function cellVal(cell){
+  if(cell===null||cell===undefined) return null;
+  if(typeof cell==='object'&&cell!==null&&cell.v!==undefined) return cell.v;
+  return cell;
+}
+function cellFormula(cell){
+  if(cell&&typeof cell==='object'&&cell.f) return cell.f;
+  return null;
+}
+function cellSet(arr,mi,val,formula){
+  if(formula) arr[mi]={v:val,f:formula};
+  else arr[mi]=val;
+}
+
+function lastKnown(arr,mi){for(var i=mi-1;i>=0;i--){var v=cellVal(arr[i]);if(v!==null&&v!==undefined)return v;}return null;}
+function lkv(arr,mi){var v=cellVal(arr[mi]);if(v!==null&&v!==undefined)return v;return lastKnown(arr,mi)||0;}
 function setHeat(td,val,arr,mi){
-  td.classList.remove('hv','tdc');
+  td.classList.remove('hv','tdc','has-f');
   if(mi===CUR)td.classList.add('tdc');
   else if(val!==null&&val!==undefined)td.classList.add('hv');
+  // indicador de fórmula
+  if(cellFormula(arr[mi]))td.classList.add('has-f');
 }
 function unit2Label(code,vol){if(!code)return '';if(code==='SC25')return 'SC 25kg';return 'BD '+(vol||18)+'lt';}
 function unit2Vol(code,vol){if(!code)return null;if(code==='SC25')return 25;return parseFloat(vol)||18;}
@@ -1024,16 +1056,40 @@ function addNavKeys(inp){
 function mkCell(arr,mi,isR,dec,cb){
   isR=isR!==false;dec=dec!==undefined?dec:2;
   var td=document.createElement('td');
-  var val=arr[mi];setHeat(td,val,arr,mi);
+  var raw=arr[mi];var val=cellVal(raw);setHeat(td,val,arr,mi);
   var inp=document.createElement('input');inp.type='text';inp.className='ci';
   inp.value=(val!==null&&val!==undefined)?(isR?fR(val,dec):fN(val,dec)):'';inp.placeholder='—';
-  inp.addEventListener('focus',function(){var r=pV(inp.value);inp.value=isNaN(r)?'':fN(r,dec);});
+  inp.addEventListener('focus',function(){
+    // Se tem fórmula, mostra a fórmula; senão mostra número limpo
+    var f=cellFormula(arr[mi]);
+    if(f){inp.value=f;}
+    else{var r=pV(inp.value);inp.value=isNaN(r)?'':fN(r,dec);}
+  });
   inp.addEventListener('blur',function(){
-    var r=pV(inp.value);
-    if(!isNaN(r)){
-      arr[mi]=r;inp.value=isR?fR(r,dec):fN(r,dec);setHeat(td,r,arr,mi);
-      if(mi<11&&arr[mi+1]!==null){var ns=td.nextElementSibling;if(ns&&!ns.classList.contains('tdd'))setHeat(ns,arr[mi+1],arr,mi+1);}
-    }else{arr[mi]=null;inp.value='';td.classList.remove('hv');if(mi===CUR)td.classList.add('tdc');}
+    var text=inp.value.trim();
+    if(text===''){
+      cellSet(arr,mi,null,null);arr[mi]=null;inp.value='';
+      td.classList.remove('hv','has-f');if(mi===CUR)td.classList.add('tdc');
+    } else if(isFormula(text)){
+      // Avaliar fórmula
+      var result=evalFormula(text);
+      if(!isNaN(result)){
+        cellSet(arr,mi,result,text);
+        inp.value=isR?fR(result,dec):fN(result,dec);
+        setHeat(td,result,arr,mi);
+      } else {
+        // Fórmula inválida — tentar como número
+        var r=pV(text);
+        if(!isNaN(r)){cellSet(arr,mi,r,null);inp.value=isR?fR(r,dec):fN(r,dec);setHeat(td,r,arr,mi);}
+        else{cellSet(arr,mi,null,null);arr[mi]=null;inp.value='';td.classList.remove('hv','has-f');}
+      }
+    } else {
+      var r=pV(text);
+      if(!isNaN(r)){
+        cellSet(arr,mi,r,null);inp.value=isR?fR(r,dec):fN(r,dec);setHeat(td,r,arr,mi);
+        if(mi<11&&cellVal(arr[mi+1])!==null){var ns=td.nextElementSibling;if(ns&&!ns.classList.contains('tdd'))setHeat(ns,cellVal(arr[mi+1]),arr,mi+1);}
+      } else {cellSet(arr,mi,null,null);arr[mi]=null;inp.value='';td.classList.remove('hv','has-f');if(mi===CUR)td.classList.add('tdc');}
+    }
     if(cb)cb();
     scheduleSave();
   });
@@ -1093,9 +1149,10 @@ function copyColumn(tbl,srcColIdx,dstColIdx){
     var srcInp=row.cells[srcColIdx].querySelector('.ci:not([readonly])');
     var dstInp=row.cells[dstColIdx].querySelector('.ci:not([readonly])');
     if(!srcInp||!dstInp||!srcInp._arr||!dstInp._arr)return;
-    var val=srcInp._arr[srcInp._mi];
-    if(val===null||val===undefined)return;
-    dstInp._arr[dstInp._mi]=val;
+    var raw=srcInp._arr[srcInp._mi];
+    if(raw===null||raw===undefined)return;
+    dstInp._arr[dstInp._mi]=raw;
+    var val=cellVal(raw);
     dstInp.value=dstInp._isR?fR(val,dstInp._dec):fN(val,dstInp._dec);
     setHeat(dstInp.parentElement,val,dstInp._arr,dstInp._mi);
     if(dstInp._cb)dstInp._cb();
