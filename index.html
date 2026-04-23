@@ -761,7 +761,7 @@ function loadFromFirestore(cb){
       try{if(d.pest) DATA.pest =JSON.parse(d.pest);}catch(e){}
       try{if(d.comp) COMP      =JSON.parse(d.comp);}catch(e){}
       try{if(d.mof)  MOF       =JSON.parse(d.mof);}catch(e){}
-      try{if(d.qexec)QEXEC     =JSON.parse(d.qexec);}catch(e){}
+      try{if(d.qexec){var _qp=JSON.parse(d.qexec);if(Array.isArray(_qp)){QEXEC={items:_qp,fatorDia:p2(23)};}else{QEXEC=_qp;}}}catch(e){}
     }
     document.getElementById('loading-bg').classList.remove('show');
     if(cb)cb();
@@ -1755,13 +1755,12 @@ function bQexec(){
 function refreshQexecMes(){
   QEXEC.items.forEach(function(item,ri){
     MS.forEach(function(_,mi){
-      var el=document.getElementById('qe-mes-'+ri+'-'+mi);
-      if(el){
-        var inp=el.querySelector('.ci');
+      var inp=document.getElementById('qe-mes-'+ri+'-'+mi);
+      if(inp){
         var dia=lkv(item.v,mi);
         var fat=lkv(QEXEC.fatorDia,mi);
         var tot=(dia&&fat)?dia*fat:null;
-        if(inp) inp.value=tot?fN(tot):'—';
+        inp.value=tot?fN(tot,0):'—';
       }
     });
   });
