@@ -810,7 +810,16 @@ function loadFromFirestore(cb){
       try{if(d.comp) COMP      =JSON.parse(d.comp);}catch(e){}
       try{if(d.mof)  MOF       =JSON.parse(d.mof);}catch(e){}
       try{if(d.qexec){var _qp=JSON.parse(d.qexec);if(Array.isArray(_qp)){QEXEC={items:_qp,fatorDia:p2(23)};}else{QEXEC=_qp;}}}catch(e){}
-      try{if(d.ceq){var _cp=JSON.parse(d.ceq);if(_cp&&_cp.tipos){CEQ=_cp.tipos;}else if(Array.isArray(_cp)){CEQ=_cp;}else{CEQ=defaultCEQ();}}}catch(e){}
+      try{if(d.ceq){var _cp=JSON.parse(d.ceq);
+        if(_cp&&_cp.tipos){CEQ=_cp.tipos;}
+        else if(Array.isArray(_cp)){CEQ=_cp;}
+        else{CEQ=defaultCEQ();}
+        // migração: garantir que cada tipo tem manut/deprec
+        CEQ.forEach(function(t){
+          if(!t.manut)t.manut=n12();
+          if(!t.deprec)t.deprec=n12();
+        });
+      }}catch(e){CEQ=defaultCEQ();}
     }
     document.getElementById('loading-bg').classList.remove('show');
     if(cb)cb();
@@ -909,8 +918,8 @@ function cellSet(arr,mi,val,formula){
   else arr[mi]=val;
 }
 
-function lastKnown(arr,mi){for(var i=mi-1;i>=0;i--){var v=cellVal(arr[i]);if(v!==null&&v!==undefined)return v;}return null;}
-function lkv(arr,mi){var v=cellVal(arr[mi]);if(v!==null&&v!==undefined)return v;return lastKnown(arr,mi)||0;}
+function lastKnown(arr,mi){if(!arr)return null;for(var i=mi-1;i>=0;i--){var v=cellVal(arr[i]);if(v!==null&&v!==undefined)return v;}return null;}
+function lkv(arr,mi){if(!arr)return 0;var v=cellVal(arr[mi]);if(v!==null&&v!==undefined)return v;return lastKnown(arr,mi)||0;}
 function setHeat(td,val,arr,mi){
   td.classList.remove('hv','tdc','has-f');
   if(mi===CUR)td.classList.add('tdc');
@@ -2081,7 +2090,7 @@ function buildAll(){
   bQexecDia();
   bQexecMes();
   // CEQ
-  bCeq();
+  try{bCeq();}catch(e){console.error('bCeq error:',e);}
   // Colapsar todas as subseções ao iniciar
   ['mo','adm','mp','frete','comp','pest','mof-funcoes','mof-equipes','qexec-dia','qexec-mes','ceq'].forEach(function(id){
     var sec=document.getElementById(id);
