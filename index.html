@@ -481,6 +481,9 @@ function buildNav(){
     link.innerHTML = page.label + ' <span class="nav-arrow">▼</span>';
     link.onclick = function(e){
       e.preventDefault();
+      // switch page on click
+      switchPage(page.id);
+      window.scrollTo({top:0, behavior:'smooth'});
       // toggle dropdown
       var isOpen = item.classList.contains('open');
       document.querySelectorAll('.tnav-item').forEach(function(i){i.classList.remove('open');});
@@ -1337,7 +1340,7 @@ function mofLookupFunc(nome){
 // ── MOF: GRADE DE FUNÇÕES ────────────────────────────────────
 function bMofFuncoes(){
   var sec=document.getElementById('mof-funcoes');sec.innerHTML='';
-  mkSecHead(sec,'Funções','Grade anual — Salário · Encargos · VA → Total por função','mofFB');
+  mkSecHead(sec,'Funções','Grade anual — Salário · Encargos · VA → Total por função',null);
   var body=document.createElement('div');body.className='sb';
   var gw=document.createElement('div');gw.className='gw';gw.style.maxHeight='600px';
   var tbl=document.createElement('table');mkThead(tbl);
@@ -1424,10 +1427,6 @@ function bMofFuncoes(){
   ab.onclick=function(){openMofFuncModal();};
   aa.appendChild(ab);body.appendChild(aa);
   sec.appendChild(body);
-
-  // Badge
-  var jan=MOF.funcoes.reduce(function(s,f){return s+mofCalcFunc(f,0).total;},0);
-  var badge=document.getElementById('mofFB');if(badge)badge.textContent='Total Jan: '+fR(jan);
 }
 
 function refreshMofFunc(fi){
@@ -1445,15 +1444,12 @@ function refreshMofFunc(fi){
       ftEl.textContent=tot>0?fR(tot):'—';
     }
   });
-  // badge
-  var jan=MOF.funcoes.reduce(function(s,fn){return s+mofCalcFunc(fn,0).total;},0);
-  var badge=document.getElementById('mofFB');if(badge)badge.textContent='Total Jan: '+fR(jan);
 }
 
 // ── MOF: GRADE DE EQUIPES ────────────────────────────────────
 function bMofEquipes(){
   var sec=document.getElementById('mof-equipes');sec.innerHTML='';
-  mkSecHead(sec,'Equipes','Composição por função — valores vinculados à grade de funções','mofEB');
+  mkSecHead(sec,'Equipes','Composição por função — valores vinculados à grade de funções',null);
   var body=document.createElement('div');body.className='sb';
   var gw=document.createElement('div');gw.className='gw';gw.style.maxHeight='600px';
   var tbl=document.createElement('table');mkThead(tbl);
@@ -1529,12 +1525,6 @@ function bMofEquipes(){
   ab.onclick=function(){openMofEquipeModal();};
   aa.appendChild(ab);body.appendChild(aa);
   sec.appendChild(body);
-
-  // Badge
-  if(MOF.equipes.length>0){
-    var jan=MOF.equipes[0].membros.reduce(function(s,nome){var fn=mofLookupFunc(nome);return s+(fn?mofCalcFunc(fn,0).total:0);},0);
-    var badge=document.getElementById('mofEB');if(badge)badge.textContent=MOF.equipes[0].n+' Jan: '+fR(jan);
-  }
 }
 
 function refreshMofEquipes(){
