@@ -23,10 +23,10 @@ body{background:var(--bg);color:var(--tx);font-family:var(--mono);font-size:12px
 
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:300;height:50px;background:#1E1C18;
-  border-bottom:3px solid var(--ambm);display:flex;align-items:center;padding:0 18px;gap:0}
+  border-bottom:3px solid var(--ambm);display:flex;align-items:center;padding:0 18px;gap:0;overflow:visible}
 .logo{font-family:var(--head);font-weight:800;font-size:17px;letter-spacing:.06em;color:var(--ambm);margin-right:4px}
 .logo-s{color:#505050;font-size:12px;margin-right:24px}
-.tnav{display:flex;gap:1px;flex:1;overflow-x:auto}.tnav::-webkit-scrollbar{display:none}
+.tnav{display:flex;gap:1px;flex:1;overflow:visible}.tnav::-webkit-scrollbar{display:none}
 .tnav a{font-family:var(--head);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
   color:#666;text-decoration:none;padding:4px 11px;border-radius:3px;white-space:nowrap;transition:color .1s,background .1s}
 .tnav a:hover{color:var(--ambm);background:rgba(200,146,0,.14)}
