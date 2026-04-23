@@ -1408,17 +1408,6 @@ function bMofFuncoes(){
     var vdd=document.createElement('td');vdd.className='tdd';vaTr.appendChild(vdd);
   });
 
-  // ── TOTAL GERAL ──
-  var ttr=tbl._tbody.insertRow();ttr.className='tr';
-  var ttl=document.createElement('td');ttl.className='tdl';ttl.textContent='TOTAL FUNÇÕES';ttr.appendChild(ttl);
-  MS.forEach(function(_,mi){
-    var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');td.id='mof-ft-'+mi;
-    var tot=MOF.funcoes.reduce(function(s,f){return s+mofCalcFunc(f,mi).total;},0);
-    td.textContent=tot>0?fR(tot):'—';
-    ttr.appendChild(td);
-  });
-  var tdd=document.createElement('td');tdd.className='tdd';ttr.appendChild(tdd);
-
   gw.appendChild(tbl);body.appendChild(gw);
 
   // Botão adicionar função
@@ -1438,11 +1427,6 @@ function refreshMofFunc(fi){
     var eEl=document.getElementById('mof-enc-'+fi+'-'+mi);
     if(eEl){var inp2=eEl.querySelector('.ci');if(inp2)inp2.value=c.enc>0?fR(c.enc):'—';}
     // update total row
-    var ftEl=document.getElementById('mof-ft-'+mi);
-    if(ftEl){
-      var tot=MOF.funcoes.reduce(function(s,fn){return s+mofCalcFunc(fn,mi).total;},0);
-      ftEl.textContent=tot>0?fR(tot):'—';
-    }
   });
 }
 
