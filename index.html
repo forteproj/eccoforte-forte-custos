@@ -755,21 +755,14 @@ var QEXEC = defaultQEXEC();
 
 // ── CEQ DATA (Custos Equipamentos Forte) ─────────────────────
 function defaultCEQ(){
-  return {
-    fatores:{
-      manut: p2(0.5),   // % manutenção
-      deprec: p2(120),  // divisor depreciação
-      dias: p2(23),     // dias úteis (custo equip dia)
-    },
-    tipos:[
-      {n:'Frio', veic:p2(180000), equip:p2(170000), combs:[{n:'Combustível',v:p2(3500)}], qexecRef:'MO FRIO'},
-      {n:'Hot Spray', veic:p2(300000), equip:p2(1000000), combs:[{n:'Combustível',v:p2(3500)},{n:'Combustível 2',v:p2(4800)},{n:'Combustível 3',v:p2(4800)}], qexecRef:'MO HOT SPRAY'},
-      {n:'Tri Componente', veic:p2(180000), equip:p2(170000), combs:[{n:'Combustível',v:p2(3500)}], qexecRef:'MO TRI'},
-      {n:'Extrusão', veic:p2(150000), equip:p2(350000), combs:[{n:'Combustível',v:p2(3500)},{n:'Combustível 2',v:p2(4800)}], qexecRef:'MO EXTRUSÃO'},
-      {n:'Bi Componente', veic:p2(180000), equip:p2(170000), combs:[{n:'Combustível',v:p2(3500)}], qexecRef:'MO BI'},
-      {n:'Maquininha', veic:p2(50000), equip:p2(50000), combs:[{n:'Combustível',v:p2(3500)}], qexecRef:'MO REMOÇÃO'},
-    ]
-  };
+  return [
+    {n:'Frio', veic:p2(180000), equip:p2(170000), manut:p2(1750), deprec:p2(2916.67), combs:[{n:'Combustível',v:p2(3500)}], qexecRef:'MO FRIO'},
+    {n:'Hot Spray', veic:p2(300000), equip:p2(1000000), manut:p2(6500), deprec:p2(10833.33), combs:[{n:'Combustível',v:p2(3500)},{n:'Combustível 2',v:p2(4800)},{n:'Combustível 3',v:p2(4800)}], qexecRef:'MO HOT SPRAY'},
+    {n:'Tri Componente', veic:p2(180000), equip:p2(170000), manut:p2(1750), deprec:p2(2916.67), combs:[{n:'Combustível',v:p2(3500)}], qexecRef:'MO TRI'},
+    {n:'Extrusão', veic:p2(150000), equip:p2(350000), manut:p2(2500), deprec:p2(4166.67), combs:[{n:'Combustível',v:p2(3500)},{n:'Combustível 2',v:p2(4800)}], qexecRef:'MO EXTRUSÃO'},
+    {n:'Bi Componente', veic:p2(180000), equip:p2(170000), manut:p2(1750), deprec:p2(2916.67), combs:[{n:'Combustível',v:p2(3500)}], qexecRef:'MO BI'},
+    {n:'Maquininha', veic:p2(50000), equip:p2(50000), manut:p2(500), deprec:p2(833.33), combs:[{n:'Combustível',v:p2(3500)}], qexecRef:'MO REMOÇÃO'},
+  ];
 }
 var CEQ = defaultCEQ();
 
@@ -817,7 +810,7 @@ function loadFromFirestore(cb){
       try{if(d.comp) COMP      =JSON.parse(d.comp);}catch(e){}
       try{if(d.mof)  MOF       =JSON.parse(d.mof);}catch(e){}
       try{if(d.qexec){var _qp=JSON.parse(d.qexec);if(Array.isArray(_qp)){QEXEC={items:_qp,fatorDia:p2(23)};}else{QEXEC=_qp;}}}catch(e){}
-      try{if(d.ceq) CEQ=JSON.parse(d.ceq);}catch(e){}
+      try{if(d.ceq){var _cp=JSON.parse(d.ceq);if(_cp&&_cp.tipos){CEQ=_cp.tipos;}else if(Array.isArray(_cp)){CEQ=_cp;}else{CEQ=defaultCEQ();}}}catch(e){}
     }
     document.getElementById('loading-bg').classList.remove('show');
     if(cb)cb();
@@ -1901,17 +1894,11 @@ function createQexec(){
 
 // ── CEQ: CÁLCULOS ────────────────────────────────────────────
 function ceqCalc(tipo, mi){
-  var veic=lkv(tipo.veic,mi);
-  var equip=lkv(tipo.equip,mi);
-  var total=veic+equip;
-  var fManut=lkv(CEQ.fatores.manut,mi)/100;
-  var fDeprec=lkv(CEQ.fatores.deprec,mi);
-  var fDias=lkv(CEQ.fatores.dias,mi);
-  var manut=total*fManut;
-  var deprec=fDeprec?total/fDeprec:0;
+  var manut=lkv(tipo.manut,mi);
+  var deprec=lkv(tipo.deprec,mi);
   var combTotal=0;
   tipo.combs.forEach(function(c){combTotal+=lkv(c.v,mi);});
-  var custoDia=fDias?(manut+deprec+combTotal)/fDias:0;
+  var custoTotal=manut+deprec+combTotal;
   // Custo por M²/Unid — busca execução mês do QEXEC
   var execMes=0;
   if(tipo.qexecRef){
@@ -1924,52 +1911,20 @@ function ceqCalc(tipo, mi){
       }
     }
   }
-  var custoM2=execMes?(manut+deprec+combTotal)/execMes:0;
-  return {total:total,manut:manut,deprec:deprec,combTotal:combTotal,custoDia:custoDia,custoM2:custoM2};
+  var custoM2=execMes?custoTotal/execMes:0;
+  return {manut:manut,deprec:deprec,combTotal:combTotal,custoTotal:custoTotal,custoM2:custoM2};
 }
 
 // ── CEQ: BUILD ───────────────────────────────────────────────
 function bCeq(){
   var sec=document.getElementById('ceq');sec.innerHTML='';
-  mkSecHead(sec,'Custos Equipamentos Forte','Grade anual por tipo — Manutenção · Depreciação · Combustível',null);
+  mkSecHead(sec,'Custos Equipamentos Forte','Grade anual por tipo — todos os campos aceitam fórmulas (ex: 350000*0,5%)',null);
   var body=document.createElement('div');body.className='sb';
 
-  // ── Fatores (editáveis) ──
-  var fBox=document.createElement('div');fBox.style.cssText='display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding:10px 14px;background:var(--bg2);border-radius:8px;border:1px solid var(--bd)';
-
-  var fatores=[
-    {label:'Manutenção %', arr:CEQ.fatores.manut, suf:'%'},
-    {label:'Depreciação (÷)', arr:CEQ.fatores.deprec, suf:'meses'},
-    {label:'Dias Úteis', arr:CEQ.fatores.dias, suf:'dias'},
-  ];
-  fatores.forEach(function(f){
-    var wrap=document.createElement('div');wrap.style.cssText='display:flex;align-items:center;gap:6px';
-    var lb=document.createElement('span');lb.style.cssText='font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.04em';lb.textContent=f.label;
-    wrap.appendChild(lb);
-    // Show current month value as editable
-    MS.forEach(function(m,mi){
-      if(mi===CUR||mi===0){
-        var inp=document.createElement('input');inp.type='number';inp.className='ci';
-        inp.style.cssText='width:60px;text-align:center;font-size:12px;background:var(--bg);border:1px solid var(--bd);border-radius:4px;padding:4px;color:var(--tx)';
-        inp.value=lkv(f.arr,mi)||'';
-        inp.title=m;
-        inp.onchange=(function(arr,idx){return function(){
-          arr[idx]=parseFloat(this.value)||0;bCeq();scheduleSave();
-        };})(f.arr,mi);
-        wrap.appendChild(inp);
-      }
-    });
-    var sf=document.createElement('span');sf.style.cssText='font-size:10px;color:var(--mu)';sf.textContent=f.suf;
-    wrap.appendChild(sf);
-    fBox.appendChild(wrap);
-  });
-  body.appendChild(fBox);
-
-  // ── Grade por tipo ──
   var gw=document.createElement('div');gw.className='gw';gw.style.maxHeight='700px';
   var tbl=document.createElement('table');mkThead(tbl);
 
-  CEQ.tipos.forEach(function(tipo,ti){
+  CEQ.forEach(function(tipo,ti){
     var par='ceq'+ti;
     if(tipo._sg===undefined)tipo._sg=false;
 
@@ -1984,64 +1939,34 @@ function bCeq(){
     };})(tipo,tog,par);
     var nm=document.createElement('span');nm.className='ph-name';nm.textContent=tipo.n;
     wrap.appendChild(tog);wrap.appendChild(nm);hl.appendChild(wrap);htr.appendChild(hl);
-    // Header total (custo equip dia)
+    // Header: Custo por M²/Unid
     MS.forEach(function(_,mi){
       var c=ceqCalc(tipo,mi);
-      htr.appendChild(mkRO(c.custoDia>0?c.custoDia:null,true,2,'ro-val','ceq-hd-'+ti+'-'+mi));
+      htr.appendChild(mkRO(c.custoM2>0?c.custoM2:null,true,4,'ro-val','ceq-hd-'+ti+'-'+mi));
     });
     var hdd=document.createElement('td');hdd.className='tdd';
     var hdb=document.createElement('button');hdb.className='db';hdb.textContent='✕';
     hdb.onclick=(function(idx){return function(){
-      if(!confirm('Remover tipo "'+CEQ.tipos[idx].n+'"?'))return;
-      CEQ.tipos.splice(idx,1);bCeq();scheduleSave();
+      if(!confirm('Remover tipo "'+CEQ[idx].n+'"?'))return;
+      CEQ.splice(idx,1);bCeq();scheduleSave();
     };})(ti);
     hdd.appendChild(hdb);htr.appendChild(hdd);
 
-    // Sub-row: Veículo
-    var mkSub=function(label,arr,editable){
+    // Sub-rows editáveis
+    var mkEditSub=function(label,arr){
       var tr=tbl._tbody.insertRow();tr.className='ir';tr.dataset.par=par;
       tr.style.display=tipo._sg?'':'none';
       var tdl=document.createElement('td');tdl.className='tdl';tdl.textContent=label;tr.appendChild(tdl);
-      if(editable){
-        MS.forEach(function(_,mi){
-          tr.appendChild(mkCell(arr,mi,true,2,function(){refreshCeq();scheduleSave();}));
-        });
-      } else {
-        MS.forEach(function(_,mi){
-          var val=lkv(arr,mi);
-          tr.appendChild(mkRO(val>0?val:null,true,2,'ro','ceq-'+label.replace(/\s/g,'')+'-'+ti+'-'+mi));
-        });
-      }
+      MS.forEach(function(_,mi){
+        tr.appendChild(mkCell(arr,mi,true,2,function(){refreshCeq();scheduleSave();}));
+      });
       var dd=document.createElement('td');dd.className='tdd';tr.appendChild(dd);
-      return tr;
     };
 
-    mkSub('Veículo',tipo.veic,true);
-    mkSub('Equipamento',tipo.equip,true);
-
-    // Manutenção (read-only calc)
-    var mtr=tbl._tbody.insertRow();mtr.className='ir';mtr.dataset.par=par;
-    mtr.style.display=tipo._sg?'':'none';
-    var ml=document.createElement('td');ml.className='tdl';
-    ml.innerHTML='Manutenção <span class="utag">'+lkv(CEQ.fatores.manut,0)+'%</span>';
-    mtr.appendChild(ml);
-    MS.forEach(function(_,mi){
-      var c=ceqCalc(tipo,mi);
-      mtr.appendChild(mkRO(c.manut>0?c.manut:null,true,2,'ro','ceq-man-'+ti+'-'+mi));
-    });
-    var mdd=document.createElement('td');mdd.className='tdd';mtr.appendChild(mdd);
-
-    // Depreciação (read-only calc)
-    var dtr=tbl._tbody.insertRow();dtr.className='ir';dtr.dataset.par=par;
-    dtr.style.display=tipo._sg?'':'none';
-    var dl=document.createElement('td');dl.className='tdl';
-    dl.innerHTML='Depreciação <span class="utag">÷'+lkv(CEQ.fatores.deprec,0)+'</span>';
-    dtr.appendChild(dl);
-    MS.forEach(function(_,mi){
-      var c=ceqCalc(tipo,mi);
-      dtr.appendChild(mkRO(c.deprec>0?c.deprec:null,true,2,'ro','ceq-dep-'+ti+'-'+mi));
-    });
-    var ddd=document.createElement('td');ddd.className='tdd';dtr.appendChild(ddd);
+    mkEditSub('Veículo',tipo.veic);
+    mkEditSub('Equipamento',tipo.equip);
+    mkEditSub('Manutenção',tipo.manut);
+    mkEditSub('Depreciação',tipo.deprec);
 
     // Combustíveis (editáveis)
     tipo.combs.forEach(function(comb,ci){
@@ -2052,7 +1977,6 @@ function bCeq(){
         ctr.appendChild(mkCell(comb.v,mi,true,2,function(){refreshCeq();scheduleSave();}));
       });
       var cdd=document.createElement('td');cdd.className='tdd';
-      // delete combustível extra
       if(ci>0){
         var cdb=document.createElement('button');cdb.className='db';cdb.textContent='✕';
         cdb.onclick=(function(t,cidx){return function(){
@@ -2074,23 +1998,12 @@ function bCeq(){
     };})(tipo);
     actd.appendChild(acb);actr.appendChild(actd);
 
-    // Custo Equip Dia (read-only calc)
-    var cetr=tbl._tbody.insertRow();cetr.className='ir';cetr.dataset.par=par;
-    cetr.style.display=tipo._sg?'':'none';
-    cetr.style.borderTop='1px solid var(--bd2)';
-    var cel=document.createElement('td');cel.className='tdl';cel.style.fontWeight='700';
-    cel.textContent='Custo Equip. Dia';cetr.appendChild(cel);
-    MS.forEach(function(_,mi){
-      var c=ceqCalc(tipo,mi);
-      cetr.appendChild(mkRO(c.custoDia>0?c.custoDia:null,true,2,'ro-val','ceq-cd-'+ti+'-'+mi));
-    });
-    var cedd=document.createElement('td');cedd.className='tdd';cetr.appendChild(cedd);
-
-    // Custo por M²/Unid (read-only calc)
+    // Custo por M²/Unid (read-only, com ref)
     var cmtr=tbl._tbody.insertRow();cmtr.className='ir';cmtr.dataset.par=par;
     cmtr.style.display=tipo._sg?'':'none';
+    cmtr.style.borderTop='1px solid var(--bd2)';
     var cml=document.createElement('td');cml.className='tdl';cml.style.fontWeight='700';
-    cml.innerHTML='Custo por M²/Unid <span class="utag">'+( tipo.qexecRef||'')+'</span>';cmtr.appendChild(cml);
+    cml.innerHTML='Custo por M²/Unid <span class="utag">'+(tipo.qexecRef||'')+'</span>';cmtr.appendChild(cml);
     MS.forEach(function(_,mi){
       var c=ceqCalc(tipo,mi);
       cmtr.appendChild(mkRO(c.custoM2>0?c.custoM2:null,true,4,'ro','ceq-cm-'+ti+'-'+mi));
@@ -2109,20 +2022,13 @@ function bCeq(){
 }
 
 function refreshCeq(){
-  CEQ.tipos.forEach(function(tipo,ti){
+  CEQ.forEach(function(tipo,ti){
     MS.forEach(function(_,mi){
       var c=ceqCalc(tipo,mi);
-      var ids={
-        'ceq-hd-':c.custoDia,'ceq-man-':c.manut,'ceq-dep-':c.deprec,
-        'ceq-cd-':c.custoDia,'ceq-cm-':c.custoM2
-      };
-      Object.keys(ids).forEach(function(pre){
-        var el=document.getElementById(pre+ti+'-'+mi);
-        if(el){
-          var dec=(pre==='ceq-cm-')?4:2;
-          el.value=ids[pre]>0?(pre==='ceq-cm-'?fN(ids[pre],dec):fR(ids[pre],dec)):'—';
-        }
-      });
+      var hd=document.getElementById('ceq-hd-'+ti+'-'+mi);
+      if(hd) hd.value=c.custoM2>0?fR(c.custoM2,4):'—';
+      var cm=document.getElementById('ceq-cm-'+ti+'-'+mi);
+      if(cm) cm.value=c.custoM2>0?fR(c.custoM2,4):'—';
     });
   });
 }
@@ -2154,7 +2060,8 @@ function createCeq(){
   var comb=parseFloat(document.getElementById('ceq-comb').value)||0;
   var ref=document.getElementById('ceq-ref').value;
   var vArr=n12();vArr[0]=veic;var eArr=n12();eArr[0]=equip;var cArr=n12();cArr[0]=comb;
-  CEQ.tipos.push({n:nome,veic:vArr,equip:eArr,combs:[{n:'Combustível',v:cArr}],qexecRef:ref});
+  var mArr=n12();var dArr=n12();
+  CEQ.push({n:nome,veic:vArr,equip:eArr,manut:mArr,deprec:dArr,combs:[{n:'Combustível',v:cArr}],qexecRef:ref});
   closeCeqModal();bCeq();scheduleSave();
 }
 
