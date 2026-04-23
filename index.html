@@ -656,6 +656,8 @@ function loadFromFirestore(cb){
 auth.onAuthStateChanged(function(user){
   if(user){
     document.getElementById('login-bg').style.display='none';
+    buildNav();
+    var sel=document.getElementById('yr-sel');if(sel)sel.value=String(ACTIVE_YEAR);
     loadFromFirestore(buildAll);
   }else{
     document.getElementById('login-bg').style.display='flex';
