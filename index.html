@@ -703,16 +703,19 @@ var MOF = defaultMOF();
 
 // ── QEXEC DATA (Qntd Execução) ──────────────────────────────
 function defaultQEXEC(){
-  return [
-    {n:'MO FRIO',      u:'M²', v:p2(150)},
-    {n:'MO HOT SPRAY', u:'M²', v:p2(200)},
-    {n:'MO TRI',       u:'M²', v:p2(150)},
-    {n:'MO EXTRUSÃO',  u:'M²', v:p2(150)},
-    {n:'MO BI',        u:'M²', v:p2(120)},
-    {n:'MO REMOÇÃO',   u:'M²', v:p2(60)},
-    {n:'MO LAMINADO',  u:'M²', v:p2(75)},
-    {n:'TACHÃO/TACHA', u:'Uni',v:p2(300)},
-  ];
+  return {
+    items:[
+      {n:'MO FRIO',      u:'M²', v:p2(150)},
+      {n:'MO HOT SPRAY', u:'M²', v:p2(200)},
+      {n:'MO TRI',       u:'M²', v:p2(150)},
+      {n:'MO EXTRUSÃO',  u:'M²', v:p2(150)},
+      {n:'MO BI',        u:'M²', v:p2(120)},
+      {n:'MO REMOÇÃO',   u:'M²', v:p2(60)},
+      {n:'MO LAMINADO',  u:'M²', v:p2(75)},
+      {n:'TACHÃO/TACHA', u:'Uni',v:p2(300)},
+    ],
+    fatorDia: p2(23)
+  };
 }
 var QEXEC = defaultQEXEC();
 
@@ -1669,10 +1672,12 @@ function bQexec(){
   var sec=document.getElementById('qexec');sec.innerHTML='';
   mkSecHead(sec,'Execução Dia Forte','Aplicação M²/Unid por equipe — grade anual editável',null);
   var body=document.createElement('div');body.className='sb';
+
+  // ── TABELA 1: Execução Dia ──
   var gw=document.createElement('div');gw.className='gw';
   var tbl=document.createElement('table');mkThead(tbl);
 
-  QEXEC.forEach(function(item,ri){
+  QEXEC.items.forEach(function(item,ri){
     var tr=tbl._tbody.insertRow();tr.className='ir';
     var tdl=document.createElement('td');tdl.className='tdl';
     var lbl=document.createElement('span');lbl.style.cssText='font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--amb)';
@@ -1684,13 +1689,13 @@ function bQexec(){
     }
     tr.appendChild(tdl);
     MS.forEach(function(_,mi){
-      tr.appendChild(mkCell(item.v,mi,false,0,function(){scheduleSave();}));
+      tr.appendChild(mkCell(item.v,mi,false,0,function(){refreshQexecMes();scheduleSave();}));
     });
     var tdd=document.createElement('td');tdd.className='tdd';
     var db=document.createElement('button');db.className='db';db.textContent='✕';
     db.onclick=(function(idx){return function(){
-      if(!confirm('Remover "'+QEXEC[idx].n+'"?'))return;
-      QEXEC.splice(idx,1);bQexec();scheduleSave();
+      if(!confirm('Remover "'+QEXEC.items[idx].n+'"?'))return;
+      QEXEC.items.splice(idx,1);bQexec();scheduleSave();
     };})(ri);
     tdd.appendChild(db);tr.appendChild(tdd);
   });
@@ -1702,7 +1707,64 @@ function bQexec(){
   var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span>＋</span> Adicionar Item';
   ab.onclick=function(){openQexecModal();};
   aa.appendChild(ab);body.appendChild(aa);
+
+  // ── SEPARADOR + TABELA 2: Execução Mês ──
+  var sep=document.createElement('div');sep.style.cssText='margin:24px 0 8px 0;border-top:2px solid var(--bd2);padding-top:12px';
+  var sepH=document.createElement('div');sepH.className='st';sepH.textContent='Execução Mês';
+  var sepS=document.createElement('div');sepS.className='ss';sepS.textContent='Execução Dia × Fator Dia = Total Mês';
+  sep.appendChild(sepH);sep.appendChild(sepS);body.appendChild(sep);
+
+  var gw2=document.createElement('div');gw2.className='gw';
+  var tbl2=document.createElement('table');mkThead(tbl2);
+
+  // ── Linha Fator Dia (editável) ──
+  var ftr=tbl2._tbody.insertRow();ftr.className='tr';
+  var ftl=document.createElement('td');ftl.className='tdl';ftl.style.fontWeight='800';
+  ftl.textContent='FATOR DIA';ftr.appendChild(ftl);
+  MS.forEach(function(_,mi){
+    ftr.appendChild(mkCell(QEXEC.fatorDia,mi,false,0,function(){refreshQexecMes();scheduleSave();}));
+  });
+  var fdd=document.createElement('td');fdd.className='tdd';ftr.appendChild(fdd);
+
+  // ── Linhas de resultado (read-only: exec_dia × fator_dia) ──
+  QEXEC.items.forEach(function(item,ri){
+    var tr=tbl2._tbody.insertRow();tr.className='ir';
+    var tdl=document.createElement('td');tdl.className='tdl';
+    var lbl=document.createElement('span');lbl.style.cssText='font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--amb)';
+    lbl.textContent=item.n;
+    tdl.appendChild(lbl);
+    if(item.u){
+      var utag=document.createElement('span');utag.className='utag';utag.textContent=item.u;
+      tdl.appendChild(utag);
+    }
+    tr.appendChild(tdl);
+    MS.forEach(function(_,mi){
+      var dia=lkv(item.v,mi);
+      var fat=lkv(QEXEC.fatorDia,mi);
+      var tot=(dia&&fat)?dia*fat:null;
+      tr.appendChild(mkRO(tot,false,0,'ro','qe-mes-'+ri+'-'+mi));
+    });
+    var tdd=document.createElement('td');tdd.className='tdd';tr.appendChild(tdd);
+  });
+
+  gw2.appendChild(tbl2);body.appendChild(gw2);
   sec.appendChild(body);
+}
+
+// Atualizar grade Mês quando dia ou fator mudam
+function refreshQexecMes(){
+  QEXEC.items.forEach(function(item,ri){
+    MS.forEach(function(_,mi){
+      var el=document.getElementById('qe-mes-'+ri+'-'+mi);
+      if(el){
+        var inp=el.querySelector('.ci');
+        var dia=lkv(item.v,mi);
+        var fat=lkv(QEXEC.fatorDia,mi);
+        var tot=(dia&&fat)?dia*fat:null;
+        if(inp) inp.value=tot?fN(tot):'—';
+      }
+    });
+  });
 }
 
 function openQexecModal(){
@@ -1724,7 +1786,7 @@ function createQexec(){
   var unid=document.getElementById('qe-unid').value.trim()||'M²';
   var val=parseFloat(document.getElementById('qe-val').value)||0;
   var arr=n12();arr[0]=val;
-  QEXEC.push({n:nome,u:unid,v:arr});
+  QEXEC.items.push({n:nome,u:unid,v:arr});
   closeQexecModal();bQexec();scheduleSave();
 }
 
