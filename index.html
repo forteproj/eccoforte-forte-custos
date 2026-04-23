@@ -423,6 +423,19 @@ tr.sg-tog-hdr:hover td.tdl{background:#DEDAD2!important;border-right:2px solid v
   </div>
 </div>
 
+<div class="page" id="page-qexec" style="display:none">
+  <div class="grp collapsed" id="g-qexec">
+    <div class="grp-head" onclick="toggleGrp('g-qexec')">
+      <span class="grp-tog cl" id="g-qexec-tog">▼</span>
+      <span class="grp-title">Execução Dia</span>
+      <span class="grp-sub">Aplicação M²/Unid por equipe</span>
+    </div>
+    <div class="grp-body">
+      <div id="qexec" class="sec"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════════
 // VERSÃO: v4-nav-mi-fix
@@ -466,6 +479,13 @@ var PAGES = [
     sections: [
       {label:'Funções',  anchor:'g-mof-funcoes'},
       {label:'Equipes',  anchor:'g-mof-equipes'},
+    ]
+  }
+  ,{
+    id: 'qexec',
+    label: 'Qntd Execução',
+    sections: [
+      {label:'Execução Dia', anchor:'g-qexec'},
     ]
   }
 ];
@@ -542,6 +562,7 @@ function changeYear(yr){
   DATA = JSON.parse(JSON.stringify(defaultData()));
   COMP = JSON.parse(JSON.stringify(defaultComp()));
   MOF  = JSON.parse(JSON.stringify(defaultMOF()));
+  QEXEC= JSON.parse(JSON.stringify(defaultQEXEC()));
   document.querySelector('.logo-s').textContent = '/ Fábrica ' + ACTIVE_YEAR;
   loadFromFirestore(buildAll);
 }
@@ -680,6 +701,21 @@ function defaultMOF(){
 }
 var MOF = defaultMOF();
 
+// ── QEXEC DATA (Qntd Execução) ──────────────────────────────
+function defaultQEXEC(){
+  return [
+    {n:'MO FRIO',      u:'M²', v:p2(150)},
+    {n:'MO HOT SPRAY', u:'M²', v:p2(200)},
+    {n:'MO TRI',       u:'M²', v:p2(150)},
+    {n:'MO EXTRUSÃO',  u:'M²', v:p2(150)},
+    {n:'MO BI',        u:'M²', v:p2(120)},
+    {n:'MO REMOÇÃO',   u:'M²', v:p2(60)},
+    {n:'MO LAMINADO',  u:'M²', v:p2(75)},
+    {n:'TACHÃO/TACHA', u:'Uni',v:p2(300)},
+  ];
+}
+var QEXEC = defaultQEXEC();
+
 // ── FIRESTORE SAVE / LOAD ─────────────────────────────────────
 var saveTimer = null;
 function setSaveStatus(s,msg){
@@ -699,6 +735,7 @@ function scheduleSave(){
       pest: JSON.stringify(DATA.pest),
       comp: JSON.stringify(COMP),
       mof:  JSON.stringify(MOF),
+      qexec:JSON.stringify(QEXEC),
       saved:firebase.firestore.FieldValue.serverTimestamp()
     }).then(function(){
       setSaveStatus('saved','✓ Salvo');
@@ -721,6 +758,7 @@ function loadFromFirestore(cb){
       try{if(d.pest) DATA.pest =JSON.parse(d.pest);}catch(e){}
       try{if(d.comp) COMP      =JSON.parse(d.comp);}catch(e){}
       try{if(d.mof)  MOF       =JSON.parse(d.mof);}catch(e){}
+      try{if(d.qexec)QEXEC     =JSON.parse(d.qexec);}catch(e){}
     }
     document.getElementById('loading-bg').classList.remove('show');
     if(cb)cb();
@@ -1626,6 +1664,70 @@ function openMofMembroModal(equipe){
 }
 function closeMofMbModal(){var m=document.getElementById('mof-mb-modal');if(m)m.remove();}
 
+// ── QEXEC: BUILD ─────────────────────────────────────────────
+function bQexec(){
+  var sec=document.getElementById('qexec');sec.innerHTML='';
+  mkSecHead(sec,'Execução Dia Forte','Aplicação M²/Unid por equipe — grade anual editável',null);
+  var body=document.createElement('div');body.className='sb';
+  var gw=document.createElement('div');gw.className='gw';
+  var tbl=document.createElement('table');mkThead(tbl);
+
+  QEXEC.forEach(function(item,ri){
+    var tr=tbl._tbody.insertRow();tr.className='ir';
+    var tdl=document.createElement('td');tdl.className='tdl';
+    var lbl=document.createElement('span');lbl.style.cssText='font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--amb)';
+    lbl.textContent=item.n;
+    tdl.appendChild(lbl);
+    if(item.u){
+      var utag=document.createElement('span');utag.className='utag';utag.textContent=item.u;
+      tdl.appendChild(utag);
+    }
+    tr.appendChild(tdl);
+    MS.forEach(function(_,mi){
+      tr.appendChild(mkCell(item.v,mi,false,0,function(){scheduleSave();}));
+    });
+    var tdd=document.createElement('td');tdd.className='tdd';
+    var db=document.createElement('button');db.className='db';db.textContent='✕';
+    db.onclick=(function(idx){return function(){
+      if(!confirm('Remover "'+QEXEC[idx].n+'"?'))return;
+      QEXEC.splice(idx,1);bQexec();scheduleSave();
+    };})(ri);
+    tdd.appendChild(db);tr.appendChild(tdd);
+  });
+
+  gw.appendChild(tbl);body.appendChild(gw);
+
+  // Botão adicionar
+  var aa=document.createElement('div');aa.className='aa';
+  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span>＋</span> Adicionar Item';
+  ab.onclick=function(){openQexecModal();};
+  aa.appendChild(ab);body.appendChild(aa);
+  sec.appendChild(body);
+}
+
+function openQexecModal(){
+  var html='<div class="modal-bg open" id="qexec-modal" onclick="if(event.target===this)closeQexecModal()">'+
+    '<div class="modal"><div class="modal-head">Novo Item de Execução</div><div class="modal-body">'+
+    '<div class="mf"><label>Nome</label><input type="text" id="qe-nome" placeholder="Ex: MO PINTURA"></div>'+
+    '<div class="mf"><label>Unidade</label><input type="text" id="qe-unid" placeholder="M² ou Uni" value="M²"></div>'+
+    '<div class="mf"><label>Qtd Inicial (Jan)</label><input type="number" id="qe-val" placeholder="100"></div>'+
+    '</div><div class="modal-foot">'+
+    '<button class="btn-cancel" onclick="closeQexecModal()">Cancelar</button>'+
+    '<button class="btn-create" onclick="createQexec()">Criar</button>'+
+    '</div></div></div>';
+  var d=document.createElement('div');d.innerHTML=html;document.body.appendChild(d.firstChild);
+  setTimeout(function(){document.getElementById('qe-nome').focus();},100);
+}
+function closeQexecModal(){var m=document.getElementById('qexec-modal');if(m)m.remove();}
+function createQexec(){
+  var nome=document.getElementById('qe-nome').value.trim();if(!nome){alert('Digite o nome.');return;}
+  var unid=document.getElementById('qe-unid').value.trim()||'M²';
+  var val=parseFloat(document.getElementById('qe-val').value)||0;
+  var arr=n12();arr[0]=val;
+  QEXEC.push({n:nome,u:unid,v:arr});
+  closeQexecModal();bQexec();scheduleSave();
+}
+
 // ── BUILD ALL ─────────────────────────────────────────────────
 function buildAll(){
   bSimple('mo',   'mo',   'Mão de Obra',         'Equipe de fábrica — salários base mensais',          null,  true,  true);
@@ -1638,8 +1740,10 @@ function buildAll(){
   // MOF
   bMofFuncoes();
   bMofEquipes();
+  // QEXEC
+  bQexec();
   // Colapsar todas as subseções ao iniciar
-  ['mo','adm','mp','frete','comp','pest','mof-funcoes','mof-equipes'].forEach(function(id){
+  ['mo','adm','mp','frete','comp','pest','mof-funcoes','mof-equipes','qexec'].forEach(function(id){
     var sec=document.getElementById(id);
     if(sec){sec.classList.add('collapsed');var tog=sec.querySelector('.stog');if(tog)tog.textContent='▶';}
   });
