@@ -730,6 +730,8 @@ function defaultCEQ(){
     {n:'Extrusão', veic:p2(150000), equip:p2(350000), manut:p2(2500), deprec:p2(4166.67), combs:[{n:'Combustível',v:p2(3500)},{n:'Combustível 2',v:p2(4800)}], diasEquip:p2(23), custoDia:p2(650.72), qexecRef:'MO EXTRUSÃO'},
     {n:'Bi Componente', veic:p2(180000), equip:p2(170000), manut:p2(1750), deprec:p2(2916.67), combs:[{n:'Combustível',v:p2(3500)}], diasEquip:p2(23), custoDia:p2(355.07), qexecRef:'MO BI'},
     {n:'Maquininha', veic:p2(50000), equip:p2(50000), manut:p2(500), deprec:p2(833.33), combs:[{n:'Combustível',v:p2(3500)}], diasEquip:p2(23), custoDia:p2(210.14), qexecRef:'MO REMOÇÃO'},
+    {n:'Remoção Equipamento', veic:p2(180000), equip:p2(170000), manut:p2(1750), deprec:p2(2916.67), combs:[{n:'Combustível',v:p2(3500)}], diasEquip:p2(23), custoDia:p2(355.07), qexecRef:'MO REMOÇÃO'},
+    {n:'Tacha/Tachão Laminado', veic:p2(180000), equip:p2(170000), manut:p2(1750), deprec:p2(2916.67), combs:[{n:'Combustível',v:p2(3500)}], diasEquip:p2(23), custoDia:p2(355.07), qexecRef:'TACHÃO/TACHA'},
   ];
 }
 var CEQ = defaultCEQ();
@@ -1573,10 +1575,10 @@ function refreshMofFunc(fi){
   var f=MOF.funcoes[fi];if(!f)return;
   MS.forEach(function(_,mi){
     var c=mofCalcFunc(f,mi);
-    var tEl=document.getElementById('mof-t-'+fi+'-'+mi);
-    if(tEl){var inp=tEl.querySelector('.ci');if(inp)inp.value=c.total>0?fR(c.total):'—';}
-    var eEl=document.getElementById('mof-enc-'+fi+'-'+mi);
-    if(eEl){var inp2=eEl.querySelector('.ci');if(inp2)inp2.value=c.enc>0?fR(c.enc):'—';}
+    var tInp=document.getElementById('mof-t-'+fi+'-'+mi);
+    if(tInp) tInp.value=c.total>0?fR(c.total):'—';
+    var eInp=document.getElementById('mof-enc-'+fi+'-'+mi);
+    if(eInp) eInp.value=c.enc>0?fR(c.enc):'—';
   });
   refreshForteComp();
   refreshForteM2Dia();
@@ -1588,7 +1590,9 @@ function findQexecByRef(moRef){
   return null;
 }
 function findCeqByRef(moRef){
-  for(var i=0;i<CEQ.length;i++){if(CEQ[i].qexecRef===moRef)return CEQ[i];}
+  // MO LAMINADO maps to Tacha/Tachão Laminado
+  var ref=moRef==='MO LAMINADO'?'TACHÃO/TACHA':moRef;
+  for(var i=0;i<CEQ.length;i++){if(CEQ[i].qexecRef===ref||CEQ[i].qexecRef===moRef)return CEQ[i];}
   return null;
 }
 function ceqCalc(tipo, mi){
@@ -1964,6 +1968,65 @@ function createCeq(){
   closeCeqModal();bForteCeq();scheduleSave();
 }
 
+
+// ── MODAIS: FUNÇÃO / MEMBRO ──────────────────────────────────
+function openMofFuncModal(){
+  var html='<div class="modal-bg open" id="mof-func-modal" onclick="if(event.target===this)closeMofFuncModal()">'+
+    '<div class="modal"><div class="modal-head">Nova Função</div><div class="modal-body">'+
+    '<div class="mf"><label>Nome da Função</label><input type="text" id="mof-f-nome" placeholder="Ex: Encarregado 3"></div>'+
+    '<div class="mf-row">'+
+    '<div class="mf"><label>Salário Inicial (R$)</label><input type="number" id="mof-f-sal" placeholder="3000"></div>'+
+    '<div class="mf"><label>Encargos %</label><input type="number" id="mof-f-enc" placeholder="70" value="70" step="1"></div>'+
+    '</div>'+
+    '<div class="mf"><label>VA (R$)</label><input type="number" id="mof-f-va" placeholder="1800" value="1800"></div>'+
+    '</div><div class="modal-foot">'+
+    '<button class="btn-cancel" onclick="closeMofFuncModal()">Cancelar</button>'+
+    '<button class="btn-create" onclick="createMofFunc()">Criar Função</button>'+
+    '</div></div></div>';
+  var d=document.createElement('div');d.innerHTML=html;document.body.appendChild(d.firstChild);
+  setTimeout(function(){document.getElementById('mof-f-nome').focus();},100);
+}
+function closeMofFuncModal(){var m=document.getElementById('mof-func-modal');if(m)m.remove();}
+function createMofFunc(){
+  var nome=document.getElementById('mof-f-nome').value.trim();if(!nome){alert('Digite o nome da função.');return;}
+  var sal=parseFloat(document.getElementById('mof-f-sal').value)||0;
+  var encPct=(parseFloat(document.getElementById('mof-f-enc').value)||70)/100;
+  var va=parseFloat(document.getElementById('mof-f-va').value)||0;
+  var salArr=n12();salArr[0]=sal;
+  var encArr=new Array(12).fill(null);encArr[0]=encPct;
+  var vaArr=n12();vaArr[0]=va;
+  MOF.funcoes.push({n:nome,sal:salArr,enc:encArr,va:vaArr});
+  closeMofFuncModal();bMofFuncoes();bForteComp();bForteM2Dia();scheduleSave();
+}
+
+var _mofMembroCb=null;
+function openMofMembroModal(equipe,cb){
+  _mofMembroCb=cb;
+  var html='<div class="modal-bg open" id="mof-mb-modal" onclick="if(event.target===this)closeMofMbModal()">'+
+    '<div class="modal"><div class="modal-head">Adicionar Membro — '+equipe.n+'</div><div class="modal-body">'+
+    '<div class="staff-list" id="mof-mb-list"></div>'+
+    '</div><div class="modal-foot">'+
+    '<button class="btn-cancel" onclick="closeMofMbModal()">Fechar</button>'+
+    '</div></div></div>';
+  var d=document.createElement('div');d.innerHTML=html;document.body.appendChild(d.firstChild);
+  var list=document.getElementById('mof-mb-list');
+  MOF.funcoes.forEach(function(f){
+    var already=equipe.membros.indexOf(f.n)>=0;
+    var item=document.createElement('div');item.className='staff-item'+(already?' checked':'');
+    var chk=document.createElement('div');chk.className='staff-check';chk.textContent=already?'✓':'';
+    var nmEl=document.createElement('span');nmEl.className='staff-name';nmEl.textContent=f.n;
+    var sv=document.createElement('span');sv.className='staff-sal';sv.textContent=fR(mofCalcFunc(f,0).total);
+    item.appendChild(chk);item.appendChild(nmEl);item.appendChild(sv);
+    item.onclick=function(){
+      if(already)return;
+      equipe.membros.push(f.n);
+      closeMofMbModal();
+      if(_mofMembroCb)_mofMembroCb();
+    };
+    list.appendChild(item);
+  });
+}
+function closeMofMbModal(){var m=document.getElementById('mof-mb-modal');if(m)m.remove();}
 
 // ── BUILD ALL ─────────────────────────────────────────────────
 function buildAll(){
