@@ -1802,7 +1802,7 @@ function bForteM2Dia(){
       };
     };
 
-    // Linha topo: nome equipe com toggle
+    // ── HEADER: nome equipe + toggle (cells vazias) ──
     var htr=tbl._tbody.insertRow();htr.className='ph';
     var hl=document.createElement('td');hl.className='tdl';
     var wrap=document.createElement('div');wrap.className='ph-lbl';
@@ -1813,11 +1813,10 @@ function bForteM2Dia(){
     };})(eq,tog,par);
     var nm=document.createElement('span');nm.className='ph-name';nm.textContent=eq.n;
     wrap.appendChild(tog);wrap.appendChild(nm);hl.appendChild(wrap);htr.appendChild(hl);
-    // placeholder cells (o header é só label)
     MS.forEach(function(){htr.appendChild(document.createElement('td'));});
     htr.appendChild(document.createElement('td'));
 
-    // 4 sub-header linhas (read-only, sempre visíveis pois são o "resultado")
+    // ── 4 linhas de resultado — sempre visíveis (sem data-par) ──
     var mkResultRow=function(label,idPre,valFn,dec){
       var tr=tbl._tbody.insertRow();tr.className='ir';
       var tdl=document.createElement('td');tdl.className='tdl';tdl.style.fontWeight='700';tdl.style.paddingLeft='28px';tdl.textContent=label;tr.appendChild(tdl);
