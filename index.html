@@ -371,7 +371,7 @@ tr.sg-tog-hdr:hover td.tdl{background:#DEDAD2!important;border-right:2px solid v
     <div class="grp-head" onclick="toggleGrp('g-custos')">
       <span class="grp-tog cl" id="g-custos-tog">▼</span>
       <span class="grp-title">Custos Base</span>
-      <span class="grp-sub">Mão de Obra · ADM</span>
+      <span class="grp-sub">Cargos e Salários · ADM</span>
     </div>
     <div class="grp-body">
       <div id="mo" class="sec"></div>
@@ -581,11 +581,11 @@ function p2(){var a=Array.from(arguments);while(a.length<12)a.push(null);return 
 function defaultData(){
   return {
     mo:[
-      {n:'Resp. Técnico',  u:'',v:p2(8200,8200,8200)},
-      {n:'Operador',       u:'',v:p2(7200,7200,7200)},
-      {n:'Ajudante 1',     u:'',v:p2(3600,3600,3600)},
-      {n:'Ajudante 2',     u:'',v:p2(3600,3600,3600)},
-      {n:'Ajudante 3',     u:'',v:p2(3600,3600,3600)},
+      {n:'Resp. Técnico', sal:p2(8200,8200,8200), enc:p2(0.70), va:p2(1800)},
+      {n:'Operador',      sal:p2(7200,7200,7200), enc:p2(0.70), va:p2(1800)},
+      {n:'Ajudante 1',   sal:p2(3600,3600,3600), enc:p2(0.70), va:p2(1800)},
+      {n:'Ajudante 2',   sal:p2(3600,3600,3600), enc:p2(0.70), va:p2(1800)},
+      {n:'Ajudante 3',   sal:p2(3600,3600,3600), enc:p2(0.70), va:p2(1800)},
     ],
     adm:[
       {n:'Locação Galpão',u:'',v:p2(10000,10000,10000)},
@@ -772,7 +772,13 @@ function loadFromFirestore(cb){
   DOC.get().then(function(doc){
     if(doc.exists){
       var d=doc.data();
-      try{if(d.mo)   DATA.mo   =JSON.parse(d.mo);}catch(e){}
+      try{if(d.mo){DATA.mo=JSON.parse(d.mo);
+        // migrate old {n,u,v} to new {n,sal,enc,va}
+        DATA.mo.forEach(function(m){
+          if(!m.sal&&m.v){m.sal=m.v;m.enc=p2(0.70);m.va=n12();}
+          if(!Array.isArray(m.enc)){m.enc=p2(m.enc||0.70);}
+        });
+      }}catch(e){}
       try{if(d.adm)  DATA.adm  =JSON.parse(d.adm);}catch(e){}
       try{if(d.mp)   DATA.mp   =JSON.parse(d.mp);}catch(e){}
       try{if(d.frete)DATA.frete=JSON.parse(d.frete);}catch(e){}
@@ -932,7 +938,7 @@ function calcProduct(p,mi){
     totalCostR+=qty*(mpP+frP);
   });
   if(p.tipo==='solvente'&&p.den)totalVol=totalVol/p.den;
-  var cop=p.staff.reduce(function(s,si){return s+(DATA.mo[si]?lkv(DATA.mo[si].v,mi):0);},0);
+  var cop=p.staff.reduce(function(s,si){return s+(DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):0);},0);
   var prod=lkv(p.prod,mi);
   var copUnit=prod>0?cop/prod:0;
   var mpUnit=totalVol>0?totalCostR/totalVol:0;
@@ -958,8 +964,10 @@ function refreshResult(pi){
     });
   });
   MS.forEach(function(_,mi){
+    var hd=document.getElementById('comp-hd-'+pi+'-'+mi);
+    if(hd){var c=calcProduct(p,mi);hd.value=c.final>0?fR(c.final,4):'—';}
     var el=document.getElementById('mo-'+pi+'-'+mi);if(!el)return;
-    var cop=p.staff.reduce(function(s,si){return s+(DATA.mo[si]?lkv(DATA.mo[si].v,mi):0);},0);
+    var cop=p.staff.reduce(function(s,si){return s+(DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):0);},0);
     el.value=cop>0?fR(cop,2):'—';
   });
 }
@@ -1168,6 +1176,163 @@ function toggleGrp(id){
 }
 
 // ── SIMPLE GRID ───────────────────────────────────────────────
+// ── FÁBRICA: CARGOS E SALÁRIOS ────────────────────────────────
+function fabMoCalcFunc(mo, mi){
+  if(!mo.sal) return {sal:0,enc:0,va:0,total:lkv(mo.v||[],mi)||0};
+  var sal=lkv(mo.sal,mi);
+  var encRate=Array.isArray(mo.enc)?lkv(mo.enc,mi):(mo.enc||0.70);
+  var va=lkv(mo.va||[],mi);
+  return {sal:sal, enc:sal*encRate, encRate:encRate, va:va, total:sal+sal*encRate+va};
+}
+
+function bFabricaCargos(){
+  var sec=document.getElementById('mo');sec.innerHTML='';
+  mkSecHead(sec,'Cargos e Salários','Salário · Encargos (editável) · VA → Total por função',null);
+  var body=document.createElement('div');body.className='sb';
+  var gw=document.createElement('div');gw.className='gw';gw.style.maxHeight='500px';
+  var tbl=document.createElement('table');mkThead(tbl);
+
+  DATA.mo.forEach(function(f,fi){
+    var par='fabmo'+fi;
+    if(f._sg===undefined)f._sg=true;
+    if(!Array.isArray(f.enc)){f.enc=p2(f.enc||0.70);}
+    if(!f.sal){f.sal=f.v||n12();f.va=n12();}
+
+    // Header: função + total
+    var htr=tbl._tbody.insertRow();htr.className='ph';
+    var hl=document.createElement('td');hl.className='tdl';
+    var wrap=document.createElement('div');wrap.className='ph-lbl';
+    var tog=document.createElement('button');tog.className='ptog';tog.textContent=f._sg?'▼':'▶';
+    tog.onclick=(function(func,togBtn,parKey){return function(){
+      func._sg=!func._sg;togBtn.textContent=func._sg?'▼':'▶';
+      tbl.querySelectorAll('[data-par="'+parKey+'"]').forEach(function(r){r.style.display=func._sg?'':'none';});
+    };})(f,tog,par);
+    var nm=document.createElement('span');nm.className='ph-name';nm.textContent=f.n;
+    wrap.appendChild(tog);wrap.appendChild(nm);hl.appendChild(wrap);htr.appendChild(hl);
+    MS.forEach(function(_,mi){htr.appendChild(mkRO(fabMoCalcFunc(f,mi).total||null,true,2,'ro-val','fabmo-t-'+fi+'-'+mi));});
+    var hdd=document.createElement('td');hdd.className='tdd';
+    var hdb=document.createElement('button');hdb.className='db';hdb.textContent='✕';
+    hdb.onclick=(function(idx){return function(){
+      if(!confirm('Remover "'+DATA.mo[idx].n+'"?'))return;
+      DATA.mo.splice(idx,1);bFabricaCargos();bComp();scheduleSave();
+    };})(fi);
+    hdd.appendChild(hdb);htr.appendChild(hdd);
+
+    // Sub: Salário
+    var salTr=tbl._tbody.insertRow();salTr.className='ir';salTr.dataset.par=par;salTr.style.display=f._sg?'':'none';
+    var salL=document.createElement('td');salL.className='tdl';salL.textContent='Salário';salTr.appendChild(salL);
+    MS.forEach(function(_,mi){salTr.appendChild(mkCell(f.sal,mi,true,2,function(){refreshFabMo(fi);}));});
+    salTr.appendChild(document.createElement('td')).className='tdd';
+
+    // Sub: Encargos % (editável)
+    var encTr=tbl._tbody.insertRow();encTr.className='ir';encTr.dataset.par=par;encTr.style.display=f._sg?'':'none';
+    var encL=document.createElement('td');encL.className='tdl';encL.textContent='Encargos %';encTr.appendChild(encL);
+    MS.forEach(function(_,mi){
+      var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');else if(cellVal(f.enc[mi])!==null)td.classList.add('hv');
+      var inp=document.createElement('input');inp.type='text';inp.className='ci';
+      var rate=lkv(f.enc,mi);inp.value=rate?(rate*100)+'%':'';inp.placeholder='70%';
+      inp.addEventListener('focus',function(){
+        var fml=cellFormula(f.enc[mi]);
+        if(fml){inp.value=fml;}else{var r=lkv(f.enc,mi);inp.value=r?(r*100)+''  :'';}
+      });
+      inp.addEventListener('blur',function(){
+        var text=inp.value.trim();if(!text){f.enc[mi]=null;refreshFabMo(fi);scheduleSave();return;}
+        var result=isFormula(text)?evalFormula(text):parseFloat(text.replace('%','').replace(',','.'));
+        if(!isNaN(result)){var r2=result>1?result/100:result;cellSet(f.enc,mi,r2,isFormula(text)?text:null);inp.value=(r2*100)+'%';}
+        refreshFabMo(fi);scheduleSave();
+      });
+      td.appendChild(inp);encTr.appendChild(td);
+    });
+    encTr.appendChild(document.createElement('td')).className='tdd';
+
+    // Sub: Encargos R$ (read-only)
+    var encRTr=tbl._tbody.insertRow();encRTr.className='ir';encRTr.dataset.par=par;encRTr.style.display=f._sg?'':'none';
+    var encRL=document.createElement('td');encRL.className='tdl';encRL.style.paddingLeft='28px';encRL.innerHTML='<span style="color:var(--mu)">↳</span> Valor R$';encRTr.appendChild(encRL);
+    MS.forEach(function(_,mi){encRTr.appendChild(mkRO(fabMoCalcFunc(f,mi).enc||null,true,2,'ro','fabmo-enc-'+fi+'-'+mi));});
+    encRTr.appendChild(document.createElement('td')).className='tdd';
+
+    // Sub: VA
+    var vaTr=tbl._tbody.insertRow();vaTr.className='ir';vaTr.dataset.par=par;vaTr.style.display=f._sg?'':'none';
+    var vaL=document.createElement('td');vaL.className='tdl';vaL.textContent='VA';vaTr.appendChild(vaL);
+    MS.forEach(function(_,mi){vaTr.appendChild(mkCell(f.va,mi,true,2,function(){refreshFabMo(fi);}));});
+    vaTr.appendChild(document.createElement('td')).className='tdd';
+  });
+
+  gw.appendChild(tbl);body.appendChild(gw);
+  var aa=document.createElement('div');aa.className='aa';
+  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span>＋</span> Adicionar Função';
+  ab.onclick=function(){openFabFuncModal();};
+  aa.appendChild(ab);body.appendChild(aa);
+  sec.appendChild(body);
+}
+
+function refreshFabMo(fi){
+  var f=DATA.mo[fi];if(!f)return;
+  MS.forEach(function(_,mi){
+    var c=fabMoCalcFunc(f,mi);
+    var tEl=document.getElementById('fabmo-t-'+fi+'-'+mi);if(tEl)tEl.value=c.total>0?fR(c.total):'—';
+    var eEl=document.getElementById('fabmo-enc-'+fi+'-'+mi);if(eEl)eEl.value=c.enc>0?fR(c.enc):'—';
+  });
+  // refresh comp totals
+  COMP.forEach(function(_,pi){refreshResult(pi);});
+}
+
+function openFabFuncModal(){
+  var html='<div class="modal-bg open" id="fabmo-modal" onclick="if(event.target===this)closeFabFuncModal()">'+
+    '<div class="modal"><div class="modal-head">Nova Função</div><div class="modal-body">'+
+    '<div class="mf"><label>Nome</label><input type="text" id="fabmo-nome" placeholder="Ex: Auxiliar"></div>'+
+    '<div class="mf-row">'+
+    '<div class="mf"><label>Salário (R$)</label><input type="number" id="fabmo-sal" placeholder="3000"></div>'+
+    '<div class="mf"><label>Encargos %</label><input type="number" id="fabmo-enc" placeholder="70" value="70"></div>'+
+    '</div>'+
+    '<div class="mf"><label>VA (R$)</label><input type="number" id="fabmo-va" placeholder="1800" value="1800"></div>'+
+    '</div><div class="modal-foot">'+
+    '<button class="btn-cancel" onclick="closeFabFuncModal()">Cancelar</button>'+
+    '<button class="btn-create" onclick="createFabFunc()">Criar</button>'+
+    '</div></div></div>';
+  var d=document.createElement('div');d.innerHTML=html;document.body.appendChild(d.firstChild);
+  setTimeout(function(){document.getElementById('fabmo-nome').focus();},100);
+}
+function closeFabFuncModal(){var m=document.getElementById('fabmo-modal');if(m)m.remove();}
+function createFabFunc(){
+  var nome=document.getElementById('fabmo-nome').value.trim();if(!nome){alert('Digite o nome.');return;}
+  var sal=parseFloat(document.getElementById('fabmo-sal').value)||0;
+  var enc=(parseFloat(document.getElementById('fabmo-enc').value)||70)/100;
+  var va=parseFloat(document.getElementById('fabmo-va').value)||0;
+  var salArr=n12();salArr[0]=sal;var encArr=new Array(12).fill(null);encArr[0]=enc;var vaArr=n12();vaArr[0]=va;
+  DATA.mo.push({n:nome,sal:salArr,enc:encArr,va:vaArr});
+  closeFabFuncModal();bFabricaCargos();scheduleSave();
+}
+
+// Modal: adicionar membro à equipe operacional de um produto
+var _fabStaffTarget=null;
+function openFabStaffModal(prod){
+  _fabStaffTarget=prod;
+  var html='<div class="modal-bg open" id="fab-staff-modal" onclick="if(event.target===this)closeFabStaffModal()">'+
+    '<div class="modal"><div class="modal-head">Equipe Operacional — '+prod.n+'</div><div class="modal-body">'+
+    '<div class="staff-list" id="fab-staff-list"></div>'+
+    '</div><div class="modal-foot">'+
+    '<button class="btn-cancel" onclick="closeFabStaffModal()">Fechar</button>'+
+    '</div></div></div>';
+  var d=document.createElement('div');d.innerHTML=html;document.body.appendChild(d.firstChild);
+  var list=document.getElementById('fab-staff-list');
+  DATA.mo.forEach(function(mo,idx){
+    var already=prod.staff.indexOf(idx)>=0;
+    var item=document.createElement('div');item.className='staff-item'+(already?' checked':'');
+    var chk=document.createElement('div');chk.className='staff-check';chk.textContent=already?'✓':'';
+    var nmEl=document.createElement('span');nmEl.className='staff-name';nmEl.textContent=mo.n;
+    var sv=document.createElement('span');sv.className='staff-sal';sv.textContent=fR(fabMoCalcFunc(mo,0).total);
+    item.appendChild(chk);item.appendChild(nmEl);item.appendChild(sv);
+    item.onclick=function(){
+      if(already)return;
+      prod.staff.push(idx);
+      closeFabStaffModal();bComp();scheduleSave();
+    };
+    list.appendChild(item);
+  });
+}
+function closeFabStaffModal(){var m=document.getElementById('fab-staff-modal');if(m)m.remove();}
+
 function bSimple(sid,key,title,sub,badgeId,hasTot,isR){
   var sec=document.getElementById(sid);sec.innerHTML='';
   mkSecHead(sec,title,sub,badgeId);
@@ -1207,6 +1372,19 @@ function bSimple(sid,key,title,sub,badgeId,hasTot,isR){
 }
 
 // ── COMP GRID ─────────────────────────────────────────────────
+// ── FÁBRICA MO HELPER ─────────────────────────────────────────
+function fabMoTotal(mo, mi){
+  if(!mo) return 0;
+  if(mo.sal){
+    var sal=lkv(mo.sal,mi);
+    var encRate=Array.isArray(mo.enc)?lkv(mo.enc,mi):(mo.enc||0.70);
+    var va=lkv(mo.va||[],mi);
+    return sal + sal*encRate + va;
+  }
+  // legacy format
+  return lkv(mo.v||[],mi);
+}
+
 function bComp(){
   var sec=document.getElementById('comp');sec.innerHTML='';
   mkSecHead(sec,'Composição por Produto','Quantidades · embalagem separada · resultado automático',null);
@@ -1232,11 +1410,17 @@ function bComp(){
         r.style.display=(sg&&p._sg[sg]===false)?'none':'';
       });
     };
-    var nm=document.createElement('span');nm.className='ph-name';nm.textContent=p.n+'  ·  '+p.u;
+    var nm=document.createElement('span');nm.className='ph-name';nm.textContent=p.n;
+    var unTag=document.createElement('span');unTag.className='utag';unTag.textContent='R$/'+p.u;
+    nm.appendChild(document.createTextNode(' '));nm.appendChild(unTag);
     var tp=document.createElement('span');tp.className='ph-type';tp.textContent=p.tipo==='extrudado'?'🧱 Extrudado':'🪣 Solvente';
     wrap.appendChild(tog);wrap.appendChild(nm);wrap.appendChild(tp);
     hl.appendChild(wrap);htr.appendChild(hl);
-    MS.forEach(function(_,mi){var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');htr.appendChild(td);});
+    // Header: Produto Final / Lt (calculado)
+    MS.forEach(function(_,mi){
+      var c=calcProduct(p,mi);
+      htr.appendChild(mkRO(c.final>0?c.final:null,true,4,'ro-val','comp-hd-'+pi+'-'+mi));
+    });
     var hdl=document.createElement('td');hdl.className='tdd';
     var hdb=document.createElement('button');hdb.className='db';hdb.textContent='✕';
     hdb.onclick=function(){COMP.splice(pi,1);bComp();scheduleSave();};hdl.appendChild(hdb);htr.appendChild(hdl);
@@ -1315,22 +1499,33 @@ function bComp(){
 
     // ─── SUB-GRUPO: EQUIPE OPERACIONAL ───
     mkSgTogRow('Equipe Operacional','eq','👥');
-    p.staff.forEach(function(si){
+    p.staff.forEach(function(si,sIdx){
       var mo=DATA.mo[si];if(!mo)return;
       var tr=tbl._tbody.insertRow();tr.className='staff-r';tr.dataset.par=par;tr.dataset.sg='eq';
       tr.style.display=(p.ex&&p._sg['eq']!==false)?'':'none';
       var tl=document.createElement('td');tl.className='tdl';
       tl.innerHTML='<span style="color:var(--mu);font-size:11px">👤</span> '+mo.n;
       tr.appendChild(tl);
-      MS.forEach(function(_,mi){tr.appendChild(mkRO(lkv(mo.v,mi)||null,true,2,'ro'));});
-      var dtd=document.createElement('td');dtd.className='tdd';tr.appendChild(dtd);
+      MS.forEach(function(_,mi){tr.appendChild(mkRO(fabMoTotal(mo,mi)||null,true,2,'ro'));});
+      var dtd=document.createElement('td');dtd.className='tdd';
+      var ddb=document.createElement('button');ddb.className='db';ddb.textContent='✕';
+      ddb.onclick=(function(prod,idx){return function(){prod.staff.splice(idx,1);bComp();scheduleSave();};})(p,sIdx);
+      dtd.appendChild(ddb);tr.appendChild(dtd);
     });
+    // Botão adicionar membro da equipe
+    var staffAddTr=tbl._tbody.insertRow();staffAddTr.dataset.par=par;staffAddTr.dataset.sg='eq';
+    staffAddTr.style.display=(p.ex&&p._sg['eq']!==false)?'':'none';
+    var staffAddTd=document.createElement('td');staffAddTd.colSpan=14;staffAddTd.style.padding='2px 14px';
+    var staffAddBtn=document.createElement('button');staffAddBtn.className='ab';staffAddBtn.style.cssText='font-size:10px;padding:3px 10px';
+    staffAddBtn.innerHTML='＋ Membro';
+    staffAddBtn.onclick=(function(prod){return function(){openFabStaffModal(prod);};})(p);
+    staffAddTd.appendChild(staffAddBtn);staffAddTr.appendChild(staffAddTd);
 
     var moTr=tbl._tbody.insertRow();moTr.className='res-sub';moTr.dataset.par=par;moTr.dataset.sg='eq';
     moTr.style.display=(p.ex&&p._sg['eq']!==false)?'':'none';
     var moL=document.createElement('td');moL.className='tdl';moL.textContent='Total MO / mês';moTr.appendChild(moL);
     MS.forEach(function(_,mi){
-      var cop=p.staff.reduce(function(s,si){return s+(DATA.mo[si]?lkv(DATA.mo[si].v,mi):0);},0);
+      var cop=p.staff.reduce(function(s,si){return s+(DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):0);},0);
       moTr.appendChild(mkRO(cop>0?cop:null,true,2,'ro-val','mo-'+pi+'-'+mi));
     });
     var modtd=document.createElement('td');modtd.className='tdd';moTr.appendChild(modtd);
@@ -1387,14 +1582,14 @@ function bComp(){
 
 // ── TOTALS ────────────────────────────────────────────────────
 function refreshTots(){
-  ['mo','adm'].forEach(function(k){
+  ['adm'].forEach(function(k){
     MS.forEach(function(_,mi){
       var el=document.getElementById(k+'-t'+mi);if(!el)return;
-      var t=DATA[k].reduce(function(s,r){return s+(r.v[mi]||0);},0);
+      var t=DATA[k].reduce(function(s,r){return s+(r.v?lkv(r.v,mi):0);},0);
       el.textContent=t>0?fR(t):'—';
     });
     var el=document.getElementById(k+'B');if(!el)return;
-    var jan=DATA[k].reduce(function(s,r){return s+(r.v[0]||0);},0);
+    var jan=DATA[k].reduce(function(s,r){return s+(r.v?lkv(r.v,0):0);},0);
     el.textContent='Total Jan: '+fR(jan);
   });
 }
@@ -1407,7 +1602,7 @@ function renderStaffList(){
   var list=document.getElementById('staff-list');list.innerHTML='';
   DATA.mo.forEach(function(mo,si){
     var checked=modalStaff.indexOf(si)>=0;
-    var sal=mo.v[0]||0;
+    var sal=fabMoCalcFunc(mo,0).total;
     var item=document.createElement('div');item.className='staff-item'+(checked?' checked':'');
     var chk=document.createElement('div');chk.className='staff-check';chk.textContent=checked?'✓':'';
     var nm=document.createElement('span');nm.className='staff-name';nm.textContent=mo.n;
@@ -1416,7 +1611,7 @@ function renderStaffList(){
     item.onclick=function(){var idx=modalStaff.indexOf(si);if(idx>=0)modalStaff.splice(idx,1);else modalStaff.push(si);renderStaffList();};
     list.appendChild(item);
   });
-  var tot=modalStaff.reduce(function(s,si){return s+(DATA.mo[si]?DATA.mo[si].v[0]||0:0);},0);
+  var tot=modalStaff.reduce(function(s,si){return s+(DATA.mo[si]?fabMoTotal(DATA.mo[si],0):0);},0);
   document.getElementById('staff-total').textContent='Total MO / mês: '+fR(tot);
 }
 function selTipo(t){
@@ -2030,7 +2225,7 @@ function closeMofMbModal(){var m=document.getElementById('mof-mb-modal');if(m)m.
 
 // ── BUILD ALL ─────────────────────────────────────────────────
 function buildAll(){
-  bSimple('mo',   'mo',   'Mão de Obra',         'Equipe de fábrica — salários base mensais',          null,  true,  true);
+  bFabricaCargos();
   bSimple('adm',  'adm',  'ADM',                 'Despesas fixas administrativas',                     null,  true,  true);
   bSimple('mp',   'mp',   'Matéria-Prima',       'Preço de compra por unidade — acompanhamento anual', null,  false, true);
   bSimple('frete','frete','Frete Matéria-Prima', 'Custo de frete por kg / lt / un',                    null,  false, true);
