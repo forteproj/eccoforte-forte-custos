@@ -152,13 +152,14 @@ tr.ph-title-row td{
   background:#1E1C18!important;
   padding:0;border-bottom:2px solid var(--ambm);border-top:6px solid var(--bg);
   text-align:left!important;
+  position:sticky;top:30px;z-index:15;
 }
 .ph-title-wrap{
   display:flex;align-items:center;gap:8px;padding:5px 14px;min-width:0;
 }
 .ph-title-name{
   font-family:var(--head);font-weight:800;font-size:13px;letter-spacing:.07em;
-  text-transform:uppercase;color:var(--ambm);white-space:nowrap;flex:1;
+  text-transform:uppercase;color:var(--ambm);white-space:nowrap;
 }
 
 /* PRODUCT ROWS */
@@ -835,9 +836,13 @@ function loadFromFirestore(cb){
       try{if(d.frete)DATA.frete=JSON.parse(d.frete);}catch(e){}
       try{if(d.pest) DATA.pest =JSON.parse(d.pest);}catch(e){}
       try{if(d.comp){COMP=JSON.parse(d.comp);
-        // Migração: remove sufixo de unidade do nome dos ingredientes
-        // ex: 'Solvente LT' → 'Solvente', para casar com tabela MP
         COMP.forEach(function(p){
+          // Reset de estado de UI — nunca persistir entre sessões
+          p._open=false;
+          if(!p._sg)p._sg={};
+          p._sg.ing=false;p._sg.emb=false;p._sg.eq=false;p._sg.res=false;
+          p._sg.ingR=false;p._sg.embR=false;
+          // Migração: remove sufixo de unidade do nome dos ingredientes
           if(!p.i) return;
           p.i.forEach(function(ing){
             if(ing.n && ing.u){
@@ -1080,7 +1085,8 @@ function refreshResult(pi){
     });
   });
   MS.forEach(function(_,mi){
-    var hd=document.getElementById('comp-hd-'+pi+'-'+mi);
+    // comp-hd agora aponta para a linha "➤ Produto Final / LT" (ri:4)
+    var hd=document.getElementById('rc-'+pi+'-4-'+mi);
     if(hd){var c=calcProduct(p,mi);hd.value=c.final>0?fR(c.final,4):'—';}
     var el=document.getElementById('mo-'+pi+'-'+mi);if(!el)return;
     var cop=p.staff.reduce(function(s,si){return s+(DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):0);},0);
@@ -1686,7 +1692,10 @@ function bComp(){
 
   COMP.forEach(function(p,pi){
     var par='c'+pi;
-    if(!p._sg)p._sg={ing:true,emb:true,eq:true,res:true,ingR:false,embR:false};
+    if(!p._sg)p._sg={ing:false,emb:false,eq:false,res:false,ingR:false,embR:false};
+    if(p._open===undefined)p._open=false;
+    // Sempre respeitar p._open ao renderizar
+    p._sg.ing=p._open; p._sg.emb=p._open; p._sg.eq=p._open; p._sg.res=p._open;
     // Migração: garantir campos novos para produtos criados antes
     if(p._sg.ingR===undefined)p._sg.ingR=false;
     if(p._sg.embR===undefined)p._sg.embR=false;
@@ -1695,7 +1704,7 @@ function bComp(){
     var titleTr=tbl._tbody.insertRow();titleTr.className='ph-title-row';
     var titleTd=document.createElement('td');titleTd.colSpan=14;
     var titleWrap=document.createElement('div');titleWrap.className='ph-title-wrap';
-    var titleTog=document.createElement('button');titleTog.className='ptog';titleTog.textContent=p.ex?'▼':'▶';
+    var titleTog=document.createElement('button');titleTog.className='ptog';
     var titleName=document.createElement('span');titleName.className='ph-title-name';titleName.textContent=p.n;
     var titleType=document.createElement('span');titleType.className='ph-type';titleType.textContent=p.tipo==='extrudado'?'🧱 Extrudado':'🪣 Solvente';
     var titleUnit=document.createElement('span');titleUnit.className='utag';titleUnit.style.marginLeft='6px';titleUnit.textContent='R$/'+p.u;
@@ -1705,52 +1714,31 @@ function bComp(){
     titleWrap.appendChild(titleTog);titleWrap.appendChild(titleName);titleWrap.appendChild(titleType);titleWrap.appendChild(titleSpacer);titleWrap.appendChild(titleDel);
     titleTd.appendChild(titleWrap);titleTr.appendChild(titleTd);
 
-    // Toggle pelo título
-    titleTog.onclick=function(){
-      p.ex=!p.ex;
-      titleTog.textContent=p.ex?'▼':'▶';
-      tog.textContent=p.ex?'▼':'▶';
+    if(p._open===undefined)p._open=false;
+    titleTog.textContent=p._open?'▼':'▶';
+    titleTog.onclick=function(e){
+      e.stopPropagation();
+      p._open=!p._open;
+      titleTog.textContent=p._open?'▼':'▶';
+      ['ing','emb','eq','res'].forEach(function(sg){p._sg[sg]=p._open;});
       tbl.querySelectorAll('[data-par="'+par+'"]').forEach(function(r){
-        if(!p.ex){r.style.display='none';return;}
         if(r.dataset.alwaysvis==='1'){r.style.display='';return;}
+        if(r.classList.contains('sg-tog-hdr')){r.style.display=p._open?'':'none';return;}
+        // linhas R$ dos ingredientes (data-rs) — ocultar junto com os sub-grupos
+        if(r.dataset.rs){r.style.display='none';return;}
         var sg=r.dataset.sg;
         r.style.display=(sg&&p._sg[sg]===false)?'none':'';
       });
     };
 
-    // ── Cabeçalho do produto (linha com valores) ──
-    var htr=tbl._tbody.insertRow();htr.className='ph';
-    var hl=document.createElement('td');hl.className='tdl';
-    var wrap=document.createElement('div');wrap.className='ph-lbl';
-    var tog=document.createElement('button');tog.className='ptog';tog.textContent=p.ex?'▼':'▶';
-    tog.onclick=function(){
-      p.ex=!p.ex;tog.textContent=p.ex?'▼':'▶';
-      titleTog.textContent=p.ex?'▼':'▶';
-      tbl.querySelectorAll('[data-par="'+par+'"]').forEach(function(r){
-        if(!p.ex){r.style.display='none';return;}
-        if(r.dataset.alwaysvis==='1'){r.style.display='';return;}
-        var sg=r.dataset.sg;
-        r.style.display=(sg&&p._sg[sg]===false)?'none':'';
-      });
-    };
-    var nm=document.createElement('span');nm.className='ph-name';nm.textContent='Custo Final / '+p.u;
-    var unTag=document.createElement('span');unTag.className='utag';unTag.textContent='R$/'+p.u;
-    var tp=document.createElement('span');// vazio — tipo já está no título
-    wrap.appendChild(tog);wrap.appendChild(nm);
-    hl.appendChild(wrap);htr.appendChild(hl);
-    // Header: Produto Final / Lt (calculado)
-    MS.forEach(function(_,mi){
-      var c=calcProduct(p,mi);
-      htr.appendChild(mkRO(c.final>0?c.final:null,true,4,'ro-val','comp-hd-'+pi+'-'+mi));
-    });
-    var hdl=document.createElement('td');hdl.className='tdd';htr.appendChild(hdl);
+    var tog=titleTog;
 
     // ── Helper: cria linha de sub-grupo toggle ──
     // rsKey opcional: se passado, adiciona botão "R$" que mostra/oculta linhas de valor R$ dos itens
     function mkSgTogRow(label,sgKey,icon,rsKey){
       var r=tbl._tbody.insertRow();
       r.className='sg-tog-hdr';r.dataset.par=par;
-      if(!p.ex)r.style.display='none';
+      r.style.display=p._open?'':'none';
       // tdl sticky — mesma estrutura de todas as linhas da tabela
       var tdl=document.createElement('td');tdl.className='tdl';
       tdl.style.height='26px';
@@ -1771,7 +1759,7 @@ function bComp(){
           p._sg[rsKey]=!p._sg[rsKey];
           rsBtn.classList.toggle('on',p._sg[rsKey]);
           // mostrar/ocultar linhas ing-rs do sub-grupo, respeitando se o grupo principal está aberto
-          var sgOpen=p._sg[sgKey]!==false && p.ex;
+          var sgOpen=p._sg[sgKey]!==false;
           tbl.querySelectorAll('[data-par="'+par+'"][data-rs="'+rsKey+'"]').forEach(function(row){
             row.style.display=(sgOpen && p._sg[rsKey])?'':'none';
           });
@@ -1793,14 +1781,10 @@ function bComp(){
         p._sg[sgKey]=!open;
         iconEl.classList.toggle('cl',open);
         tbl.querySelectorAll('[data-par="'+par+'"][data-sg="'+sgKey+'"]').forEach(function(row){
-          if(!p.ex)return;
           row.style.display=open?'none':'';
         });
-        // ao fechar o sub-grupo, sempre oculta as linhas R$ também
-        // ao abrir, restaura a visibilidade conforme o estado do toggle R$
         if(rsKey){
           tbl.querySelectorAll('[data-par="'+par+'"][data-rs="'+rsKey+'"]').forEach(function(row){
-            if(!p.ex){row.style.display='none';return;}
             row.style.display=(!open && p._sg[rsKey])?'':'none';
           });
         }
@@ -1811,7 +1795,7 @@ function bComp(){
     // ── Helper: linha de ingrediente (+ linha R$ oculta logo abaixo) ──
     function ingRow(ing,ii,cls,sgKey,rsKey){
       var tr=tbl._tbody.insertRow();tr.className=cls;tr.dataset.par=par;tr.dataset.sg=sgKey;
-      tr.style.display=(p.ex&&p._sg[sgKey]!==false)?'':'none';
+      tr.style.display=(p._sg[sgKey]!==false)?'':'none';
       var tl=document.createElement('td');tl.className='tdl';
       var fl=document.createElement('button');fl.className='flag';fl.textContent=ing.emb?'📦':'✅';
       fl.onclick=(function(theIng,theTr,theFl){return function(){
@@ -1829,7 +1813,7 @@ function bComp(){
 
       // ── Linha ↳ R$ (read-only, oculta por padrão) ──
       var rsTr=tbl._tbody.insertRow();rsTr.className='ing-rs';rsTr.dataset.par=par;rsTr.dataset.rs=rsKey;
-      var sgOpen=p.ex && p._sg[sgKey]!==false;
+      var sgOpen=p._sg[sgKey]!==false;
       rsTr.style.display=(sgOpen && p._sg[rsKey])?'':'none';
       var rsL=document.createElement('td');rsL.className='tdl';rsL.innerHTML='<span style="color:var(--mu)">↳</span> Valor R$';rsTr.appendChild(rsL);
       MS.forEach(function(_,mi){
@@ -1853,7 +1837,7 @@ function bComp(){
 
     // Botão adicionar ingrediente
     var aitr=tbl._tbody.insertRow();aitr.dataset.par=par;aitr.dataset.sg='emb';
-    aitr.style.display=(p.ex&&p._sg['emb']!==false)?'':'none';
+    aitr.style.display=(p._sg['emb']!==false)?'':'none';
     aitr.style.borderBottom='1px dashed var(--bd)';
     var aitd=document.createElement('td');aitd.colSpan=14;aitd.style.padding='4px 14px';
     var aib=document.createElement('button');aib.className='ab';aib.style.cssText='font-size:10px;padding:3px 10px';
@@ -1866,7 +1850,7 @@ function bComp(){
     p.staff.forEach(function(si,sIdx){
       var mo=DATA.mo[si];if(!mo)return;
       var tr=tbl._tbody.insertRow();tr.className='staff-r';tr.dataset.par=par;tr.dataset.sg='eq';
-      tr.style.display=(p.ex&&p._sg['eq']!==false)?'':'none';
+      tr.style.display=(p._sg['eq']!==false)?'':'none';
       var tl=document.createElement('td');tl.className='tdl';
       tl.innerHTML='<span style="color:var(--mu);font-size:11px">👤</span> '+mo.n;
       tr.appendChild(tl);
@@ -1878,7 +1862,7 @@ function bComp(){
     });
     // Botão adicionar membro da equipe
     var staffAddTr=tbl._tbody.insertRow();staffAddTr.dataset.par=par;staffAddTr.dataset.sg='eq';
-    staffAddTr.style.display=(p.ex&&p._sg['eq']!==false)?'':'none';
+    staffAddTr.style.display=(p._sg['eq']!==false)?'':'none';
     var staffAddTd=document.createElement('td');staffAddTd.colSpan=14;staffAddTd.style.padding='2px 14px';
     var staffAddBtn=document.createElement('button');staffAddBtn.className='ab';staffAddBtn.style.cssText='font-size:10px;padding:3px 10px';
     staffAddBtn.innerHTML='＋ Membro';
@@ -1886,7 +1870,7 @@ function bComp(){
     staffAddTd.appendChild(staffAddBtn);staffAddTr.appendChild(staffAddTd);
 
     var moTr=tbl._tbody.insertRow();moTr.className='res-sub';moTr.dataset.par=par;moTr.dataset.sg='eq';
-    moTr.style.display=(p.ex&&p._sg['eq']!==false)?'':'none';
+    moTr.style.display=(p._sg['eq']!==false)?'':'none';
     var moL=document.createElement('td');moL.className='tdl';moL.textContent='Total MO / mês';moTr.appendChild(moL);
     MS.forEach(function(_,mi){
       var cop=p.staff.reduce(function(s,si){return s+(DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):0);},0);
@@ -1895,14 +1879,14 @@ function bComp(){
     var modtd=document.createElement('td');modtd.className='tdd';moTr.appendChild(modtd);
 
     var prdTr=tbl._tbody.insertRow();prdTr.className='staff-r';prdTr.dataset.par=par;prdTr.dataset.sg='eq';
-    prdTr.style.display=(p.ex&&p._sg['eq']!==false)?'':'none';
+    prdTr.style.display=(p._sg['eq']!==false)?'':'none';
     var prdL=document.createElement('td');prdL.className='tdl';prdL.innerHTML='Produtividade <span class="utag">'+p.u+'/mês</span>';prdTr.appendChild(prdL);
     MS.forEach(function(_,mi){prdTr.appendChild(mkCell(p.prod,mi,false,0,function(){refreshResult(pi);}));});
     var pdtd=document.createElement('td');pdtd.className='tdd';prdTr.appendChild(pdtd);
 
     if(p.tipo==='solvente'){
       var denTr=tbl._tbody.insertRow();denTr.className='staff-r';denTr.dataset.par=par;denTr.dataset.sg='eq';
-      denTr.style.display=(p.ex&&p._sg['eq']!==false)?'':'none';
+      denTr.style.display=(p._sg['eq']!==false)?'':'none';
       var denL=document.createElement('td');denL.className='tdl';denL.textContent='Fator Densidade (kg→lt)';denTr.appendChild(denL);
       MS.forEach(function(_,mi){
         var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');
@@ -1927,7 +1911,7 @@ function bComp(){
     resRows.forEach(function(row){
       var rtr=tbl._tbody.insertRow();rtr.className=row.cls;rtr.dataset.par=par;
       if(row.av){rtr.dataset.alwaysvis='1';}else{rtr.dataset.sg='res';}
-      rtr.style.display=(p.ex&&(row.av||p._sg['res']!==false))?'':'none';
+      rtr.style.display=(row.av||p._sg['res']!==false)?'':'none';
       var rtl=document.createElement('td');rtl.className='tdl';rtl.textContent=row.lbl;rtr.appendChild(rtl);
       MS.forEach(function(_,mi){
         var c=calcProduct(p,mi);var val=row.fn(c);
@@ -2644,7 +2628,7 @@ function createIng(pi){
   scheduleSave();
   // Expandir o produto e o sub-grupo correto após rebuild
   setTimeout(function(){
-    if(!p.ex){p.ex=true;}
+    p._open=true;
     var sgKey=emb?'emb':'ing';
     if(p._sg[sgKey]===false)p._sg[sgKey]=true;
     bComp();
