@@ -452,7 +452,7 @@ tr.sg-tog-hdr:hover td.tdl{background:#DEDAD2!important;border-right:2px solid v
 //  1. Enter navega para o campo abaixo na mesma coluna (corrigido)
 //  2. Botão "→" no cabeçalho copia coluna para a próxima (com toast)
 // ═══════════════════════════════════════════════════════════════
-window.__ECCOFORTE_VERSION = 'v8-insertrow-fix';
+window.__ECCOFORTE_VERSION = 'v11-cargos-subtotal';
 console.log('🔥 ECCOFORTE carregado — versão:', window.__ECCOFORTE_VERSION);
 
 // ── FIREBASE ──────────────────────────────────────────────────
@@ -581,11 +581,11 @@ function p2(){var a=Array.from(arguments);while(a.length<12)a.push(null);return 
 function defaultData(){
   return {
     mo:[
-      {n:'Resp. Técnico', sal:p2(8200,8200,8200), enc:p2(0.70), va:p2(1800)},
-      {n:'Operador',      sal:p2(7200,7200,7200), enc:p2(0.70), va:p2(1800)},
-      {n:'Ajudante 1',   sal:p2(3600,3600,3600), enc:p2(0.70), va:p2(1800)},
-      {n:'Ajudante 2',   sal:p2(3600,3600,3600), enc:p2(0.70), va:p2(1800)},
-      {n:'Ajudante 3',   sal:p2(3600,3600,3600), enc:p2(0.70), va:p2(1800)},
+      {n:'Resp. Técnico', sal:p2(8200,8200,8200), adic:p2(0.30), enc:p2(0.70), va:p2(1800), vr:n12(), vt:n12(), outros:n12()},
+      {n:'Operador',      sal:p2(7200,7200,7200), adic:p2(0.30), enc:p2(0.70), va:p2(1800), vr:n12(), vt:n12(), outros:n12()},
+      {n:'Ajudante 1',   sal:p2(3600,3600,3600), adic:p2(0.30), enc:p2(0.70), va:p2(1800), vr:n12(), vt:n12(), outros:n12()},
+      {n:'Ajudante 2',   sal:p2(3600,3600,3600), adic:p2(0.30), enc:p2(0.70), va:p2(1800), vr:n12(), vt:n12(), outros:n12()},
+      {n:'Ajudante 3',   sal:p2(3600,3600,3600), adic:p2(0.30), enc:p2(0.70), va:p2(1800), vr:n12(), vt:n12(), outros:n12()},
     ],
     adm:[
       {n:'Locação Galpão',u:'',v:p2(10000,10000,10000)},
@@ -773,10 +773,16 @@ function loadFromFirestore(cb){
     if(doc.exists){
       var d=doc.data();
       try{if(d.mo){DATA.mo=JSON.parse(d.mo);
-        // migrate old {n,u,v} to new {n,sal,enc,va}
+        // migrate old {n,u,v} to new {n,sal,adic,enc,va,vr,vt,outros}
         DATA.mo.forEach(function(m){
           if(!m.sal&&m.v){m.sal=m.v;m.enc=p2(0.70);m.va=n12();}
           if(!Array.isArray(m.enc)){m.enc=p2(m.enc||0.70);}
+          // Adicional %: para dados antigos sem o campo, assume 30% (default)
+          if(!Array.isArray(m.adic)){m.adic=p2(FAB_ADIC_DEFAULT);}
+          if(!m.va)     m.va    =n12();
+          if(!m.vr)     m.vr    =n12();
+          if(!m.vt)     m.vt    =n12();
+          if(!m.outros) m.outros=n12();
         });
       }}catch(e){}
       try{if(d.adm)  DATA.adm  =JSON.parse(d.adm);}catch(e){}
@@ -1177,26 +1183,66 @@ function toggleGrp(id){
 
 // ── SIMPLE GRID ───────────────────────────────────────────────
 // ── FÁBRICA: CARGOS E SALÁRIOS ────────────────────────────────
+// Default do Adicional (periculosidade/insalubridade): 30%
+// Editável por função/mês; cargos que não recebem adicional ficam com 0%.
+var FAB_ADIC_DEFAULT = 0.30;
+
 function fabMoCalcFunc(mo, mi){
-  if(!mo.sal) return {sal:0,enc:0,va:0,total:lkv(mo.v||[],mi)||0};
+  if(!mo) return {sal:0,adicRate:0,adic:0,encRate:0.70,enc:0,valor:0,va:0,vr:0,vt:0,outros:0,total:0};
+  // Compatibilidade com formato legado {n,u,v}
+  if(!mo.sal){
+    return {sal:0,adicRate:0,adic:0,encRate:0.70,enc:0,valor:0,va:0,vr:0,vt:0,outros:0,total:lkv(mo.v||[],mi)||0};
+  }
   var sal=lkv(mo.sal,mi);
+  // adic pode não existir em dados antigos → assume default 30%
+  var adicRate=Array.isArray(mo.adic)?lkv(mo.adic,mi):FAB_ADIC_DEFAULT;
+  if(adicRate===null||adicRate===undefined||isNaN(adicRate)) adicRate=FAB_ADIC_DEFAULT;
+  var adic=sal*adicRate;
   var encRate=Array.isArray(mo.enc)?lkv(mo.enc,mi):(mo.enc||0.70);
-  var va=lkv(mo.va||[],mi);
-  return {sal:sal, enc:sal*encRate, encRate:encRate, va:va, total:sal+sal*encRate+va};
+  var enc=(sal+adic)*encRate;
+  var valor=sal+adic+enc; // subtotal "Valor" (apenas referência)
+  var va    =lkv(mo.va    ||[],mi);
+  var vr    =lkv(mo.vr    ||[],mi);
+  var vt    =lkv(mo.vt    ||[],mi);
+  var outros=lkv(mo.outros||[],mi);
+  var total =sal+adic+enc+va+vr+vt+outros;
+  return {sal:sal,adicRate:adicRate,adic:adic,encRate:encRate,enc:enc,valor:valor,va:va,vr:vr,vt:vt,outros:outros,total:total};
 }
 
 function bFabricaCargos(){
   var sec=document.getElementById('mo');sec.innerHTML='';
-  mkSecHead(sec,'Cargos e Salários','Salário · Encargos (editável) · VA → Total por função',null);
+  mkSecHead(sec,'Cargos e Salários','Sal. Base · Adicional (editável) · Encargos (editável) · VA · VR · VT · Outros → Total por função',null);
   var body=document.createElement('div');body.className='sb';
   var gw=document.createElement('div');gw.className='gw';gw.style.maxHeight='500px';
   var tbl=document.createElement('table');mkThead(tbl);
 
+  // ── MIGRAÇÃO DE SCHEMA: garantir todos os campos novos ──
+  DATA.mo.forEach(function(f){
+    if(!Array.isArray(f.enc))   f.enc   =p2(f.enc||0.70);
+    if(!f.sal){f.sal=f.v||n12();}
+    // Adicional: se não existe, cria array com 30% no primeiro mês (default)
+    if(!Array.isArray(f.adic))  f.adic  =p2(FAB_ADIC_DEFAULT);
+    if(!f.va)     f.va    =n12();
+    if(!f.vr)     f.vr    =n12();
+    if(!f.vt)     f.vt    =n12();
+    if(!f.outros) f.outros=n12();
+  });
+
+  // ── LINHA "TOTAL GERAL" (cabeçalho-resumo do grupo) ──
+  var totTr=tbl._tbody.insertRow();totTr.className='tr';
+  var totL=document.createElement('td');totL.className='tdl';totL.textContent='Total Geral';totTr.appendChild(totL);
+  MS.forEach(function(_,mi){
+    var td=document.createElement('td');
+    var inp=document.createElement('input');inp.type='text';inp.className='ci';inp.readOnly=true;
+    inp.id='fabmo-grandtot-'+mi;
+    inp.value='—';
+    td.appendChild(inp);totTr.appendChild(td);
+  });
+  totTr.appendChild(document.createElement('td')).className='tdd';
+
   DATA.mo.forEach(function(f,fi){
     var par='fabmo'+fi;
     if(f._sg===undefined)f._sg=true;
-    if(!Array.isArray(f.enc)){f.enc=p2(f.enc||0.70);}
-    if(!f.sal){f.sal=f.v||n12();f.va=n12();}
 
     // Header: função + total
     var htr=tbl._tbody.insertRow();htr.className='ph';
@@ -1218,13 +1264,44 @@ function bFabricaCargos(){
     };})(fi);
     hdd.appendChild(hdb);htr.appendChild(hdd);
 
-    // Sub: Salário
+    // Sub: Salário Base
     var salTr=tbl._tbody.insertRow();salTr.className='ir';salTr.dataset.par=par;salTr.style.display=f._sg?'':'none';
-    var salL=document.createElement('td');salL.className='tdl';salL.textContent='Salário';salTr.appendChild(salL);
+    var salL=document.createElement('td');salL.className='tdl';salL.textContent='Salário Base';salTr.appendChild(salL);
     MS.forEach(function(_,mi){salTr.appendChild(mkCell(f.sal,mi,true,2,function(){refreshFabMo(fi);}));});
     salTr.appendChild(document.createElement('td')).className='tdd';
 
-    // Sub: Encargos % (editável)
+    // Sub: Adicional % (editável) — default 30%, pode ser 0% para quem não recebe
+    var adTr=tbl._tbody.insertRow();adTr.className='ir';adTr.dataset.par=par;adTr.style.display=f._sg?'':'none';
+    var adL=document.createElement('td');adL.className='tdl';adL.textContent='Adicional %';adTr.appendChild(adL);
+    MS.forEach(function(_,mi){
+      var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');else if(cellVal(f.adic[mi])!==null)td.classList.add('hv');
+      var inp=document.createElement('input');inp.type='text';inp.className='ci';
+      var rate=lkv(f.adic,mi);inp.value=(rate!==null&&rate!==undefined&&!isNaN(rate))?(rate*100)+'%':'';inp.placeholder='30%';
+      inp.addEventListener('focus',function(){
+        var fml=cellFormula(f.adic[mi]);
+        if(fml){inp.value=fml;}else{var r=lkv(f.adic,mi);inp.value=(r!==null&&r!==undefined&&!isNaN(r))?(r*100)+'':'';}
+      });
+      inp.addEventListener('blur',function(){
+        var text=inp.value.trim();
+        if(!text){f.adic[mi]=null;refreshFabMo(fi);scheduleSave();return;}
+        var result=isFormula(text)?evalFormula(text):parseFloat(text.replace('%','').replace(',','.'));
+        if(!isNaN(result)){var r2=result>1?result/100:result;cellSet(f.adic,mi,r2,isFormula(text)?text:null);inp.value=(r2*100)+'%';}
+        refreshFabMo(fi);scheduleSave();
+      });
+      td.appendChild(inp);adTr.appendChild(td);
+    });
+    adTr.appendChild(document.createElement('td')).className='tdd';
+
+    // Sub: Adicional R$ (read-only) = Sal * Adicional%
+    var adRTr=tbl._tbody.insertRow();adRTr.className='ir';adRTr.dataset.par=par;adRTr.style.display=f._sg?'':'none';
+    var adRL=document.createElement('td');adRL.className='tdl';adRL.style.paddingLeft='28px';adRL.innerHTML='<span style="color:var(--mu)">↳</span> Valor R$';adRTr.appendChild(adRL);
+    MS.forEach(function(_,mi){
+      var v=fabMoCalcFunc(f,mi).adic;
+      adRTr.appendChild(mkRO((v===null||v===undefined||isNaN(v))?null:v,true,2,'ro','fabmo-ad-'+fi+'-'+mi));
+    });
+    adRTr.appendChild(document.createElement('td')).className='tdd';
+
+    // Sub: Encargos % (editável) — incide sobre (Sal + Adic)
     var encTr=tbl._tbody.insertRow();encTr.className='ir';encTr.dataset.par=par;encTr.style.display=f._sg?'':'none';
     var encL=document.createElement('td');encL.className='tdl';encL.textContent='Encargos %';encTr.appendChild(encL);
     MS.forEach(function(_,mi){
@@ -1245,17 +1322,49 @@ function bFabricaCargos(){
     });
     encTr.appendChild(document.createElement('td')).className='tdd';
 
-    // Sub: Encargos R$ (read-only)
+    // Sub: Encargos R$ (read-only) = (Sal + Adic) * Encargos%
     var encRTr=tbl._tbody.insertRow();encRTr.className='ir';encRTr.dataset.par=par;encRTr.style.display=f._sg?'':'none';
     var encRL=document.createElement('td');encRL.className='tdl';encRL.style.paddingLeft='28px';encRL.innerHTML='<span style="color:var(--mu)">↳</span> Valor R$';encRTr.appendChild(encRL);
-    MS.forEach(function(_,mi){encRTr.appendChild(mkRO(fabMoCalcFunc(f,mi).enc||null,true,2,'ro','fabmo-enc-'+fi+'-'+mi));});
+    MS.forEach(function(_,mi){
+      var v=fabMoCalcFunc(f,mi).enc;
+      encRTr.appendChild(mkRO((v===null||v===undefined||isNaN(v))?null:v,true,2,'ro','fabmo-enc-'+fi+'-'+mi));
+    });
     encRTr.appendChild(document.createElement('td')).className='tdd';
+
+    // Sub: SUBTOTAL (Salário + Adicional R$ + Encargos R$) — read-only destacado
+    var subTr=tbl._tbody.insertRow();subTr.className='res-sub';subTr.dataset.par=par;subTr.style.display=f._sg?'':'none';
+    var subL=document.createElement('td');subL.className='tdl';subL.textContent='Subtotal';subTr.appendChild(subL);
+    MS.forEach(function(_,mi){
+      var c=fabMoCalcFunc(f,mi);
+      var sub=c.sal+c.adic+c.enc;
+      var td=mkRO(sub>0?sub:null,true,2,'ro-val','fabmo-sub-'+fi+'-'+mi);
+      subTr.appendChild(td);
+    });
+    subTr.appendChild(document.createElement('td')).className='tdd';
 
     // Sub: VA
     var vaTr=tbl._tbody.insertRow();vaTr.className='ir';vaTr.dataset.par=par;vaTr.style.display=f._sg?'':'none';
     var vaL=document.createElement('td');vaL.className='tdl';vaL.textContent='VA';vaTr.appendChild(vaL);
     MS.forEach(function(_,mi){vaTr.appendChild(mkCell(f.va,mi,true,2,function(){refreshFabMo(fi);}));});
     vaTr.appendChild(document.createElement('td')).className='tdd';
+
+    // Sub: VR
+    var vrTr=tbl._tbody.insertRow();vrTr.className='ir';vrTr.dataset.par=par;vrTr.style.display=f._sg?'':'none';
+    var vrL=document.createElement('td');vrL.className='tdl';vrL.textContent='VR';vrTr.appendChild(vrL);
+    MS.forEach(function(_,mi){vrTr.appendChild(mkCell(f.vr,mi,true,2,function(){refreshFabMo(fi);}));});
+    vrTr.appendChild(document.createElement('td')).className='tdd';
+
+    // Sub: VT
+    var vtTr=tbl._tbody.insertRow();vtTr.className='ir';vtTr.dataset.par=par;vtTr.style.display=f._sg?'':'none';
+    var vtL=document.createElement('td');vtL.className='tdl';vtL.textContent='VT';vtTr.appendChild(vtL);
+    MS.forEach(function(_,mi){vtTr.appendChild(mkCell(f.vt,mi,true,2,function(){refreshFabMo(fi);}));});
+    vtTr.appendChild(document.createElement('td')).className='tdd';
+
+    // Sub: Outros
+    var outTr=tbl._tbody.insertRow();outTr.className='ir';outTr.dataset.par=par;outTr.style.display=f._sg?'':'none';
+    var outL=document.createElement('td');outL.className='tdl';outL.textContent='Outros';outTr.appendChild(outL);
+    MS.forEach(function(_,mi){outTr.appendChild(mkCell(f.outros,mi,true,2,function(){refreshFabMo(fi);}));});
+    outTr.appendChild(document.createElement('td')).className='tdd';
   });
 
   gw.appendChild(tbl);body.appendChild(gw);
@@ -1264,6 +1373,19 @@ function bFabricaCargos(){
   ab.onclick=function(){openFabFuncModal();};
   aa.appendChild(ab);body.appendChild(aa);
   sec.appendChild(body);
+
+  // Atualizar a linha "Total Geral" depois de montar tudo
+  refreshFabMoGrandTotal();
+}
+
+// Atualiza a linha de Total Geral (somatório de todas as funções por mês)
+function refreshFabMoGrandTotal(){
+  MS.forEach(function(_,mi){
+    var sum=0;
+    DATA.mo.forEach(function(f){sum+=fabMoTotal(f,mi);});
+    var el=document.getElementById('fabmo-grandtot-'+mi);
+    if(el)el.value=sum>0?fR(sum,2):'—';
+  });
 }
 
 function refreshFabMo(fi){
@@ -1271,8 +1393,16 @@ function refreshFabMo(fi){
   MS.forEach(function(_,mi){
     var c=fabMoCalcFunc(f,mi);
     var tEl=document.getElementById('fabmo-t-'+fi+'-'+mi);if(tEl)tEl.value=c.total>0?fR(c.total):'—';
-    var eEl=document.getElementById('fabmo-enc-'+fi+'-'+mi);if(eEl)eEl.value=c.enc>0?fR(c.enc):'—';
+    var aEl=document.getElementById('fabmo-ad-'+fi+'-'+mi);
+    if(aEl)aEl.value=(c.adic===null||c.adic===undefined||isNaN(c.adic))?'—':fR(c.adic);
+    var eEl=document.getElementById('fabmo-enc-'+fi+'-'+mi);
+    if(eEl)eEl.value=(c.enc===null||c.enc===undefined||isNaN(c.enc))?'—':fR(c.enc);
+    var sEl=document.getElementById('fabmo-sub-'+fi+'-'+mi);
+    var sub=c.sal+c.adic+c.enc;
+    if(sEl)sEl.value=sub>0?fR(sub):'—';
   });
+  // refresh linha Total Geral
+  refreshFabMoGrandTotal();
   // refresh comp totals
   COMP.forEach(function(_,pi){refreshResult(pi);});
 }
@@ -1282,10 +1412,13 @@ function openFabFuncModal(){
     '<div class="modal"><div class="modal-head">Nova Função</div><div class="modal-body">'+
     '<div class="mf"><label>Nome</label><input type="text" id="fabmo-nome" placeholder="Ex: Auxiliar"></div>'+
     '<div class="mf-row">'+
-    '<div class="mf"><label>Salário (R$)</label><input type="number" id="fabmo-sal" placeholder="3000"></div>'+
-    '<div class="mf"><label>Encargos %</label><input type="number" id="fabmo-enc" placeholder="70" value="70"></div>'+
+    '<div class="mf"><label>Salário Base (R$)</label><input type="number" id="fabmo-sal" placeholder="3000"></div>'+
+    '<div class="mf"><label>Adicional %</label><input type="number" id="fabmo-adic" placeholder="30" value="30" step="1"></div>'+
     '</div>'+
+    '<div class="mf-row">'+
+    '<div class="mf"><label>Encargos %</label><input type="number" id="fabmo-enc" placeholder="70" value="70"></div>'+
     '<div class="mf"><label>VA (R$)</label><input type="number" id="fabmo-va" placeholder="1800" value="1800"></div>'+
+    '</div>'+
     '</div><div class="modal-foot">'+
     '<button class="btn-cancel" onclick="closeFabFuncModal()">Cancelar</button>'+
     '<button class="btn-create" onclick="createFabFunc()">Criar</button>'+
@@ -1297,10 +1430,14 @@ function closeFabFuncModal(){var m=document.getElementById('fabmo-modal');if(m)m
 function createFabFunc(){
   var nome=document.getElementById('fabmo-nome').value.trim();if(!nome){alert('Digite o nome.');return;}
   var sal=parseFloat(document.getElementById('fabmo-sal').value)||0;
+  var adic=(parseFloat(document.getElementById('fabmo-adic').value)||0)/100;
   var enc=(parseFloat(document.getElementById('fabmo-enc').value)||70)/100;
   var va=parseFloat(document.getElementById('fabmo-va').value)||0;
-  var salArr=n12();salArr[0]=sal;var encArr=new Array(12).fill(null);encArr[0]=enc;var vaArr=n12();vaArr[0]=va;
-  DATA.mo.push({n:nome,sal:salArr,enc:encArr,va:vaArr});
+  var salArr=n12();salArr[0]=sal;
+  var adicArr=new Array(12).fill(null);adicArr[0]=adic;
+  var encArr=new Array(12).fill(null);encArr[0]=enc;
+  var vaArr=n12();vaArr[0]=va;
+  DATA.mo.push({n:nome,sal:salArr,adic:adicArr,enc:encArr,va:vaArr,vr:n12(),vt:n12(),outros:n12()});
   closeFabFuncModal();bFabricaCargos();scheduleSave();
 }
 
@@ -1377,9 +1514,16 @@ function fabMoTotal(mo, mi){
   if(!mo) return 0;
   if(mo.sal){
     var sal=lkv(mo.sal,mi);
+    var adicRate=Array.isArray(mo.adic)?lkv(mo.adic,mi):FAB_ADIC_DEFAULT;
+    if(adicRate===null||adicRate===undefined||isNaN(adicRate)) adicRate=FAB_ADIC_DEFAULT;
+    var adic=sal*adicRate;
     var encRate=Array.isArray(mo.enc)?lkv(mo.enc,mi):(mo.enc||0.70);
-    var va=lkv(mo.va||[],mi);
-    return sal + sal*encRate + va;
+    var enc=(sal+adic)*encRate;
+    var va    =lkv(mo.va    ||[],mi);
+    var vr    =lkv(mo.vr    ||[],mi);
+    var vt    =lkv(mo.vt    ||[],mi);
+    var outros=lkv(mo.outros||[],mi);
+    return sal+adic+enc+va+vr+vt+outros;
   }
   // legacy format
   return lkv(mo.v||[],mi);
