@@ -147,11 +147,38 @@ td.has-f::after{content:'';position:absolute;top:2px;right:2px;width:0;height:0;
 .db{opacity:0;cursor:pointer;background:none;border:none;border-radius:2px;color:#A03030;font-size:13px;line-height:1;padding:2px 5px}
 tr:hover .db{opacity:1}.db:hover{background:rgba(160,30,30,.1)}
 
+/* PRODUCT TITLE ROW — nome completo acima das linhas do produto */
+tr.ph-title-row td{
+  background:#1E1C18!important;
+  padding:0;border-bottom:2px solid var(--ambm);border-top:6px solid var(--bg);
+  text-align:left!important;
+}
+.ph-title-wrap{
+  display:flex;align-items:center;gap:8px;padding:5px 14px;min-width:0;
+}
+.ph-title-name{
+  font-family:var(--head);font-weight:800;font-size:13px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ambm);white-space:nowrap;flex:1;
+}
+
 /* PRODUCT ROWS */
-tr.ph td{background:var(--sf2);height:29px;border-bottom:1px solid var(--bd2)}tr.ph td.tdl{max-width:var(--lbl);overflow:hidden}
+tr.ph td{background:#E0DDD5;height:32px;border-bottom:2px solid var(--bd2);border-top:3px solid var(--bg)}tr.ph td.tdl{max-width:var(--lbl);overflow:hidden}
+tr.ph td:not(.tdl){font-weight:700;color:var(--amb)}
 .ph-lbl{display:flex;align-items:center;height:29px;gap:4px;overflow:hidden;min-width:0}
 .ptog{background:none;border:none;cursor:pointer;color:var(--ambm);font-size:10px;padding:2px 4px;line-height:1;flex-shrink:0}
-.ph-name{font-family:var(--head);font-weight:800;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--amb);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
+.ph-name{font-family:var(--head);font-weight:800;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--amb);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;position:relative;cursor:default;}
+/* Ao hover na célula label do cabeçalho do produto, expande o nome sobre as colunas */
+tr.ph td.tdl:hover .ph-name{
+  overflow:visible;white-space:nowrap;
+}
+tr.ph td.tdl:hover .ph-name::after{
+  content:attr(data-fullname);
+  position:absolute;left:0;top:50%;transform:translateY(-50%);
+  background:var(--sf2);border:1px solid var(--abdr);border-radius:3px;
+  color:var(--amb);font-size:12px;font-weight:800;letter-spacing:.05em;
+  padding:3px 10px;white-space:nowrap;z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);pointer-events:none;
+}
 .ph-type{font-family:var(--head);font-size:10px;color:var(--mu);background:var(--sf3);border:1px solid var(--bd);border-radius:2px;padding:1px 6px;margin-left:4px}
 tr.sg-hdr td{background:#EEECEA;height:24px;border-bottom:1px solid var(--bd)}
 tr.sg-hdr td.tdl{background:#EEECEA;font-family:var(--head);font-weight:700;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--txs);padding-left:14px}
@@ -389,7 +416,7 @@ tr.ing-rs td.tdc.tdl{background:#FFF7CC!important}
     <div class="grp-head" onclick="toggleGrp('g-custos')">
       <span class="grp-tog cl" id="g-custos-tog">▼</span>
       <span class="grp-title">Custos Base</span>
-      <span class="grp-sub">Cargos e Salários · ADM</span>
+      <span class="grp-sub">Cargos e Salários · Predial</span>
     </div>
     <div class="grp-body">
       <div id="mo" class="sec"></div>
@@ -688,7 +715,7 @@ function defaultComp(){
        {n:'Dolomita # 325',      u:'KG',mid:4, fid:4, emb:false,v:p2(608,608)},
        {n:'Rheotix SP',          u:'KG',mid:15,fid:15,emb:false,v:p2(12,12)},
        {n:'Metanol',             u:'KG',mid:8, fid:8, emb:false,v:p2(10,10)},
-       {n:'Solvente LT',         u:'LT',mid:16,fid:16,emb:false,v:p2(90,90)},
+       {n:'Solvente',            u:'LT',mid:16,fid:16,emb:false,v:p2(90,90)},
        {n:'Balde',               u:'UN',mid:17,fid:17,emb:true, v:p2(37,37)},
      ]},
   ];
@@ -807,7 +834,21 @@ function loadFromFirestore(cb){
       try{if(d.mp)   DATA.mp   =JSON.parse(d.mp);}catch(e){}
       try{if(d.frete)DATA.frete=JSON.parse(d.frete);}catch(e){}
       try{if(d.pest) DATA.pest =JSON.parse(d.pest);}catch(e){}
-      try{if(d.comp) COMP      =JSON.parse(d.comp);}catch(e){}
+      try{if(d.comp){COMP=JSON.parse(d.comp);
+        // Migração: remove sufixo de unidade do nome dos ingredientes
+        // ex: 'Solvente LT' → 'Solvente', para casar com tabela MP
+        COMP.forEach(function(p){
+          if(!p.i) return;
+          p.i.forEach(function(ing){
+            if(ing.n && ing.u){
+              var suffix=' '+ing.u;
+              if(ing.n.slice(-suffix.length)===suffix){
+                ing.n=ing.n.slice(0,-suffix.length).trim();
+              }
+            }
+          });
+        });
+      }}catch(e){}
       try{if(d.mof)  MOF       =JSON.parse(d.mof);}catch(e){}
       try{if(d.qexec){var _qp=JSON.parse(d.qexec);
         if(Array.isArray(_qp)){
@@ -953,20 +994,59 @@ function showToast(msg){
 
 // ── CALC ──────────────────────────────────────────────────────
 // Valor R$ de um ingrediente em um mês = Qtd × (Preço MP + Frete)
+// Normaliza nome removendo sufixos de unidade para comparação tolerante
+function normName(n){
+  if(!n) return '';
+  return n.trim().replace(/\s+(KG|LT|UN|G|ML)$/i,'').toLowerCase();
+}
+
+// Busca MP e Frete pelo NOME do ingrediente (robusto a reordenação da tabela)
+// Fallback para mid/fid numérico se nome não encontrar (compatibilidade legada)
+function mpPriceByIng(ing, mi){
+  if(ing.n){
+    var norm=normName(ing.n);
+    // Busca exata primeiro
+    for(var i=0;i<DATA.mp.length;i++){
+      if(DATA.mp[i].n===ing.n) return lkv(DATA.mp[i].v,mi);
+    }
+    // Busca tolerante (ignora sufixo de unidade)
+    for(var i=0;i<DATA.mp.length;i++){
+      if(normName(DATA.mp[i].n)===norm) return lkv(DATA.mp[i].v,mi);
+    }
+  }
+  if(ing.mid>=0&&DATA.mp[ing.mid]) return lkv(DATA.mp[ing.mid].v,mi);
+  return 0;
+}
+function frPriceByIng(ing, mi){
+  if(ing.n){
+    var norm=normName(ing.n);
+    // Busca exata primeiro
+    for(var i=0;i<DATA.frete.length;i++){
+      if(DATA.frete[i].n===ing.n) return lkv(DATA.frete[i].v,mi);
+    }
+    // Busca tolerante (ignora sufixo de unidade)
+    for(var i=0;i<DATA.frete.length;i++){
+      if(normName(DATA.frete[i].n)===norm) return lkv(DATA.frete[i].v,mi);
+    }
+  }
+  if(ing.fid>=0&&DATA.frete[ing.fid]) return lkv(DATA.frete[ing.fid].v,mi);
+  return 0;
+}
+
 function ingValueR(ing, mi){
   if(!ing) return 0;
   var qty=lkv(ing.v,mi);
   if(!qty&&qty!==0) return 0;
-  var mpP=(ing.mid>=0&&DATA.mp[ing.mid])?lkv(DATA.mp[ing.mid].v,mi):0;
-  var frP=(ing.fid>=0&&DATA.frete[ing.fid])?lkv(DATA.frete[ing.fid].v,mi):0;
+  var mpP=mpPriceByIng(ing,mi);
+  var frP=frPriceByIng(ing,mi);
   return qty*(mpP+frP);
 }
 function calcProduct(p,mi){
   var totalVol=0,totalCostR=0;
   p.i.forEach(function(ing){
     var qty=lkv(ing.v,mi);if(!qty&&qty!==0)return;
-    var mpP=(ing.mid>=0&&DATA.mp[ing.mid])?lkv(DATA.mp[ing.mid].v,mi):0;
-    var frP=(ing.fid>=0&&DATA.frete[ing.fid])?lkv(DATA.frete[ing.fid].v,mi):0;
+    var mpP=mpPriceByIng(ing,mi);
+    var frP=frPriceByIng(ing,mi);
     if(!ing.emb)totalVol+=qty;
     totalCostR+=qty*(mpP+frP);
   });
@@ -975,19 +1055,22 @@ function calcProduct(p,mi){
   var prod=lkv(p.prod,mi);
   var copUnit=prod>0?cop/prod:0;
   var mpUnit=totalVol>0?totalCostR/totalVol:0;
-  var final=mpUnit+copUnit;
+  // Custo Predial = Total ADM / Produtividade LT/mês
+  var admTotal=DATA.adm.reduce(function(s,r){return s+(r.v?lkv(r.v,mi):0);},0);
+  var predialUnit=prod>0?admTotal/prod:0;
+  var final=mpUnit+copUnit+predialUnit;
   var fac=unit2Vol(p.unit2,p.vol2);
-  return {vol:totalVol,costR:totalCostR,cop:cop,mpUnit:mpUnit,copUnit:copUnit,final:final,final2:fac?final*fac:null};
+  return {vol:totalVol,costR:totalCostR,cop:cop,mpUnit:mpUnit,copUnit:copUnit,predialUnit:predialUnit,final:final,final2:fac?final*fac:null};
 }
 function refreshResult(pi){
   var p=COMP[pi];if(!p)return;
   var rows=[
-    {fn:function(c){return c.vol;},  isR:false,dec:2},
-    {fn:function(c){return c.mpUnit;},isR:true,dec:4},
-    {fn:function(c){return c.cop;},  isR:true,dec:2},
-    {fn:function(c){return c.copUnit;},isR:true,dec:4},
-    {fn:function(c){return c.final;},isR:true,dec:4},
-    {fn:function(c){return c.final2;},isR:true,dec:4},
+    {fn:function(c){return c.vol;},        isR:false,dec:2},
+    {fn:function(c){return c.mpUnit;},     isR:true, dec:4},
+    {fn:function(c){return c.predialUnit;},isR:true, dec:4},
+    {fn:function(c){return c.copUnit;},    isR:true, dec:4},
+    {fn:function(c){return c.final;},      isR:true, dec:4},
+    {fn:function(c){return c.final2;},     isR:true, dec:4},
   ];
   rows.forEach(function(row,ri){
     MS.forEach(function(_,mi){
@@ -1291,7 +1374,7 @@ function bFabricaCargos(){
     var par='fabmo'+fi;
     if(f._sg===undefined)f._sg=true;
 
-    // Header: função + total
+    // Header: função + total por mês
     var htr=tbl._tbody.insertRow();htr.className='ph';
     var hl=document.createElement('td');hl.className='tdl';
     var wrap=document.createElement('div');wrap.className='ph-lbl';
@@ -1523,6 +1606,13 @@ function bSimple(sid,key,title,sub,badgeId,hasTot,isR){
   var body=document.createElement('div');body.className='sb';
   var gw=document.createElement('div');gw.className='gw';
   var tbl=document.createElement('table');mkThead(tbl);
+  // Para ADM: linha TOTAL GERAL no topo, antes dos itens
+  if(hasTot && key==='adm'){
+    var totTr=tbl._tbody.insertRow();totTr.className='tr';
+    var totL=document.createElement('td');totL.className='tdl';totL.textContent='Total Geral';totTr.appendChild(totL);
+    MS.forEach(function(_,mi){var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');td.id=key+'-t'+mi;totTr.appendChild(td);});
+    totTr.appendChild(document.createElement('td')).className='tdd';
+  }
   DATA[key].forEach(function(row,ri){
     var tr=tbl._tbody.insertRow();
     var tl=document.createElement('td');tl.className='tdl';
@@ -1537,9 +1627,12 @@ function bSimple(sid,key,title,sub,badgeId,hasTot,isR){
     tr.appendChild(tl);
     MS.forEach(function(_,mi){tr.appendChild(mkCell(row.v,mi,isR,2,function(){
       refreshTots();
-      // Se a alteração foi em MP ou Frete, recalcular composição (linhas R$ + resultado final)
+      // Se a alteração foi em MP, Frete ou ADM, recalcular composição
       if(key==='mp'||key==='frete'){
         refreshAllCompRs();
+        COMP.forEach(function(_,pi){refreshResult(pi);});
+      }
+      if(key==='adm'){
         COMP.forEach(function(_,pi){refreshResult(pi);});
       }
     }));});
@@ -1548,7 +1641,8 @@ function bSimple(sid,key,title,sub,badgeId,hasTot,isR){
     b.onclick=function(){DATA[key].splice(ri,1);bSimple(sid,key,title,sub,badgeId,hasTot,isR);refreshTots();scheduleSave();};
     td.appendChild(b);tr.appendChild(td);
   });
-  if(hasTot){
+  // Para ADM o total já foi inserido no topo; para demais seções insere no final
+  if(hasTot && key!=='adm'){
     var tr=tbl._tbody.insertRow();tr.className='tr';
     var tl=document.createElement('td');tl.className='tdl';tl.textContent='TOTAL';tr.appendChild(tl);
     MS.forEach(function(_,mi){var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');td.id=key+'-t'+mi;tr.appendChild(td);});
@@ -1597,13 +1691,25 @@ function bComp(){
     if(p._sg.ingR===undefined)p._sg.ingR=false;
     if(p._sg.embR===undefined)p._sg.embR=false;
 
-    // ── Cabeçalho do produto ──
-    var htr=tbl._tbody.insertRow();htr.className='ph';
-    var hl=document.createElement('td');hl.className='tdl';
-    var wrap=document.createElement('div');wrap.className='ph-lbl';
-    var tog=document.createElement('button');tog.className='ptog';tog.textContent=p.ex?'▼':'▶';
-    tog.onclick=function(){
-      p.ex=!p.ex;tog.textContent=p.ex?'▼':'▶';
+    // ── Título completo do produto (linha separada, full-width) ──
+    var titleTr=tbl._tbody.insertRow();titleTr.className='ph-title-row';
+    var titleTd=document.createElement('td');titleTd.colSpan=14;
+    var titleWrap=document.createElement('div');titleWrap.className='ph-title-wrap';
+    var titleTog=document.createElement('button');titleTog.className='ptog';titleTog.textContent=p.ex?'▼':'▶';
+    var titleName=document.createElement('span');titleName.className='ph-title-name';titleName.textContent=p.n;
+    var titleType=document.createElement('span');titleType.className='ph-type';titleType.textContent=p.tipo==='extrudado'?'🧱 Extrudado':'🪣 Solvente';
+    var titleUnit=document.createElement('span');titleUnit.className='utag';titleUnit.style.marginLeft='6px';titleUnit.textContent='R$/'+p.u;
+    var titleDel=document.createElement('button');titleDel.className='db';titleDel.style.cssText='opacity:1;margin-left:auto;flex-shrink:0';titleDel.textContent='✕';
+    titleDel.onclick=function(){COMP.splice(pi,1);bComp();scheduleSave();};
+    var titleSpacer=document.createElement('span');titleSpacer.style.flex='1';
+    titleWrap.appendChild(titleTog);titleWrap.appendChild(titleName);titleWrap.appendChild(titleType);titleWrap.appendChild(titleSpacer);titleWrap.appendChild(titleDel);
+    titleTd.appendChild(titleWrap);titleTr.appendChild(titleTd);
+
+    // Toggle pelo título
+    titleTog.onclick=function(){
+      p.ex=!p.ex;
+      titleTog.textContent=p.ex?'▼':'▶';
+      tog.textContent=p.ex?'▼':'▶';
       tbl.querySelectorAll('[data-par="'+par+'"]').forEach(function(r){
         if(!p.ex){r.style.display='none';return;}
         if(r.dataset.alwaysvis==='1'){r.style.display='';return;}
@@ -1611,20 +1717,33 @@ function bComp(){
         r.style.display=(sg&&p._sg[sg]===false)?'none':'';
       });
     };
-    var nm=document.createElement('span');nm.className='ph-name';nm.textContent=p.n;
+
+    // ── Cabeçalho do produto (linha com valores) ──
+    var htr=tbl._tbody.insertRow();htr.className='ph';
+    var hl=document.createElement('td');hl.className='tdl';
+    var wrap=document.createElement('div');wrap.className='ph-lbl';
+    var tog=document.createElement('button');tog.className='ptog';tog.textContent=p.ex?'▼':'▶';
+    tog.onclick=function(){
+      p.ex=!p.ex;tog.textContent=p.ex?'▼':'▶';
+      titleTog.textContent=p.ex?'▼':'▶';
+      tbl.querySelectorAll('[data-par="'+par+'"]').forEach(function(r){
+        if(!p.ex){r.style.display='none';return;}
+        if(r.dataset.alwaysvis==='1'){r.style.display='';return;}
+        var sg=r.dataset.sg;
+        r.style.display=(sg&&p._sg[sg]===false)?'none':'';
+      });
+    };
+    var nm=document.createElement('span');nm.className='ph-name';nm.textContent='Custo Final / '+p.u;
     var unTag=document.createElement('span');unTag.className='utag';unTag.textContent='R$/'+p.u;
-    nm.appendChild(document.createTextNode(' '));nm.appendChild(unTag);
-    var tp=document.createElement('span');tp.className='ph-type';tp.textContent=p.tipo==='extrudado'?'🧱 Extrudado':'🪣 Solvente';
-    wrap.appendChild(tog);wrap.appendChild(nm);wrap.appendChild(tp);
+    var tp=document.createElement('span');// vazio — tipo já está no título
+    wrap.appendChild(tog);wrap.appendChild(nm);
     hl.appendChild(wrap);htr.appendChild(hl);
     // Header: Produto Final / Lt (calculado)
     MS.forEach(function(_,mi){
       var c=calcProduct(p,mi);
       htr.appendChild(mkRO(c.final>0?c.final:null,true,4,'ro-val','comp-hd-'+pi+'-'+mi));
     });
-    var hdl=document.createElement('td');hdl.className='tdd';
-    var hdb=document.createElement('button');hdb.className='db';hdb.textContent='✕';
-    hdb.onclick=function(){COMP.splice(pi,1);bComp();scheduleSave();};hdl.appendChild(hdb);htr.appendChild(hdl);
+    var hdl=document.createElement('td');hdl.className='tdd';htr.appendChild(hdl);
 
     // ── Helper: cria linha de sub-grupo toggle ──
     // rsKey opcional: se passado, adiciona botão "R$" que mostra/oculta linhas de valor R$ dos itens
@@ -1739,7 +1858,7 @@ function bComp(){
     var aitd=document.createElement('td');aitd.colSpan=14;aitd.style.padding='4px 14px';
     var aib=document.createElement('button');aib.className='ab';aib.style.cssText='font-size:10px;padding:3px 10px';
     aib.innerHTML='＋ Ingrediente';
-    aib.onclick=function(){p.i.push({n:'Novo',u:'KG',mid:-1,fid:-1,emb:false,v:n12()});bComp();scheduleSave();};
+    aib.onclick=(function(prod,pidx){return function(){openIngModal(prod,pidx);};})(p,pi);
     aitd.appendChild(aib);aitr.appendChild(aitd);
 
     // ─── SUB-GRUPO: EQUIPE OPERACIONAL ───
@@ -1798,11 +1917,11 @@ function bComp(){
     // ─── SUB-GRUPO: RESULTADO CALCULADO ───
     mkSgTogRow('Resultado Calculado','res','📊');
     var resRows=[
-      {lbl:'Volume lote ('+p.u+')',fn:function(c){return c.vol;},    isR:false,dec:2,cls:'res-sub',ri:0,av:false},
-      {lbl:'Custo MP / '+p.u,      fn:function(c){return c.mpUnit;}, isR:true, dec:4,cls:'res-sub',ri:1,av:false},
-      {lbl:'Custo MO total / mês', fn:function(c){return c.cop;},    isR:true, dec:2,cls:'res-sub',ri:2,av:false},
-      {lbl:'Custo MO / '+p.u,      fn:function(c){return c.copUnit;},isR:true, dec:4,cls:'res-sub',ri:3,av:false},
-      {lbl:'➤ Produto Final / '+p.u,fn:function(c){return c.final;}, isR:true, dec:4,cls:'res',    ri:4,av:true},
+      {lbl:'Volume lote ('+p.u+')',   fn:function(c){return c.vol;},         isR:false,dec:2,cls:'res-sub',ri:0,av:false},
+      {lbl:'Custo MP / '+p.u,         fn:function(c){return c.mpUnit;},      isR:true, dec:4,cls:'res-sub',ri:1,av:false},
+      {lbl:'Custo Predial / '+p.u,    fn:function(c){return c.predialUnit;}, isR:true, dec:4,cls:'res-sub',ri:2,av:false},
+      {lbl:'Custo MO / '+p.u,         fn:function(c){return c.copUnit;},     isR:true, dec:4,cls:'res-sub',ri:3,av:false},
+      {lbl:'➤ Produto Final / '+p.u,  fn:function(c){return c.final;},       isR:true, dec:4,cls:'res',    ri:4,av:true},
     ];
     if(p.unit2)resRows.push({lbl:'➤ Produto Final / '+unit2Label(p.unit2,p.vol2),fn:function(c){return c.final2;},isR:true,dec:4,cls:'res',ri:5,av:true});
     resRows.forEach(function(row){
@@ -2468,10 +2587,74 @@ function openMofMembroModal(equipe,cb){
 }
 function closeMofMbModal(){var m=document.getElementById('mof-mb-modal');if(m)m.remove();}
 
+// ── MODAL: NOVO INGREDIENTE ───────────────────────────────────
+function openIngModal(prod, pi){
+  var html='<div class="modal-bg open" id="ing-modal" onclick="if(event.target===this)closeIngModal()">'+
+    '<div class="modal"><div class="modal-head">Novo Ingrediente — '+prod.n+'</div><div class="modal-body">'+
+    '<div class="mf"><label>Matéria-Prima</label>'+
+    '<select id="ing-mp-sel" style="width:100%;background:var(--sf2);border:1px solid var(--bd2);border-radius:4px;padding:7px 10px;font-family:var(--mono);font-size:12px;color:var(--tx);outline:none">'+
+    '<option value="-1">— Nenhuma (digitar manualmente) —</option>';
+  DATA.mp.forEach(function(mp,idx){
+    html+='<option value="'+idx+'">'+mp.n+(mp.u?' · '+mp.u:'')+'</option>';
+  });
+  html+='</select></div>'+
+    '<div class="mf"><label>Nome (sobrescreve se selecionar MP acima)</label>'+
+    '<input type="text" id="ing-nome" placeholder="Ex: Resina Acrílica"></div>'+
+    '<div class="mf-row">'+
+    '<div class="mf"><label>Unidade</label>'+
+    '<select id="ing-unit"><option value="KG">KG</option><option value="LT">LT</option><option value="UN">UN</option></select></div>'+
+    '<div class="mf"><label>É embalagem?</label>'+
+    '<select id="ing-emb"><option value="0">Não (ingrediente)</option><option value="1">Sim (embalagem)</option></select></div>'+
+    '</div>'+
+    '</div><div class="modal-foot">'+
+    '<button class="btn-cancel" onclick="closeIngModal()">Cancelar</button>'+
+    '<button class="btn-create" onclick="createIng('+pi+')">Adicionar</button>'+
+    '</div></div></div>';
+  var d=document.createElement('div');d.innerHTML=html;document.body.appendChild(d.firstChild);
+  // Ao selecionar uma MP, preenche nome e unidade automaticamente
+  document.getElementById('ing-mp-sel').addEventListener('change',function(){
+    var idx=parseInt(this.value);
+    if(idx>=0&&DATA.mp[idx]){
+      document.getElementById('ing-nome').value=DATA.mp[idx].n;
+      var u=DATA.mp[idx].u||'KG';
+      var sel=document.getElementById('ing-unit');
+      for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===u){sel.selectedIndex=i;break;}}
+    }
+  });
+  setTimeout(function(){document.getElementById('ing-mp-sel').focus();},100);
+}
+function closeIngModal(){var m=document.getElementById('ing-modal');if(m)m.remove();}
+function createIng(pi){
+  var p=COMP[pi];if(!p)return;
+  var mid=parseInt(document.getElementById('ing-mp-sel').value);
+  var nome=document.getElementById('ing-nome').value.trim();
+  var unit=document.getElementById('ing-unit').value;
+  var emb=document.getElementById('ing-emb').value==='1';
+  // Se escolheu uma MP, vincula também ao frete correspondente (mesmo índice)
+  var fid=-1;
+  if(mid>=0){
+    if(!nome)nome=DATA.mp[mid].n;
+    unit=DATA.mp[mid].u||unit;
+    if(DATA.frete[mid])fid=mid;
+  }
+  if(!nome){alert('Digite o nome do ingrediente.');return;}
+  p.i.push({n:nome,u:unit,mid:mid,fid:fid,emb:emb,v:n12()});
+  closeIngModal();
+  bComp();
+  scheduleSave();
+  // Expandir o produto e o sub-grupo correto após rebuild
+  setTimeout(function(){
+    if(!p.ex){p.ex=true;}
+    var sgKey=emb?'emb':'ing';
+    if(p._sg[sgKey]===false)p._sg[sgKey]=true;
+    bComp();
+  },50);
+}
+
 // ── BUILD ALL ─────────────────────────────────────────────────
 function buildAll(){
   bFabricaCargos();
-  bSimple('adm',  'adm',  'ADM',                 'Despesas fixas administrativas',                     null,  true,  true);
+  bSimple('adm',  'adm',  'Predial',             'Despesas fixas prediais',                            null,  true,  true);
   bSimple('mp',   'mp',   'Matéria-Prima',       'Preço de compra por unidade — acompanhamento anual', null,  false, true);
   bSimple('frete','frete','Frete Matéria-Prima', 'Custo de frete por kg / lt / un',                    null,  false, true);
   bComp();
