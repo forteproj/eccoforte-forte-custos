@@ -2079,11 +2079,20 @@ function refreshTots(){
   ['adm'].forEach(function(k){
     MS.forEach(function(_,mi){
       var el=document.getElementById(k+'-t'+mi);if(!el)return;
-      var t=DATA[k].reduce(function(s,r){return s+(r.v?lkv(r.v,mi):0);},0);
+      // Usa cellVal (sem propagação) para respeitar meses explicitamente zerados
+      var t=DATA[k].reduce(function(s,r){
+        if(!r.v)return s;
+        var v=cellVal(r.v[mi]);
+        return s+(v!==null&&v!==undefined?v:0);
+      },0);
       el.textContent=t>0?fR(t):'—';
     });
     var el=document.getElementById(k+'B');if(!el)return;
-    var jan=DATA[k].reduce(function(s,r){return s+(r.v?lkv(r.v,0):0);},0);
+    var jan=DATA[k].reduce(function(s,r){
+      if(!r.v)return s;
+      var v=cellVal(r.v[0]);
+      return s+(v!==null&&v!==undefined?v:0);
+    },0);
     el.textContent='Total Jan: '+fR(jan);
   });
 }
