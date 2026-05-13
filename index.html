@@ -1069,14 +1069,20 @@ function pV(s){return parseFloat(String(s).replace(/R\$\s*/,'').replace(',','.')
 // ── FÓRMULAS (estilo Excel) ──────────────────────────────────
 function evalFormula(expr){
   if(!expr||typeof expr!=='string') return NaN;
+  // Normaliza separadores
   expr=expr.replace(/,/g,'.').replace(/\s/g,'');
+  // Remove = inicial se houver
+  if(expr.charAt(0)==='=') expr=expr.slice(1);
+  // Valida ANTES de substituir % (só dígitos, operadores e %)
+  if(!/^[0-9+\-*/.()%]+$/.test(expr)) return NaN;
+  // Converte % para divisão por 100
   expr=expr.replace(/([\d.]+)%/g,'($1/100)');
-  if(!/^[0-9+\-*/.()]+$/.test(expr)) return NaN;
   try{return Function('"use strict";return ('+expr+')')();}catch(e){return NaN;}
 }
 function isFormula(s){
   if(!s||typeof s!=='string') return false;
   var clean=s.replace(/,/g,'.').replace(/\s/g,'');
+  if(clean.charAt(0)==='=') return true;
   return /[+\-*/%()]/.test(clean) && !/^-?[\d.,]+$/.test(clean);
 }
 function cellVal(cell){
@@ -2463,7 +2469,24 @@ function bForteCeq(){
     acb.innerHTML='＋ Combustível';
     acb.onclick=(function(t){return function(){t.combs.push({n:'Combustível '+(t.combs.length+1),v:n12()});bForteCeq();scheduleSave();};})(tipo);
     actd.appendChild(acb);actr.appendChild(actd);
-    mkEd('Custo Equipamento Dia',tipo.custoDia);
+
+    // Linha Dias (editável)
+    var diasTr=tbl._tbody.insertRow();diasTr.className='ir';diasTr.dataset.par=par;diasTr.style.display=tipo._sg?'':'none';
+    var diasL=document.createElement('td');diasL.className='tdl';diasL.textContent='Dias Trabalhados';diasTr.appendChild(diasL);
+    MS.forEach(function(_,mi){diasTr.appendChild(mkCell(tipo.diasEquip,mi,false,0,function(){refreshForteCeq();scheduleSave();}));});
+    diasTr.appendChild(document.createElement('td')).className='tdd';
+
+    // Linha Custo/Dia (read-only, calculado automaticamente)
+    var cdTr=tbl._tbody.insertRow();cdTr.className='ir res-sub';cdTr.dataset.par=par;cdTr.style.display=tipo._sg?'':'none';
+    var cdL=document.createElement('td');cdL.className='tdl';cdL.innerHTML='Custo Equip. / Dia <span style="color:var(--mu);font-size:10px;">(auto)</span>';cdTr.appendChild(cdL);
+    // Guarda referência dos inputs diretamente no objeto tipo
+    tipo._cdInputs=[];
+    MS.forEach(function(_,mi){
+      var td=mkRO(null,true,2,'ro-val','fceq-cd-'+ti+'-'+mi);
+      tipo._cdInputs[mi]=td.querySelector('input');
+      cdTr.appendChild(td);
+    });
+    cdTr.appendChild(document.createElement('td')).className='tdd';
   });
 
   gw.appendChild(tbl);body.appendChild(gw);
@@ -2472,13 +2495,29 @@ function bForteCeq(){
   ab.onclick=function(){openCeqModal();};
   aa.appendChild(ab);body.appendChild(aa);
   sec.appendChild(body);
+  // Chama após appendChild para garantir que os elementos estão no DOM
+  setTimeout(function(){refreshForteCeq();},0);
 }
 
 function refreshForteCeq(){
   CEQ.forEach(function(tipo,ti){
     MS.forEach(function(_,mi){
+      // Header veic+equip
       var tot=(lkv(tipo.veic,mi)||0)+(lkv(tipo.equip,mi)||0);
-      var hd=document.getElementById('fceq-hd-'+ti+'-'+mi);if(hd)hd.value=tot>0?fR(tot):'—';
+      var hd=document.getElementById('fceq-hd-'+ti+'-'+mi);
+      if(hd)hd.value=tot>0?fR(tot):'—';
+
+      // Custo/Dia = (manut + deprec + todos combs) / dias
+      var somaTotal=(lkv(tipo.manut,mi)||0)
+                   +(lkv(tipo.deprec,mi)||0)
+                   +tipo.combs.reduce(function(s,c){return s+(lkv(c.v,mi)||0);},0);
+      var dias=lkv(tipo.diasEquip,mi)||0;
+      var val=(somaTotal>0&&dias>0)?(somaTotal/dias):null;
+      tipo.custoDia[mi]=val;
+      // Atualiza via referência direta (evita getElementById com DOM não-anexado)
+      if(tipo._cdInputs&&tipo._cdInputs[mi]){
+        tipo._cdInputs[mi].value=(val!==null)?fR(val,2):'—';
+      }
     });
   });
   refreshForteM2Dia();
