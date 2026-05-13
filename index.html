@@ -291,6 +291,13 @@ tr.ing-rs td:not(.tdl){color:var(--mu);font-size:11px}
 tr.ing-rs td.tdc{background:#FFFAE0!important}
 tr.ing-rs td.tdc.tdl{background:#FFF7CC!important}
 
+/* Linha % na fórmula */
+tr.ing-pct td{background:#F5F0FF!important;border-bottom:1px dotted #C8B8F0!important;height:24px}
+tr.ing-pct td.tdl{background:#F5F0FF!important;padding-left:48px;font-size:10px;}
+tr.ing-pct td:not(.tdl){color:#7A60B0;font-size:11px;font-weight:600}
+tr.ing-pct td.tdc{background:#EDE4FF!important}
+tr.ing-pct td.tdc.tdl{background:#EDE4FF!important}
+
 /* TOAST de feedback para cópia de coluna */
 #col-copy-toast{
   position:fixed;bottom:24px;right:24px;z-index:9999;
@@ -1215,6 +1222,17 @@ function refreshIngRs(pi, ii){
     var v=ingValueR(ing,mi);
     el.value=(v>0)?fR(v,2):'—';
   });
+  // Atualiza % de TODOS os ingredientes do produto (denominador pode ter mudado)
+  var p2=COMP[pi];if(!p2)return;
+  p2.i.forEach(function(x,xi){
+    MS.forEach(function(_,mi){
+      var el=document.getElementById('ing-pct-'+pi+'-'+xi+'-'+mi);
+      if(!el)return;
+      var totalCusto=p2.i.reduce(function(s,y){return s+ingValueR(y,mi);},0);
+      var v=ingValueR(x,mi);
+      el.value=(v>0&&totalCusto>0)?fN(v/totalCusto*100,1)+' %':'—';
+    });
+  });
 }
 
 // Atualiza TODAS as linhas "↳ R$" de TODOS os produtos
@@ -1938,6 +1956,21 @@ function bComp(){
         td.appendChild(inp);rsTr.appendChild(td);
       });
       rsTr.appendChild(document.createElement('td')).className='tdd';
+
+      // ── Linha ↳ % na fórmula (mesmo data-rs, aparece junto com R$) ──
+      var pctTr=tbl._tbody.insertRow();pctTr.className='ing-rs ing-pct';pctTr.dataset.par=par;pctTr.dataset.rs=rsKey;
+      pctTr.style.display=(sgOpen && p._sg[rsKey])?'':'none';
+      var pctL=document.createElement('td');pctL.className='tdl';pctL.innerHTML='<span style="color:var(--mu)">↳</span> <span style="color:#7A60B0;font-size:10px;">% na fórmula</span>';pctTr.appendChild(pctL);
+      MS.forEach(function(_,mi){
+        var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');
+        var inp=document.createElement('input');inp.type='text';inp.className='ci';inp.readOnly=true;
+        inp.id='ing-pct-'+pi+'-'+ii+'-'+mi;
+        var totalCusto=p.i.reduce(function(s,x){return s+ingValueR(x,mi);},0);
+        var v=ingValueR(ing,mi);
+        inp.value=(v>0&&totalCusto>0)?fN(v/totalCusto*100,1)+' %':'—';
+        td.appendChild(inp);pctTr.appendChild(td);
+      });
+      pctTr.appendChild(document.createElement('td')).className='tdd';
     }
 
     // ─── SUB-GRUPO: INGREDIENTES ───
@@ -2830,6 +2863,22 @@ function printCompItem(p){
     return s;
   }
 
+  // Linha de % sobre custo total da formula (soma de todos os ingredientes+embalagens)
+  function rowPct(vals){
+    var s='<tr>';
+    s+='<td style="text-align:left;padding:1.5pt 4pt 1.5pt 20pt;font-size:6pt;font-style:italic;border:1px solid #eee;background:#F5F0FF;color:#7A60B0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">&#37; na formula</td>';
+    MS.forEach(function(_,mi){
+      var bg=mi===CUR?'#F0EAFF':'#F5F0FF';
+      var totalCusto=p.i.reduce(function(s,ing){return s+ingValueR(ing,mi);},0);
+      var v=typeof vals==='function'?vals(mi):null;
+      var pct=(v!==null&&v!==undefined&&totalCusto>0)?(v/totalCusto*100):null;
+      var txt=(pct===null||isNaN(pct))?'—':pct.toFixed(1).replace('.',',')+' %';
+      s+='<td style="text-align:right;padding:1.5pt 3pt;font-size:6pt;border:1px solid #eee;background:'+bg+';color:#7A60B0;font-weight:600;white-space:nowrap;">'+txt+'</td>';
+    });
+    s+='</tr>';
+    return s;
+  }
+
   function sepRow(){
     return '<tr><td colspan="13" style="background:#f0ede8;height:2pt;padding:0;border:none;"></td></tr>';
   }
@@ -2860,7 +2909,6 @@ function printCompItem(p){
   html+=chip('Unidade','R$/'+p.u);
   if(p.unit2)html+=chip('Emb. Sec.',unit2Label(p.unit2,p.vol2));
   if(p.tipo==='solvente')html+=chip('Densidade',_fN(p.den,2)+' kg→lt');
-  html+=chip('Custo Base',c0.final>0?_fR(c0.final,4):'—');
   html+='</div>';
 
   // SECAO 1 — Ingredientes
@@ -2870,6 +2918,7 @@ function printCompItem(p){
   ings.forEach(function(ing){
     html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){return lkv(ing.v,mi);},null,false,2,false);
     html+=rowRS('↳ R$ custo',function(mi){return ingValueR(ing,mi);});
+    html+=rowPct(function(mi){return ingValueR(ing,mi);});
   });
   if(!ings.length)html+='<tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhum ingrediente cadastrado</td></tr>';
   html+='</tbody></table></div>';
@@ -2881,6 +2930,7 @@ function printCompItem(p){
   embs.forEach(function(ing){
     html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){return lkv(ing.v,mi);},null,false,2,false);
     html+=rowRS('↳ R$ custo',function(mi){return ingValueR(ing,mi);});
+    html+=rowPct(function(mi){return ingValueR(ing,mi);});
   });
   if(!embs.length)html+='<tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhuma embalagem cadastrada</td></tr>';
   html+='</tbody></table></div>';
