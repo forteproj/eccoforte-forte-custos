@@ -2944,9 +2944,15 @@ function printCompItem(p){
   html+=secLabel('','INGREDIENTES — Quantidade por lote');
   html+='<table>'+thRow()+'<tbody>';
   ings.forEach(function(ing){
-    html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){return lkv(ing.v,mi);},null,false,2,false);
-    html+=rowRS('↳ R$ custo',function(mi){return ingValueR(ing,mi);});
-    html+=rowPct(function(mi){return ingValueR(ing,mi);});
+    html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){var v=cellVal(ing.v[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,2,false);
+    html+=rowRS('↳ R$ custo',function(mi){
+      var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
+      return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
+    });
+    html+=rowPct(function(mi){
+      var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
+      return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
+    });
   });
   if(!ings.length)html+='<tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhum ingrediente cadastrado</td></tr>';
   html+='</tbody></table></div>';
@@ -2956,9 +2962,15 @@ function printCompItem(p){
   html+=secLabel('','EMBALAGENS — Quantidade por lote');
   html+='<table>'+thRow()+'<tbody>';
   embs.forEach(function(ing){
-    html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){return lkv(ing.v,mi);},null,false,2,false);
-    html+=rowRS('↳ R$ custo',function(mi){return ingValueR(ing,mi);});
-    html+=rowPct(function(mi){return ingValueR(ing,mi);});
+    html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){var v=cellVal(ing.v[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,2,false);
+    html+=rowRS('↳ R$ custo',function(mi){
+      var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
+      return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
+    });
+    html+=rowPct(function(mi){
+      var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
+      return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
+    });
   });
   if(!embs.length)html+='<tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhuma embalagem cadastrada</td></tr>';
   html+='</tbody></table></div>';
@@ -2972,8 +2984,12 @@ function printCompItem(p){
     html+=row(mo.n,'#f5f4f0',function(mi){return fabMoTotal(mo,mi)||null;},null,true,2,false);
   });
   html+=sepRow();
-  html+=rowSub('Total MO / mes',function(mi){return p.staff.reduce(function(s,si){return s+(DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):0);},0);},true,2);
-  html+=row('Produtividade '+p.u+'/mes','#f5f4f0',function(mi){return lkv(p.prod,mi);},null,false,0,false);
+  html+=rowSub('Total MO / mes',function(mi){
+    var anyData=p.staff.some(function(si){return DATA.mo[si]&&fabMoTotal(DATA.mo[si],mi)!==null;});
+    if(!anyData)return null;
+    return p.staff.reduce(function(s,si){var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;return s+(v!==null?v:0);},0);
+  },true,2);
+  html+=row('Produtividade '+p.u+'/mes','#f5f4f0',function(mi){var v=cellVal(p.prod[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,0,false);
   if(p.tipo==='solvente'){html+=row('Fator Densidade (kg→lt)','#f5f4f0',function(mi){return p.den;},null,false,2,false);}
   html+='</tbody></table></div>';
 
