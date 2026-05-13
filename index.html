@@ -1165,6 +1165,11 @@ function ingValueR(ing, mi){
   return qty*(mpP+frP);
 }
 function calcProduct(p,mi){
+  // Só calcula se produtividade tem valor explícito neste mês.
+  // Sem produtividade, todos os custos unitários são inválidos.
+  var prodRaw=cellVal(p.prod[mi]);
+  if(prodRaw===null||prodRaw===undefined) return {vol:null,costR:null,cop:null,mpUnit:null,copUnit:null,predialUnit:null,final:null,final2:null};
+
   var totalVol=0,totalCostR=0;
   p.i.forEach(function(ing){
     var qty=lkv(ing.v,mi);if(!qty&&qty!==0)return;
@@ -1174,12 +1179,19 @@ function calcProduct(p,mi){
     totalCostR+=qty*(mpP+frP);
   });
   if(p.tipo==='solvente'&&p.den)totalVol=totalVol/p.den;
-  var cop=p.staff.reduce(function(s,si){return s+(DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):0);},0);
+  var cop=p.staff.reduce(function(s,si){
+    var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;
+    return s+(v!==null&&v!==undefined?v:0);
+  },0);
   var prod=lkv(p.prod,mi);
   var copUnit=prod>0?cop/prod:0;
   var mpUnit=totalVol>0?totalCostR/totalVol:0;
-  // Custo Predial = Total ADM / Produtividade LT/mês
-  var admTotal=DATA.adm.reduce(function(s,r){return s+(r.v?lkv(r.v,mi):0);},0);
+  // Custo Predial = Total ADM / Produtividade
+  var admTotal=DATA.adm.reduce(function(s,r){
+    if(!r.v)return s;
+    var v=cellVal(r.v[mi]);
+    return s+(v!==null&&v!==undefined?v:0);
+  },0);
   var predialUnit=prod>0?admTotal/prod:0;
   var final=mpUnit+copUnit+predialUnit;
   var fac=unit2Vol(p.unit2,p.vol2);
@@ -1205,10 +1217,11 @@ function refreshResult(pi){
   MS.forEach(function(_,mi){
     // comp-hd agora aponta para a linha "➤ Produto Final / LT" (ri:4)
     var hd=document.getElementById('rc-'+pi+'-4-'+mi);
-    if(hd){var c=calcProduct(p,mi);hd.value=c.final>0?fR(c.final,4):'—';}
+    if(hd){var c=calcProduct(p,mi);hd.value=(c.final!==null&&c.final>0)?fR(c.final,4):'—';}
     var el=document.getElementById('mo-'+pi+'-'+mi);if(!el)return;
-    var cop=p.staff.reduce(function(s,si){return s+(DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):0);},0);
-    el.value=cop>0?fR(cop,2):'—';
+    var anyData=p.staff.some(function(si){return DATA.mo[si]&&fabMoTotal(DATA.mo[si],mi)!==null;});
+    var cop=anyData?p.staff.reduce(function(s,si){var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;return s+(v!==null&&v!==undefined?v:0);},0):null;
+    el.value=(cop!==null&&cop>0)?fR(cop,2):'—';
   });
 }
 
@@ -1796,6 +1809,9 @@ function bSimple(sid,key,title,sub,badgeId,hasTot,isR){
 function fabMoTotal(mo, mi){
   if(!mo) return 0;
   if(mo.sal){
+    // Se não há salário explícito neste mês, retorna null (sem propagação)
+    var salRaw=cellVal(mo.sal[mi]);
+    if(salRaw===null||salRaw===undefined) return null;
     var sal=lkv(mo.sal,mi);
     var adicRate=Array.isArray(mo.adic)?lkv(mo.adic,mi):FAB_ADIC_DEFAULT;
     if(adicRate===null||adicRate===undefined||isNaN(adicRate)) adicRate=FAB_ADIC_DEFAULT;
@@ -1809,6 +1825,8 @@ function fabMoTotal(mo, mi){
     return sal+adic+enc+va+vr+vt+outros;
   }
   // legacy format
+  var legRaw=cellVal((mo.v||[])[mi]);
+  if(legRaw===null||legRaw===undefined) return null;
   return lkv(mo.v||[],mi);
 }
 
@@ -2019,8 +2037,9 @@ function bComp(){
     moTr.style.display=(p._sg['eq']!==false)?'':'none';
     var moL=document.createElement('td');moL.className='tdl';moL.textContent='Total MO / mês';moTr.appendChild(moL);
     MS.forEach(function(_,mi){
-      var cop=p.staff.reduce(function(s,si){return s+(DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):0);},0);
-      moTr.appendChild(mkRO(cop>0?cop:null,true,2,'ro-val','mo-'+pi+'-'+mi));
+      var anyData=p.staff.some(function(si){return DATA.mo[si]&&fabMoTotal(DATA.mo[si],mi)!==null;});
+      var cop=anyData?p.staff.reduce(function(s,si){var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;return s+(v!==null&&v!==undefined?v:0);},0):null;
+      moTr.appendChild(mkRO(cop!==null&&cop>0?cop:anyData?cop:null,true,2,'ro-val','mo-'+pi+'-'+mi));
     });
     var modtd=document.createElement('td');modtd.className='tdd';moTr.appendChild(modtd);
 
