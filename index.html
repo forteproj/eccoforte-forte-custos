@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
   --bg:#E6E4DE;--sf:#F2F0EB;--sf2:#E2DFD8;--sf3:#D8D5CE;
@@ -388,6 +389,73 @@ table.pt .sep-row td{background:#f0ede8;height:2px;padding:0;border:none;}
 /* coluna do mes atual destacada no header */
 table.pt th.cur{background:#3A3000;color:#FFD040;}
 
+/* ═══════════════════════════════════════════════════
+   ORGANOGRAMA
+═══════════════════════════════════════════════════ */
+.org-tabs{display:flex;background:var(--sf2);border-bottom:2px solid var(--bd2);padding:0 18px}
+.org-tab{font-family:var(--head);font-weight:700;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);padding:9px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
+.org-tab:hover{color:var(--tx)}
+.org-tab.on{color:var(--ambm);border-bottom-color:var(--ambm)}
+.org-page{display:none;padding:16px 18px 60px}
+.org-page.on{display:block}
+.org-sh{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.org-st{font-weight:800;font-size:14px;letter-spacing:.05em;text-transform:uppercase;border-left:4px solid var(--ambm);padding-left:10px}
+.org-ss{font-size:10px;color:var(--mu);padding-left:14px;margin-top:1px}
+.org-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border:1px solid var(--bd2);border-radius:3px;background:var(--sf);color:var(--txs);font-family:var(--head);font-weight:700;font-size:10px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.org-btn:hover{color:var(--ambm);border-color:var(--ambm);background:var(--abg)}
+.org-btn.ok{background:var(--ambm);color:#1E1C18;border-color:var(--ambm)}
+.org-btn.ghost{background:transparent;border-style:dashed;color:var(--mu)}
+.org-btn.ghost:hover{color:var(--ambm);border-color:var(--ambm)}
+.org-bar{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.org-flt{font-family:var(--head);font-weight:700;font-size:8px;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:2px;border:1.5px solid;cursor:pointer;background:transparent;transition:opacity .15s}
+.org-flt.off{opacity:.25}
+.org-zlbl{font-size:10px;color:var(--mu);font-weight:700;min-width:34px;text-align:right}
+.cvwrap{overflow:auto;background:var(--sf2);border:1px solid var(--bd);border-radius:5px;height:calc(100vh - 210px);min-height:380px;position:relative;cursor:grab}
+.cvwrap.panning{cursor:grabbing}
+#org-cv-canvas{position:absolute;top:0;left:0;pointer-events:none;z-index:0}
+#org-cv-nodes{position:absolute;top:0;left:0;z-index:1}
+.onode{position:absolute;background:var(--sf);border:1px solid var(--bd);border-radius:3px;width:118px;cursor:move;user-select:none}
+.onode:hover{border-color:var(--bd2)}
+.onode.shared{border-style:dashed}
+.ostripe{height:2px;border-radius:3px 3px 0 0}
+.oicon{font-size:14px;display:block;padding:4px 7px 1px}
+.oname{font-weight:700;font-size:10px;padding:0 7px 1px;line-height:1.25;word-break:break-word;color:var(--tx)}
+.obadge{display:inline-block;font-weight:700;font-size:8px;letter-spacing:.04em;text-transform:uppercase;padding:1px 5px;border-radius:2px;margin:2px 7px 6px}
+.ochip{position:absolute;background:var(--sf);border:1px solid var(--bd);border-radius:3px;width:118px;cursor:move;user-select:none;overflow:hidden}
+.ochip:hover{border-color:var(--bd2)}
+.ochip-stripe{height:2px;border-radius:3px 3px 0 0}
+.ochip-body{display:flex;align-items:center;padding:5px 7px 6px;gap:5px}
+.ochip-ico{font-size:12px;flex-shrink:0}
+.ochip-info{min-width:0;flex:1}
+.ochip-lbl{font-weight:700;font-size:7px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);line-height:1;margin-bottom:1px}
+.ochip-val{font-weight:700;font-size:9px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.org-teams-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;align-items:flex-start}
+.org-teams-scroll::-webkit-scrollbar{height:5px}
+.org-teams-scroll::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
+.org-tcard{background:var(--sf);border:1px solid var(--bd);border-radius:4px;min-width:220px;max-width:240px;flex-shrink:0;overflow:hidden}
+.org-thead{display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:2px solid var(--bd2);background:var(--sf2)}
+.org-tdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.org-tname{flex:1;border:none;outline:none;font-family:var(--head);font-weight:700;font-size:10px;letter-spacing:.06em;text-transform:uppercase;background:transparent;color:var(--tx)}
+.org-tname:focus{background:var(--fv);border-radius:2px;padding:0 3px}
+.org-btnx{background:none;border:none;cursor:pointer;color:var(--bd2);font-size:13px;padding:1px 3px;border-radius:2px}
+.org-btnx:hover{color:#D44}
+.org-tmeta{border-bottom:1px solid var(--bd);background:var(--sf2)}
+.org-tmrow{display:flex;align-items:center;border-bottom:1px solid var(--bd)}
+.org-tmrow:last-child{border-bottom:none}
+.org-tmic{font-size:11px;width:24px;text-align:center;color:var(--mu)}
+.org-tmlbl{font-weight:700;font-size:8px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);width:42px}
+.org-tminp{flex:1;border:none;outline:none;padding:5px 6px;font-size:11px;font-family:var(--head);background:transparent;color:var(--tx)}
+.org-tminp:focus{background:var(--fv)}
+.org-ttbl{width:100%;border-collapse:collapse}
+.org-ttbl thead th{background:var(--sf3);font-weight:700;font-size:8px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);padding:3px 8px;border-bottom:1px solid var(--bd2);text-align:left}
+.org-ttbl tbody td{border-bottom:1px solid var(--bd);padding:0}
+.org-ttbl tbody tr:last-child td{border-bottom:none}
+.org-ttbl input{width:100%;border:none;outline:none;padding:5px 8px;font-size:11px;font-family:var(--head);background:transparent;color:var(--tx)}
+.org-ttbl input:focus{background:var(--fv)}
+.org-tdact{width:22px;text-align:center}
+.org-tdact button{background:none;border:none;cursor:pointer;color:var(--bd2);font-size:11px;padding:2px}
+.org-tdact button:hover{color:#D44}
+.org-tfoot{padding:5px 8px;border-top:1px solid var(--bd)}
 /* PRINT MEDIA — paisagem, todas as colunas em 1 pagina */
 @media print{
   @page{size:A4 landscape;margin:8mm 6mm;}
@@ -609,7 +677,84 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
   </div>
 </div>
 
-<script>
+<!-- ═══════════════ PÁGINA ORGANOGRAMA ═══════════════ -->
+<div class="page" id="page-organograma" style="display:none;padding:0">
+  <div class="org-tabs">
+    <div class="org-tab on" id="otab-org"    onclick="orgShowTab('org')">Organograma</div>
+    <div class="org-tab"    id="otab-editor" onclick="orgShowTab('editor')">Editor de equipes</div>
+    <div class="org-tab"    id="otab-mestre" onclick="orgShowTab('mestre')">Hierarquia mestre</div>
+  </div>
+
+  <!-- TAB: ORGANOGRAMA -->
+  <div class="org-page on" id="opage-org">
+    <div class="org-sh">
+      <div><div class="org-st">Organograma</div><div class="org-ss">Gerado pelas equipes cadastradas — scroll ou Ctrl+roda para zoom</div></div>
+      <div style="margin-left:auto;display:flex;gap:5px">
+        <button class="org-btn" onclick="orgBuild()">⟳ Gerar</button>
+      </div>
+    </div>
+    <div class="org-bar" id="org-filters">
+      <div style="display:flex;gap:3px;align-items:center">
+        <button class="org-btn" onclick="orgZoom(orgScale-0.1)">−</button>
+        <span class="org-zlbl" id="org-zlbl">100%</span>
+        <button class="org-btn" onclick="orgZoom(orgScale+0.1)">+</button>
+        <button class="org-btn" onclick="orgZoom(1)" style="margin-left:2px">↩</button>
+        <button class="org-btn" onclick="orgFit()" style="margin-left:2px">⊡ Fit</button>
+      </div>
+    </div>
+    <div class="cvwrap" id="org-cvwrap">
+      <canvas id="org-cv-canvas"></canvas>
+      <div id="org-cv-nodes"></div>
+      <div id="org-empty" style="display:flex;align-items:center;justify-content:center;height:100%;font-size:11px;color:var(--mu);flex-direction:column;gap:8px">
+        <span style="font-size:26px">📋</span>Clique em <strong style="color:var(--ambm)">⟳ Gerar</strong> para montar o organograma
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: EDITOR -->
+  <div class="org-page" id="opage-editor">
+    <div class="org-sh">
+      <div><div class="org-st">Editor de equipes</div><div class="org-ss">Pares Nome / Cargo por equipe — Obra e Veículo no topo de cada coluna</div></div>
+      <div style="margin-left:auto;display:flex;gap:5px;flex-wrap:wrap">
+        <button class="org-btn" onclick="orgAddTeam()">+ Equipe</button>
+        <button class="org-btn" onclick="document.getElementById('org-csv-in').click()">📂 CSV/Excel</button>
+        <input type="file" id="org-csv-in" accept=".csv,.xlsx,.xls" style="display:none" onchange="orgHandleImport(this.files[0])">
+        <button class="org-btn" onclick="orgExportCSV()">📥 Exportar</button>
+        <button class="org-btn ok" onclick="orgSave()">💾 Salvar</button>
+      </div>
+    </div>
+    <div class="org-teams-scroll" id="org-teams-wrap"></div>
+    <div style="margin-top:8px;text-align:center">
+      <button class="org-btn ghost" onclick="orgAddRowAll()">+ Linha em todas as equipes</button>
+    </div>
+  </div>
+
+  <!-- TAB: MESTRE -->
+  <div class="org-page" id="opage-mestre">
+    <div class="org-sh">
+      <div><div class="org-st">Hierarquia mestre</div>
+        <div class="org-ss">Ordem dos cargos — ✅ Compartilhado = aparece uma vez no topo, ligado a todas as equipes</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:5px">
+        <button class="org-btn" onclick="orgAddMestre()">+ Cargo</button>
+        <button class="org-btn ok" onclick="orgSave()">💾 Salvar</button>
+      </div>
+    </div>
+    <div style="background:var(--sf);border:1px solid var(--bd);border-radius:4px;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--sf2)">
+          <th style="padding:5px 10px;text-align:left;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">#</th>
+          <th style="padding:5px 10px;text-align:left;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">Ícone</th>
+          <th style="padding:5px 10px;text-align:left;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">Cargo</th>
+          <th style="padding:5px 10px;text-align:left;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">Aliases</th>
+          <th style="padding:5px 10px;text-align:center;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">Compartilhado</th>
+          <th style="border-bottom:1px solid var(--bd2)"></th>
+        </tr></thead>
+        <tbody id="org-mestre-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 // ═══════════════════════════════════════════════════════════════
 // VERSÃO: v4-nav-mi-fix
 // Melhorias:
@@ -656,9 +801,16 @@ var PAGES = [
       {label:'Custo M.O./Equip M²/Dia',anchor:'g-forte-m2dia'},
     ]
   }
+  ,{
+    id: 'organograma',
+    label: 'Organograma',
+    sections: [
+      {label:'Visualizar',        anchor:'opage-org'},
+      {label:'Editor de equipes', anchor:'opage-editor'},
+      {label:'Hierarquia mestre', anchor:'opage-mestre'},
+    ]
+  }
 ];
-
-function buildNav(){
   var nav = document.getElementById('main-nav');
   nav.innerHTML = '';
   PAGES.forEach(function(page){
@@ -685,12 +837,16 @@ function buildNav(){
       a.href = '#' + sec.anchor;
       a.onclick = function(){
         item.classList.remove('open');
-        // switch to the correct page
         switchPage(page.id);
-        // expand group if collapsed
+        // para organograma, ativar a sub-tab correta
+        if(page.id === 'organograma'){
+          var tabMap = {'opage-org':'org','opage-editor':'editor','opage-mestre':'mestre'};
+          var t = tabMap[sec.anchor];
+          if(t) orgShowTab(t);
+          return false;
+        }
         var grp = document.getElementById(sec.anchor);
         if(grp && grp.classList.contains('collapsed')) toggleGrp(sec.anchor);
-        // smooth scroll
         setTimeout(function(){
           if(grp) grp.scrollIntoView({behavior:'smooth', block:'start'});
         }, 80);
@@ -1012,6 +1168,7 @@ auth.onAuthStateChanged(function(user){
     buildNav();
     var sel=document.getElementById('yr-sel');if(sel)sel.value=String(ACTIVE_YEAR);
     loadFromFirestore(buildAll);
+    orgInit();
   }else{
     document.getElementById('login-bg').style.display='flex';
   }
@@ -3076,6 +3233,417 @@ function buildAll(){
     if(sec){sec.classList.add('collapsed');var tog=sec.querySelector('.stog');if(tog)tog.textContent='▶';}
   });
 }
-</script>
-</body>
-</html>
+// ═══════════════════════════════════════════════════════════════
+// ORGANOGRAMA
+// ═══════════════════════════════════════════════════════════════
+var ORG_TC=['#C99200','#2563eb','#16a34a','#d97706','#7c3aed','#db2777','#0891b2','#059669','#dc2626','#0d9488'];
+var ORG_NW=118,ORG_NH=72,ORG_CHH=42,ORG_GX=10,ORG_GY=38;
+var orgTeams=[],orgMestre=[],orgNodes=[],orgEdges=[],orgVisTeams=new Set();
+var orgScale=1,orgDrag=null,orgPan=null;
+
+var ORG_DM=[
+  {id:ouid(),cargo:'Diretor',    aliases:'diretor,diretoria',     icon:'🎯',shared:true},
+  {id:ouid(),cargo:'Gerente',    aliases:'gerente',               icon:'🏢',shared:true},
+  {id:ouid(),cargo:'Supervisão', aliases:'supervisão,supervisor', icon:'📋',shared:true},
+  {id:ouid(),cargo:'Encarregado',aliases:'encarregado',           icon:'👷',shared:false},
+  {id:ouid(),cargo:'Engenheiro', aliases:'engenheiro',            icon:'📐',shared:false},
+  {id:ouid(),cargo:'Soldador',   aliases:'soldador',              icon:'⚙️',shared:false},
+  {id:ouid(),cargo:'Caldereiro', aliases:'caldereiro',            icon:'🔥',shared:false},
+  {id:ouid(),cargo:'Ajudante',   aliases:'ajudante',              icon:'🧰',shared:false},
+];
+
+function ouid(){return Math.random().toString(36).slice(2,9)}
+function onorm(s){return (s||'').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+function oesc(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+function orgGetRK(raw){
+  var r=onorm(raw);
+  for(var i=0;i<orgMestre.length;i++){
+    var m=orgMestre[i];
+    var aliases=(m.aliases||m.cargo).split(',').map(function(a){return onorm(a.trim())});
+    if(aliases.some(function(a){return a&&r.includes(a)})) return onorm(m.cargo);
+  }
+  return 'outro';
+}
+function orgGetMeta(rk){
+  var m=orgMestre.find(function(m){return onorm(m.cargo)===rk});
+  return m?{icon:m.icon,shared:m.shared,idx:orgMestre.indexOf(m)}:{icon:'👤',shared:false,idx:99};
+}
+function orgGetBadge(rk){
+  var s={diretor:'background:#2a2060;color:#b8adff',gerente:'background:#1a3060;color:#8bbfff',
+    'supervisão':'background:#1a3060;color:#8bbfff',supervisor:'background:#1a3060;color:#8bbfff',
+    encarregado:'background:#0d4030;color:#5de0a0',engenheiro:'background:#0d4030;color:#5de0a0',
+    caldereiro:'background:#3d2800;color:#ffb940',soldador:'background:#2a2060;color:#b8adff',
+    ajudante:'background:#3a1a10;color:#ff9070'};
+  return s[rk]||'background:#2a2820;color:#908D86';
+}
+
+function orgShowTab(t){
+  ['org','editor','mestre'].forEach(function(k){
+    document.getElementById('opage-'+k).classList.toggle('on',k===t);
+    document.getElementById('otab-'+k).classList.toggle('on',k===t);
+  });
+  if(t==='org') orgBuild();
+}
+
+// ── SAVE / LOAD Firestore ──────────────────────────────────────
+function orgSave(){
+  setSaveStatus('saving');
+  db.collection('organograma').doc('dados').set({
+    teams: orgTeams,
+    mestre: orgMestre,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    setSaveStatus('saved');
+  }).catch(function(e){
+    setSaveStatus('error');
+    console.error('Organograma save error',e);
+  });
+}
+
+function orgLoad(){
+  db.collection('organograma').doc('dados').get().then(function(snap){
+    if(snap.exists){
+      var d=snap.data();
+      orgTeams = d.teams||[];
+      orgMestre = (d.mestre&&d.mestre.length)?d.mestre:ORG_DM.map(function(m){return Object.assign({},m)});
+    } else {
+      orgTeams=[];
+      orgMestre=ORG_DM.map(function(m){return Object.assign({},m)});
+    }
+    orgRenderTeams();
+    orgRenderMestre();
+  }).catch(function(e){
+    orgMestre=ORG_DM.map(function(m){return Object.assign({},m)});
+    orgRenderTeams();
+    orgRenderMestre();
+  });
+}
+
+// ── EDITOR ────────────────────────────────────────────────────
+function orgRenderTeams(){
+  var w=document.getElementById('org-teams-wrap');w.innerHTML='';
+  orgTeams.forEach(function(t,ti){w.appendChild(orgMkCard(t,ti));});
+}
+function orgMkCard(t,ti){
+  var c=ORG_TC[ti%ORG_TC.length];
+  var d=document.createElement('div');d.className='org-tcard';d.id='otc-'+t.id;
+  d.innerHTML='<div class="org-thead">'
+    +'<div class="org-tdot" style="background:'+c+'"></div>'
+    +'<input class="org-tname" value="'+oesc(t.name)+'" onchange="orgRenameT(\''+t.id+'\',this.value)">'
+    +'<button class="org-btnx" onclick="orgRemoveT(\''+t.id+'\')">✕</button>'
+    +'</div>'
+    +'<div class="org-tmeta">'
+    +'<div class="org-tmrow"><span class="org-tmic">📍</span><span class="org-tmlbl">Obra</span>'
+    +'<input class="org-tminp" value="'+oesc(t.obra||'')+'" placeholder="Local / obra" onchange="orgUpdateMeta(\''+t.id+'\',\'obra\',this.value)"></div>'
+    +'<div class="org-tmrow"><span class="org-tmic">🚗</span><span class="org-tmlbl">Veículo</span>'
+    +'<input class="org-tminp" value="'+oesc(t.veiculo||'')+'" placeholder="Placa / modelo" onchange="orgUpdateMeta(\''+t.id+'\',\'veiculo\',this.value)"></div>'
+    +'</div>'
+    +'<table class="org-ttbl"><thead><tr><th>Nome</th><th>Cargo</th><th></th></tr></thead>'
+    +'<tbody id="otb-'+t.id+'"></tbody></table>'
+    +'<div class="org-tfoot"><button class="org-btn ghost" style="width:100%;justify-content:center" onclick="orgAddRow(\''+t.id+'\')">+ Linha</button></div>';
+  var tb=d.querySelector('tbody');
+  t.rows.forEach(function(r,ri){tb.appendChild(orgMkRow(t.id,r,ri));});
+  return d;
+}
+function orgMkRow(tid,row,ri){
+  var tr=document.createElement('tr');
+  tr.innerHTML='<td><input value="'+oesc(row.name)+'" placeholder="Nome" onchange="orgUpCell(\''+tid+'\','+ri+',\'name\',this.value)"></td>'
+    +'<td><input value="'+oesc(row.cargo)+'" placeholder="Cargo" style="color:var(--txs)" onchange="orgUpCell(\''+tid+'\','+ri+',\'cargo\',this.value)"></td>'
+    +'<td class="org-tdact"><button onclick="orgRemoveRow(\''+tid+'\','+ri+')">✕</button></td>';
+  return tr;
+}
+function orgAddTeam(){orgTeams.push({id:ouid(),name:'Equipe '+(orgTeams.length+1),obra:'',veiculo:'',rows:[{name:'',cargo:''}]});orgRenderTeams();document.getElementById('org-teams-wrap').scrollLeft=99999}
+function orgRenameT(id,v){var t=orgTeams.find(function(t){return t.id===id});if(t)t.name=v}
+function orgUpdateMeta(id,f,v){var t=orgTeams.find(function(t){return t.id===id});if(t)t[f]=v}
+function orgRemoveT(id){if(!confirm('Remover equipe?'))return;orgTeams=orgTeams.filter(function(t){return t.id!==id});orgRenderTeams()}
+function orgAddRow(tid){var t=orgTeams.find(function(t){return t.id===tid});if(!t)return;t.rows.push({name:'',cargo:''});var tb=document.getElementById('otb-'+tid);var ri=t.rows.length-1;tb.appendChild(orgMkRow(tid,t.rows[ri],ri));tb.lastElementChild.querySelector('input').focus()}
+function orgAddRowAll(){orgTeams.forEach(function(t){t.rows.push({name:'',cargo:''})});orgRenderTeams()}
+function orgRemoveRow(tid,ri){var t=orgTeams.find(function(t){return t.id===tid});if(!t)return;t.rows.splice(ri,1);var tb=document.getElementById('otb-'+tid);tb.innerHTML='';t.rows.forEach(function(r,i){tb.appendChild(orgMkRow(tid,r,i))})}
+function orgUpCell(tid,ri,f,v){var t=orgTeams.find(function(t){return t.id===tid});if(t&&t.rows[ri])t.rows[ri][f]=v}
+
+// ── MESTRE ────────────────────────────────────────────────────
+function orgRenderMestre(){
+  var tb=document.getElementById('org-mestre-body');tb.innerHTML='';
+  orgMestre.forEach(function(m,i){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td style="padding:4px 10px;color:var(--mu);font-weight:700;text-align:center;width:26px">'+(i+1)+'</td>'
+      +'<td style="padding:4px 10px"><input value="'+oesc(m.icon)+'" style="width:30px;border:1px solid var(--bd);border-radius:2px;background:var(--sf2);text-align:center;padding:2px;font-size:14px" onchange="orgUpM(\''+m.id+'\',\'icon\',this.value)"></td>'
+      +'<td style="padding:4px 10px"><input value="'+oesc(m.cargo)+'" style="border:1px solid var(--bd);border-radius:2px;background:var(--sf2);padding:3px 7px;font-family:var(--head);font-weight:700;font-size:10px;width:120px" onchange="orgUpM(\''+m.id+'\',\'cargo\',this.value)"></td>'
+      +'<td style="padding:4px 10px"><input value="'+oesc(m.aliases)+'" placeholder="alias1,alias2" style="border:1px solid var(--bd);border-radius:2px;background:var(--sf2);padding:3px 7px;font-size:11px;width:180px;color:var(--txs)" onchange="orgUpM(\''+m.id+'\',\'aliases\',this.value)"></td>'
+      +'<td style="padding:4px 10px;text-align:center"><input type="checkbox" '+(m.shared?'checked':'')+' title="Aparece uma vez no topo, compartilhado por todas as equipes" onchange="orgUpM(\''+m.id+'\',\'shared\',this.checked)"></td>'
+      +'<td style="padding:4px 10px"><button class="org-btn" style="padding:2px 7px;color:#D44;border-color:#D4444422" onclick="orgRmM(\''+m.id+'\')">✕</button></td>';
+    tr.style.borderBottom='1px solid var(--bd)';
+    tb.appendChild(tr);
+  });
+}
+function orgAddMestre(){orgMestre.push({id:ouid(),cargo:'Novo cargo',aliases:'',icon:'👤',shared:false});orgRenderMestre()}
+function orgUpM(id,f,v){var m=orgMestre.find(function(m){return m.id===id});if(m)m[f]=v}
+function orgRmM(id){orgMestre=orgMestre.filter(function(m){return m.id!==id});orgRenderMestre()}
+
+// ── BUILD ─────────────────────────────────────────────────────
+function orgBuild(){
+  orgNodes=[];orgEdges=[];
+  document.getElementById('org-empty').style.display='none';
+  if(!orgTeams.length||orgTeams.every(function(t){return !t.rows.some(function(r){return r.name})})){
+    document.getElementById('org-empty').style.display='flex';return;
+  }
+  var idc=0;
+  var n=orgTeams.length;
+  var colW=ORG_NW+ORG_GX+20;
+  var canvasW=Math.max(900,n*colW+80);
+
+  // nós compartilhados
+  var sMap={};
+  orgTeams.forEach(function(t){
+    t.rows.forEach(function(r){
+      if(!r.name)return;
+      var rk=orgGetRK(r.cargo),meta=orgGetMeta(rk);
+      if(meta.shared){var k=onorm(r.name)+'|'+rk;if(!sMap[k])sMap[k]={id:'n'+(++idc),type:'person',name:r.name,cargoRaw:r.cargo,rk:rk,shared:true,teamIdx:-1,nH:ORG_NH,x:0,y:0};}
+    });
+  });
+  var sNodes=Object.values(sMap);
+  var sByLvl={};
+  sNodes.forEach(function(nd){var l=orgGetMeta(nd.rk).idx;if(!sByLvl[l])sByLvl[l]=[];sByLvl[l].push(nd);});
+  var sLvls=Object.keys(sByLvl).map(Number).sort(function(a,b){return a-b});
+  var curY=28;
+  sLvls.forEach(function(lvl){
+    var g=sByLvl[lvl],tw=g.length*(ORG_NW+ORG_GX)-ORG_GX,sx=(canvasW-tw)/2;
+    g.forEach(function(nd,i){nd.x=sx+i*(ORG_NW+ORG_GX);nd.y=curY;orgNodes.push(nd);});
+    curY+=ORG_NH+ORG_GY;
+  });
+  for(var li=1;li<sLvls.length;li++){
+    var p=sByLvl[sLvls[li-1]],ch=sByLvl[sLvls[li]];
+    ch.forEach(function(cn,ci){var pi=Math.floor(ci*p.length/ch.length);orgEdges.push({from:p[pi].id,to:cn.id});});
+  }
+  var sBottom=curY;
+  orgVisTeams=new Set(orgTeams.map(function(_,i){return i}));
+
+  orgTeams.forEach(function(team,ti){
+    var cx=40+ti*colW+ORG_NW/2;
+    var cy=sBottom+14;
+    var members=team.rows.filter(function(r){return r.name&&!orgGetMeta(orgGetRK(r.cargo)).shared});
+    members.sort(function(a,b){return orgGetMeta(orgGetRK(a.cargo)).idx-orgGetMeta(orgGetRK(b.cargo)).idx});
+    var byLvl={};
+    members.forEach(function(m){var l=orgGetMeta(orgGetRK(m.cargo)).idx;if(!byLvl[l])byLvl[l]=[];byLvl[l].push(m);});
+    var lvls=Object.keys(byLvl).map(Number).sort(function(a,b){return a-b});
+    var tNodes=[],chips=[];
+
+    if(lvls.length&&(team.obra||team.veiculo)){
+      var chipX=cx-ORG_NW/2;
+      if(team.obra){var c={id:'n'+(++idc),type:'chip',kind:'obra',label:team.obra,teamIdx:ti,shared:false,nH:ORG_CHH,x:chipX,y:cy};orgNodes.push(c);tNodes.push(c);chips.push(c);cy+=ORG_CHH+5;}
+      if(team.veiculo){var c2={id:'n'+(++idc),type:'chip',kind:'veiculo',label:team.veiculo,teamIdx:ti,shared:false,nH:ORG_CHH,x:chipX,y:cy};orgNodes.push(c2);tNodes.push(c2);chips.push(c2);cy+=ORG_CHH+5;}
+      cy+=ORG_GY/2;
+    }
+
+    lvls.forEach(function(lvl){
+      var g=byLvl[lvl],tw=g.length*(ORG_NW+ORG_GX)-ORG_GX,sx=cx-tw/2;
+      g.forEach(function(m,gi){
+        var nd={id:'n'+(++idc),type:'person',name:m.name,cargoRaw:m.cargo,rk:orgGetRK(m.cargo),shared:false,teamIdx:ti,nH:ORG_NH,x:sx+gi*(ORG_NW+ORG_GX),y:cy};
+        orgNodes.push(nd);tNodes.push(nd);
+      });
+      cy+=ORG_NH+ORG_GY;
+    });
+
+    var pNodes=tNodes.filter(function(nd){return nd.type==='person'});
+    var pByLvl={};
+    pNodes.forEach(function(nd){var l=orgGetMeta(nd.rk).idx;if(!pByLvl[l])pByLvl[l]=[];pByLvl[l].push(nd);});
+    var pLvls=Object.keys(pByLvl).map(Number).sort(function(a,b){return a-b});
+    for(var pli=1;pli<pLvls.length;pli++){
+      var pp=pByLvl[pLvls[pli-1]],pc=pByLvl[pLvls[pli]];
+      pc.forEach(function(cn,ci){var pi=Math.floor(ci*pp.length/pc.length);orgEdges.push({from:pp[pi].id,to:cn.id});});
+    }
+    if(chips.length&&pNodes.length){
+      var firstP=pNodes.slice().sort(function(a,b){return orgGetMeta(a.rk).idx-orgGetMeta(b.rk).idx})[0];
+      for(var ci=1;ci<chips.length;ci++) orgEdges.push({from:chips[ci-1].id,to:chips[ci].id,chip:true});
+      orgEdges.push({from:chips[chips.length-1].id,to:firstP.id,chip:true});
+    }
+    if(sNodes.length&&tNodes.length){
+      var ls=sNodes.slice().sort(function(a,b){return orgGetMeta(b.rk).idx-orgGetMeta(a.rk).idx})[0];
+      var ft=chips.length?chips[0]:pNodes.slice().sort(function(a,b){return orgGetMeta(a.rk).idx-orgGetMeta(b.rk).idx})[0];
+      if(ls&&ft) orgEdges.push({from:ls.id,to:ft.id});
+    }
+  });
+
+  var maxX=Math.max.apply(null,orgNodes.map(function(nd){return nd.x+ORG_NW+30}));
+  var maxY=Math.max.apply(null,orgNodes.map(function(nd){return nd.y+nd.nH+30}));
+  document.getElementById('org-cv-nodes').style.cssText='position:absolute;top:0;left:0;width:'+maxX+'px;height:'+maxY+'px';
+  var cv=document.getElementById('org-cv-canvas');
+  cv.width=maxX;cv.height=maxY;cv.style.width=maxX+'px';cv.style.height=maxY+'px';
+  orgBuildFilters();
+  orgRender();
+  setTimeout(orgFit,120);
+}
+
+function orgRender(){
+  var ct=document.getElementById('org-cv-nodes');
+  ct.querySelectorAll('.onode,.ochip').forEach(function(e){e.remove()});
+  orgNodes.forEach(function(nd){
+    if(!nd.shared&&!orgVisTeams.has(nd.teamIdx))return;
+    var color=nd.teamIdx>=0?ORG_TC[nd.teamIdx%ORG_TC.length]:'#555';
+    if(nd.type==='chip'){
+      var el=document.createElement('div');
+      el.className='ochip';el.id='on-'+nd.id;
+      el.style.cssText='left:'+nd.x+'px;top:'+nd.y+'px';
+      el.innerHTML='<div class="ochip-stripe" style="background:'+color+'"></div>'
+        +'<div class="ochip-body"><span class="ochip-ico">'+(nd.kind==='obra'?'📍':'🚗')+'</span>'
+        +'<div class="ochip-info"><div class="ochip-lbl">'+(nd.kind==='obra'?'Obra':'Veículo')+'</div>'
+        +'<div class="ochip-val">'+oesc(nd.label)+'</div></div></div>';
+      el.addEventListener('mousedown',function(e){orgStartDrag(e,nd.id)});
+      ct.appendChild(el);return;
+    }
+    var meta=orgGetMeta(nd.rk);
+    var el2=document.createElement('div');
+    el2.className='onode'+(nd.shared?' shared':'');el2.id='on-'+nd.id;
+    el2.style.cssText='left:'+nd.x+'px;top:'+nd.y+'px';
+    el2.innerHTML=(!nd.shared?'<div class="ostripe" style="background:'+color+'"></div>':'<div style="height:2px"></div>')
+      +'<span class="oicon">'+meta.icon+'</span>'
+      +'<div class="oname">'+oesc(nd.name)+'</div>'
+      +'<span class="obadge" style="'+orgGetBadge(nd.rk)+'">'+oesc(nd.cargoRaw)+'</span>';
+    el2.addEventListener('mousedown',function(e){orgStartDrag(e,nd.id)});
+    ct.appendChild(el2);
+  });
+  orgDrawLines();
+}
+
+function orgDrawLines(){
+  var cv=document.getElementById('org-cv-canvas');
+  var ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  orgEdges.forEach(function(e){
+    var fn=orgNodes.find(function(nd){return nd.id===e.from});
+    var tn=orgNodes.find(function(nd){return nd.id===e.to});
+    if(!fn||!tn)return;
+    if(!fn.shared&&!orgVisTeams.has(fn.teamIdx))return;
+    if(!tn.shared&&!orgVisTeams.has(tn.teamIdx))return;
+    var x1=fn.x+ORG_NW/2,y1=fn.y+fn.nH;
+    var x2=tn.x+ORG_NW/2,y2=tn.y;
+    var cy=(y1+y2)/2;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.bezierCurveTo(x1,cy,x2,cy,x2,y2);
+    ctx.strokeStyle=e.chip?'#C8C5BE':'#AEA9A0';
+    ctx.lineWidth=e.chip?1:1.4;
+    ctx.setLineDash(e.chip?[3,3]:[]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(x2-4,y2-7);ctx.lineTo(x2,y2);ctx.lineTo(x2+4,y2-7);
+    ctx.strokeStyle=e.chip?'#C8C5BE':'#AEA9A0';ctx.lineWidth=e.chip?1:1.2;ctx.stroke();
+  });
+}
+
+function orgBuildFilters(){
+  var w=document.getElementById('org-filters');
+  w.querySelectorAll('.org-flt').forEach(function(b){b.remove()});
+  var zg=w.querySelector('div');
+  orgTeams.forEach(function(t,ti){
+    var color=ORG_TC[ti%ORG_TC.length];
+    var btn=document.createElement('button');
+    btn.className='org-flt';btn.textContent=t.name;
+    btn.style.cssText='color:'+color+';border-color:'+color;
+    btn.onclick=function(){
+      orgVisTeams.has(ti)?orgVisTeams.delete(ti):orgVisTeams.add(ti);
+      btn.classList.toggle('off',!orgVisTeams.has(ti));orgRender();
+    };
+    w.insertBefore(btn,zg);
+  });
+}
+
+function orgZoom(v){
+  orgScale=Math.min(Math.max(v,0.25),2);
+  orgScale=Math.round(orgScale*10)/10;
+  document.getElementById('org-zlbl').textContent=Math.round(orgScale*100)+'%';
+  ['org-cv-nodes','org-cv-canvas'].forEach(function(id){
+    var el=document.getElementById(id);
+    el.style.transform='scale('+orgScale+')';el.style.transformOrigin='top left';
+  });
+}
+function orgFit(){
+  if(!orgNodes.length)return;
+  var wrap=document.getElementById('org-cvwrap');
+  var maxX=Math.max.apply(null,orgNodes.map(function(nd){return nd.x+ORG_NW+20}));
+  var maxY=Math.max.apply(null,orgNodes.map(function(nd){return nd.y+nd.nH+20}));
+  var sx=wrap.clientWidth/maxX,sy=wrap.clientHeight/maxY;
+  orgZoom(Math.min(sx,sy,1));
+  wrap.scrollLeft=0;wrap.scrollTop=0;
+}
+
+function orgStartDrag(e,id){
+  e.preventDefault();e.stopPropagation();
+  var nd=orgNodes.find(function(x){return x.id===id});if(!nd)return;
+  var wrap=document.getElementById('org-cvwrap');
+  var rect=wrap.getBoundingClientRect();
+  orgDrag={id:id,sx:(e.clientX-rect.left+wrap.scrollLeft)/orgScale-nd.x,sy:(e.clientY-rect.top+wrap.scrollTop)/orgScale-nd.y};
+  window.addEventListener('mousemove',orgOnDrag);window.addEventListener('mouseup',orgEndDrag);
+}
+function orgOnDrag(e){
+  if(!orgDrag)return;
+  var nd=orgNodes.find(function(x){return x.id===orgDrag.id});
+  var wrap=document.getElementById('org-cvwrap');
+  var rect=wrap.getBoundingClientRect();
+  nd.x=Math.max(0,(e.clientX-rect.left+wrap.scrollLeft)/orgScale-orgDrag.sx);
+  nd.y=Math.max(0,(e.clientY-rect.top+wrap.scrollTop)/orgScale-orgDrag.sy);
+  var el=document.getElementById('on-'+nd.id);
+  if(el){el.style.left=nd.x+'px';el.style.top=nd.y+'px';}
+  orgDrawLines();
+}
+function orgEndDrag(){orgDrag=null;window.removeEventListener('mousemove',orgOnDrag);window.removeEventListener('mouseup',orgEndDrag)}
+
+// Pan canvas
+document.addEventListener('DOMContentLoaded',function(){
+  var wrap=document.getElementById('org-cvwrap');
+  if(!wrap)return;
+  wrap.addEventListener('mousedown',function(e){
+    if(e.target.closest('.onode,.ochip'))return;
+    orgPan={sx:e.clientX+wrap.scrollLeft,sy:e.clientY+wrap.scrollTop};
+    wrap.classList.add('panning');
+  });
+  window.addEventListener('mousemove',function(e){
+    if(!orgPan)return;
+    wrap.scrollLeft=orgPan.sx-e.clientX;wrap.scrollTop=orgPan.sy-e.clientY;
+  });
+  window.addEventListener('mouseup',function(){orgPan=null;if(wrap)wrap.classList.remove('panning')});
+  wrap.addEventListener('wheel',function(e){
+    if(e.ctrlKey||e.metaKey){e.preventDefault();orgZoom(orgScale+(e.deltaY<0?0.1:-0.1));}
+  },{passive:false});
+});
+
+// ── IMPORT/EXPORT ─────────────────────────────────────────────
+function orgHandleImport(file){
+  if(!file)return;
+  var ext=file.name.split('.').pop().toLowerCase();
+  var r=new FileReader();
+  r.onload=function(e){
+    var wb=ext==='csv'?XLSX.read(e.target.result,{type:'string'}):XLSX.read(e.target.result,{type:'array'});
+    var rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+    orgTeams=orgParseCSV(rows);orgRenderTeams();
+  };
+  ext==='csv'?r.readAsText(file):r.readAsArrayBuffer(file);
+}
+function orgParseCSV(rows){
+  if(!rows.length)return[];
+  var keys=Object.keys(rows[0]),res=[];var i=0;
+  while(i<keys.length-1){
+    var a=onorm(keys[i]),b=onorm(keys[i+1]);
+    if((a.includes('nome')||a.includes('name'))&&(b.includes('cargo')||b.includes('role')||b.includes('funcao'))){
+      var lbl=keys[i].replace(/[-–]\s*(nome|name).*/i,'').trim()||'Equipe '+(res.length+1);
+      var r2=rows.map(function(r){return{name:String(r[keys[i]]||'').trim(),cargo:String(r[keys[i+1]]||'').trim()}}).filter(function(r){return r.name&&onorm(r.name)!=='nome'});
+      if(r2.length)res.push({id:ouid(),name:lbl,obra:'',veiculo:'',rows:r2});
+      i+=2;
+    }else i++;
+  }
+  return res;
+}
+function orgExportCSV(){
+  var h=orgTeams.flatMap(function(t){return[t.name+' - Nome',t.name+' - Cargo']});
+  var mr=Math.max.apply(null,orgTeams.map(function(t){return t.rows.length}));
+  var d=[h];
+  for(var ri=0;ri<mr;ri++) d.push(orgTeams.flatMap(function(t){return[t.rows[ri]?t.rows[ri].name:'',t.rows[ri]?t.rows[ri].cargo:'']}));
+  var ws=XLSX.utils.aoa_to_sheet(d);var wb2=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb2,ws,'Equipes');XLSX.writeFile(wb2,'organograma_equipes.xlsx');
+}
+
+// carrega quando o Firebase autentica
+function orgInit(){
+  orgMestre=ORG_DM.map(function(m){return Object.assign({},m)});
+  orgRenderMestre();
+  orgLoad();
+}
+
