@@ -456,6 +456,22 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
 .org-tdact button{background:none;border:none;cursor:pointer;color:var(--bd2);font-size:11px;padding:2px}
 .org-tdact button:hover{color:#D44}
 .org-tfoot{padding:5px 8px;border-top:1px solid var(--bd)}
+/* ── MAPA ── */
+#org-map{ width:100%;height:100%; }
+.org-map-popup-box{background:var(--sf);border:1px solid var(--bd);border-radius:5px;
+  padding:10px 12px;min-width:180px;max-width:220px;box-shadow:0 4px 16px rgba(0,0,0,.15);
+  font-family:var(--head);pointer-events:auto}
+.omp-team{font-weight:800;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);margin-bottom:2px}
+.omp-obra{font-weight:700;font-size:13px;color:var(--tx);margin-bottom:4px}
+.omp-row{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--txs);margin-bottom:2px}
+.omp-divider{border:none;border-top:1px solid var(--bd);margin:6px 0}
+.omp-person{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txs);padding:2px 0}
+.omp-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.omp-name{font-weight:700;color:var(--tx)}
+.omp-cargo{color:var(--mu);font-size:9px}
+.omp-close{position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;
+  font-size:14px;color:var(--mu);line-height:1;pointer-events:auto}
+.omp-close:hover{color:var(--tx)}
 /* PRINT MEDIA — paisagem, todas as colunas em 1 pagina */
 @media print{
   @page{size:A4 landscape;margin:8mm 6mm;}
@@ -681,6 +697,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
 <div class="page" id="page-organograma" style="display:none;padding:0">
   <div class="org-tabs">
     <div class="org-tab on" id="otab-org"    onclick="orgShowTab('org')">Organograma</div>
+    <div class="org-tab"    id="otab-mapa"   onclick="orgShowTab('mapa')">Mapa</div>
     <div class="org-tab"    id="otab-editor" onclick="orgShowTab('editor')">Editor de equipes</div>
     <div class="org-tab"    id="otab-mestre" onclick="orgShowTab('mestre')">Hierarquia mestre</div>
   </div>
@@ -708,6 +725,24 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
       <div id="org-empty" style="display:flex;align-items:center;justify-content:center;height:100%;font-size:11px;color:var(--mu);flex-direction:column;gap:8px">
         <span style="font-size:26px">📋</span>Clique em <strong style="color:var(--ambm)">⟳ Gerar</strong> para montar o organograma
       </div>
+    </div>
+  </div>
+
+  <!-- TAB: MAPA -->
+  <div class="org-page" id="opage-mapa">
+    <div class="org-sh">
+      <div><div class="org-st">Mapa de equipes</div><div class="org-ss">Localização das equipes por obra — clique no pin para ver detalhes</div></div>
+      <div style="margin-left:auto;display:flex;gap:5px">
+        <button class="org-btn" onclick="orgMapBuild()">⟳ Atualizar</button>
+      </div>
+    </div>
+    <div id="org-map-wrap" style="position:relative;height:calc(100vh - 210px);min-height:400px;border:1px solid var(--bd);border-radius:5px;overflow:hidden;background:#e8f0e4">
+      <div id="org-map"></div>
+      <div id="org-map-empty" style="display:flex;align-items:center;justify-content:center;height:100%;font-size:11px;color:var(--mu);flex-direction:column;gap:8px">
+        <span style="font-size:26px">🗺️</span>Clique em <strong style="color:var(--ambm)">⟳ Atualizar</strong> para carregar o mapa
+      </div>
+      <!-- popup -->
+      <div id="org-map-popup" style="display:none;position:absolute;z-index:1000;pointer-events:none"></div>
     </div>
   </div>
 
@@ -755,6 +790,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
     </div>
   </div>
 </div>
+<script>
 // ═══════════════════════════════════════════════════════════════
 // VERSÃO: v4-nav-mi-fix
 // Melhorias:
@@ -806,11 +842,14 @@ var PAGES = [
     label: 'Organograma',
     sections: [
       {label:'Visualizar',        anchor:'opage-org'},
+      {label:'Mapa',              anchor:'opage-mapa'},
       {label:'Editor de equipes', anchor:'opage-editor'},
       {label:'Hierarquia mestre', anchor:'opage-mestre'},
     ]
   }
 ];
+
+function buildNav(){
   var nav = document.getElementById('main-nav');
   nav.innerHTML = '';
   PAGES.forEach(function(page){
@@ -3278,11 +3317,12 @@ function orgGetBadge(rk){
 }
 
 function orgShowTab(t){
-  ['org','editor','mestre'].forEach(function(k){
+  ['org','mapa','editor','mestre'].forEach(function(k){
     document.getElementById('opage-'+k).classList.toggle('on',k===t);
     document.getElementById('otab-'+k).classList.toggle('on',k===t);
   });
   if(t==='org') orgBuild();
+  if(t==='mapa') orgMapBuild();
 }
 
 // ── SAVE / LOAD Firestore ──────────────────────────────────────
@@ -3388,11 +3428,10 @@ function orgBuild(){
     document.getElementById('org-empty').style.display='flex';return;
   }
   var idc=0;
-  var n=orgTeams.length;
-  var colW=ORG_NW+ORG_GX+20;
-  var canvasW=Math.max(900,n*colW+80);
+  var COL_W = ORG_NW + 24; // largura de cada coluna de equipe
 
-  // nós compartilhados
+  // ── nós compartilhados (Diretor, Gerente, Supervisão) ──
+  // aparecem uma vez no topo, centralizados
   var sMap={};
   orgTeams.forEach(function(t){
     t.rows.forEach(function(r){
@@ -3405,6 +3444,8 @@ function orgBuild(){
   var sByLvl={};
   sNodes.forEach(function(nd){var l=orgGetMeta(nd.rk).idx;if(!sByLvl[l])sByLvl[l]=[];sByLvl[l].push(nd);});
   var sLvls=Object.keys(sByLvl).map(Number).sort(function(a,b){return a-b});
+
+  var canvasW=Math.max(900, orgTeams.length*COL_W+80);
   var curY=28;
   sLvls.forEach(function(lvl){
     var g=sByLvl[lvl],tw=g.length*(ORG_NW+ORG_GX)-ORG_GX,sx=(canvasW-tw)/2;
@@ -3418,48 +3459,55 @@ function orgBuild(){
   var sBottom=curY;
   orgVisTeams=new Set(orgTeams.map(function(_,i){return i}));
 
+  // ── equipes em colunas verticais — tudo em linha reta para baixo ──
   orgTeams.forEach(function(team,ti){
-    var cx=40+ti*colW+ORG_NW/2;
-    var cy=sBottom+14;
-    var members=team.rows.filter(function(r){return r.name&&!orgGetMeta(orgGetRK(r.cargo)).shared});
-    members.sort(function(a,b){return orgGetMeta(orgGetRK(a.cargo)).idx-orgGetMeta(orgGetRK(b.cargo)).idx});
-    var byLvl={};
-    members.forEach(function(m){var l=orgGetMeta(orgGetRK(m.cargo)).idx;if(!byLvl[l])byLvl[l]=[];byLvl[l].push(m);});
-    var lvls=Object.keys(byLvl).map(Number).sort(function(a,b){return a-b});
-    var tNodes=[],chips=[];
+    var cx = 40 + ti*COL_W + ORG_NW/2;
+    var cy = sBottom + 14;
+    var tNodes=[], chips=[], prevNode=null;
 
-    if(lvls.length&&(team.obra||team.veiculo)){
+    // 1. chips de obra e veículo
+    if(team.obra||team.veiculo){
       var chipX=cx-ORG_NW/2;
-      if(team.obra){var c={id:'n'+(++idc),type:'chip',kind:'obra',label:team.obra,teamIdx:ti,shared:false,nH:ORG_CHH,x:chipX,y:cy};orgNodes.push(c);tNodes.push(c);chips.push(c);cy+=ORG_CHH+5;}
-      if(team.veiculo){var c2={id:'n'+(++idc),type:'chip',kind:'veiculo',label:team.veiculo,teamIdx:ti,shared:false,nH:ORG_CHH,x:chipX,y:cy};orgNodes.push(c2);tNodes.push(c2);chips.push(c2);cy+=ORG_CHH+5;}
+      if(team.obra){
+        var c={id:'n'+(++idc),type:'chip',kind:'obra',label:team.obra,teamIdx:ti,shared:false,nH:ORG_CHH,x:chipX,y:cy};
+        orgNodes.push(c);tNodes.push(c);chips.push(c);cy+=ORG_CHH+6;
+      }
+      if(team.veiculo){
+        var c2={id:'n'+(++idc),type:'chip',kind:'veiculo',label:team.veiculo,teamIdx:ti,shared:false,nH:ORG_CHH,x:chipX,y:cy};
+        orgNodes.push(c2);tNodes.push(c2);chips.push(c2);cy+=ORG_CHH+6;
+      }
       cy+=ORG_GY/2;
     }
 
-    lvls.forEach(function(lvl){
-      var g=byLvl[lvl],tw=g.length*(ORG_NW+ORG_GX)-ORG_GX,sx=cx-tw/2;
-      g.forEach(function(m,gi){
-        var nd={id:'n'+(++idc),type:'person',name:m.name,cargoRaw:m.cargo,rk:orgGetRK(m.cargo),shared:false,teamIdx:ti,nH:ORG_NH,x:sx+gi*(ORG_NW+ORG_GX),y:cy};
-        orgNodes.push(nd);tNodes.push(nd);
-      });
+    // 2. membros — TODOS em linha reta para baixo, um por um
+    var members=team.rows.filter(function(r){return r.name&&!orgGetMeta(orgGetRK(r.cargo)).shared});
+    members.sort(function(a,b){return orgGetMeta(orgGetRK(a.cargo)).idx-orgGetMeta(orgGetRK(b.cargo)).idx});
+
+    members.forEach(function(m){
+      var nd={id:'n'+(++idc),type:'person',name:m.name,cargoRaw:m.cargo,
+        rk:orgGetRK(m.cargo),shared:false,teamIdx:ti,nH:ORG_NH,
+        x:cx-ORG_NW/2, y:cy};
+      orgNodes.push(nd); tNodes.push(nd);
       cy+=ORG_NH+ORG_GY;
     });
 
     var pNodes=tNodes.filter(function(nd){return nd.type==='person'});
-    var pByLvl={};
-    pNodes.forEach(function(nd){var l=orgGetMeta(nd.rk).idx;if(!pByLvl[l])pByLvl[l]=[];pByLvl[l].push(nd);});
-    var pLvls=Object.keys(pByLvl).map(Number).sort(function(a,b){return a-b});
-    for(var pli=1;pli<pLvls.length;pli++){
-      var pp=pByLvl[pLvls[pli-1]],pc=pByLvl[pLvls[pli]];
-      pc.forEach(function(cn,ci){var pi=Math.floor(ci*pp.length/pc.length);orgEdges.push({from:pp[pi].id,to:cn.id});});
-    }
+
+    // 3. ligar chips em cadeia
     if(chips.length&&pNodes.length){
-      var firstP=pNodes.slice().sort(function(a,b){return orgGetMeta(a.rk).idx-orgGetMeta(b.rk).idx})[0];
       for(var ci=1;ci<chips.length;ci++) orgEdges.push({from:chips[ci-1].id,to:chips[ci].id,chip:true});
-      orgEdges.push({from:chips[chips.length-1].id,to:firstP.id,chip:true});
+      orgEdges.push({from:chips[chips.length-1].id,to:pNodes[0].id,chip:true});
     }
+
+    // 4. ligar pessoas em linha reta — cada um conecta ao próximo
+    for(var pi2=1;pi2<pNodes.length;pi2++){
+      orgEdges.push({from:pNodes[pi2-1].id,to:pNodes[pi2].id});
+    }
+
+    // 5. conectar compartilhado → topo da equipe
     if(sNodes.length&&tNodes.length){
       var ls=sNodes.slice().sort(function(a,b){return orgGetMeta(b.rk).idx-orgGetMeta(a.rk).idx})[0];
-      var ft=chips.length?chips[0]:pNodes.slice().sort(function(a,b){return orgGetMeta(a.rk).idx-orgGetMeta(b.rk).idx})[0];
+      var ft=chips.length?chips[0]:pNodes[0];
       if(ls&&ft) orgEdges.push({from:ls.id,to:ft.id});
     }
   });
@@ -3640,10 +3688,122 @@ function orgExportCSV(){
   XLSX.utils.book_append_sheet(wb2,ws,'Equipes');XLSX.writeFile(wb2,'organograma_equipes.xlsx');
 }
 
-// carrega quando o Firebase autentica
+// ── MAPA ─────────────────────────────────────────────────────
+var orgMap=null, orgMapMarkers=[], orgGeoCache={};
+
+function orgMapLoadLeaflet(cb){
+  if(window.L){cb();return;}
+  var css=document.createElement('link');
+  css.rel='stylesheet';
+  css.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css';
+  document.head.appendChild(css);
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js';
+  s.onload=cb;
+  document.head.appendChild(s);
+}
+
+function orgMapBuild(){
+  document.getElementById('org-map-empty').style.display='none';
+  document.getElementById('org-map-popup').style.display='none';
+  orgMapLoadLeaflet(function(){
+    var wrap=document.getElementById('org-map-wrap');
+    var mapEl=document.getElementById('org-map');
+    mapEl.style.cssText='width:100%;height:'+wrap.offsetHeight+'px';
+
+    if(!orgMap){
+      orgMap=L.map('org-map',{zoomControl:true}).setView([-14.5,-51.5],4);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+        attribution:'© OpenStreetMap',maxZoom:18
+      }).addTo(orgMap);
+    } else {
+      orgMapMarkers.forEach(function(m){orgMap.removeLayer(m)});
+      orgMapMarkers=[];
+    }
+
+    var TC_MAP=['#C99200','#2563eb','#16a34a','#d97706','#7c3aed','#db2777','#0891b2','#059669','#dc2626','#0d9488'];
+    var teams=orgTeams.filter(function(t){return t.obra&&t.obra.trim()});
+
+    if(!teams.length){
+      document.getElementById('org-map-empty').style.display='flex';
+      return;
+    }
+
+    var done=0;
+    teams.forEach(function(team,ti){
+      var cidade=team.obra.trim();
+      if(orgGeoCache[cidade]){
+        orgMapAddMarker(team,ti,orgGeoCache[cidade].lat,orgGeoCache[cidade].lng,TC_MAP);
+        done++;
+        if(done===teams.length) setTimeout(function(){orgMap.invalidateSize()},100);
+        return;
+      }
+      fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(cidade+', Brasil')+'&format=json&limit=1')
+        .then(function(r){return r.json()})
+        .then(function(data){
+          if(data&&data[0]){
+            var lat=parseFloat(data[0].lat),lng=parseFloat(data[0].lon);
+            orgGeoCache[cidade]={lat:lat,lng:lng};
+            orgMapAddMarker(team,ti,lat,lng,TC_MAP);
+          }
+          done++;
+          if(done===teams.length) setTimeout(function(){orgMap.invalidateSize()},100);
+        })
+        .catch(function(){done++;});
+    });
+  });
+}
+
+function orgMapAddMarker(team,ti,lat,lng,TC_MAP){
+  var color=TC_MAP[ti%TC_MAP.length];
+  var svgPin='<svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36">'
+    +'<path d="M14 0C6.3 0 0 6.3 0 14c0 9.6 14 22 14 22s14-12.4 14-22C28 6.3 21.7 0 14 0z" fill="'+color+'"/>'
+    +'<circle cx="14" cy="14" r="6" fill="#fff" opacity="0.9"/>'
+    +'</svg>';
+  var icon=L.divIcon({
+    html:svgPin,iconSize:[28,36],iconAnchor:[14,36],popupAnchor:[0,-36],className:''
+  });
+  var marker=L.marker([lat,lng],{icon:icon}).addTo(orgMap);
+  marker.on('click',function(e){
+    orgMapShowPopup(team,color,e.originalEvent);
+  });
+  orgMapMarkers.push(marker);
+}
+
+function orgMapShowPopup(team,color,evt){
+  var wrap=document.getElementById('org-map-wrap');
+  var popup=document.getElementById('org-map-popup');
+  var members=team.rows.filter(function(r){return r.name});
+  var peopleHtml=members.map(function(r){
+    return '<div class="omp-person">'
+      +'<div class="omp-dot" style="background:'+color+'"></div>'
+      +'<div><span class="omp-name">'+oesc(r.name)+'</span>'
+      +' <span class="omp-cargo">'+oesc(r.cargo)+'</span></div>'
+      +'</div>';
+  }).join('');
+  popup.innerHTML='<div class="org-map-popup-box" style="position:relative">'
+    +'<button class="omp-close" onclick="document.getElementById(\'org-map-popup\').style.display=\'none\'">✕</button>'
+    +'<div class="omp-team">'+oesc(team.name)+'</div>'
+    +'<div class="omp-obra">'+oesc(team.obra)+'</div>'
+    +(team.veiculo?'<div class="omp-row">🚗 '+oesc(team.veiculo)+'</div>':'')
+    +'<hr class="omp-divider">'+peopleHtml+'</div>';
+  var rect=wrap.getBoundingClientRect();
+  var x=evt.clientX-rect.left, y=evt.clientY-rect.top;
+  var pw=220;
+  var left=Math.min(x-pw/2,wrap.offsetWidth-pw-8);
+  var top=y-44-members.length*22;
+  if(top<8) top=y+20;
+  popup.style.cssText='display:block;position:absolute;left:'+Math.max(8,left)+'px;top:'+Math.max(8,top)+'px;z-index:1000';
+}
+
+// ── INIT ─────────────────────────────────────────────────────
 function orgInit(){
   orgMestre=ORG_DM.map(function(m){return Object.assign({},m)});
   orgRenderMestre();
   orgLoad();
 }
 
+
+</script>
+</body>
+</html>
