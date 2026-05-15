@@ -3730,12 +3730,35 @@ function orgMapBuild(){
     }
 
     var done=0;
+    // agrupar equipes por cidade para calcular offset
+    var cidadeCount={}, cidadeIdx={};
+    teams.forEach(function(t){
+      var c=t.obra.trim();
+      cidadeCount[c]=(cidadeCount[c]||0)+1;
+      cidadeIdx[c]=0;
+    });
+
     teams.forEach(function(team,ti){
       var cidade=team.obra.trim();
-      if(orgGeoCache[cidade]){
-        orgMapAddMarker(team,ti,orgGeoCache[cidade].lat,orgGeoCache[cidade].lng,TC_MAP);
+      var total=cidadeCount[cidade];
+      var idx=cidadeIdx[cidade]++;
+
+      function addMarkerWithOffset(lat,lng){
+        // se mais de uma equipe na mesma cidade, espalha em leque
+        var offsetLat=lat, offsetLng=lng;
+        if(total>1){
+          var angle=(2*Math.PI/total)*idx - Math.PI/2;
+          var radius=0.018; // ~2km de raio
+          offsetLat=lat+radius*Math.sin(angle);
+          offsetLng=lng+radius*Math.cos(angle);
+        }
+        orgMapAddMarker(team,ti,offsetLat,offsetLng,TC_MAP);
         done++;
         if(done===teams.length) setTimeout(function(){orgMap.invalidateSize()},100);
+      }
+
+      if(orgGeoCache[cidade]){
+        addMarkerWithOffset(orgGeoCache[cidade].lat,orgGeoCache[cidade].lng);
         return;
       }
       fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(cidade+', Brasil')+'&format=json&limit=1')
@@ -3744,10 +3767,8 @@ function orgMapBuild(){
           if(data&&data[0]){
             var lat=parseFloat(data[0].lat),lng=parseFloat(data[0].lon);
             orgGeoCache[cidade]={lat:lat,lng:lng};
-            orgMapAddMarker(team,ti,lat,lng,TC_MAP);
-          }
-          done++;
-          if(done===teams.length) setTimeout(function(){orgMap.invalidateSize()},100);
+            addMarkerWithOffset(lat,lng);
+          } else { done++; }
         })
         .catch(function(){done++;});
     });
@@ -3756,12 +3777,20 @@ function orgMapBuild(){
 
 function orgMapAddMarker(team,ti,lat,lng,TC_MAP){
   var color=TC_MAP[ti%TC_MAP.length];
-  var svgPin='<svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36">'
-    +'<path d="M14 0C6.3 0 0 6.3 0 14c0 9.6 14 22 14 22s14-12.4 14-22C28 6.3 21.7 0 14 0z" fill="'+color+'"/>'
-    +'<circle cx="14" cy="14" r="6" fill="#fff" opacity="0.9"/>'
+  var svgPin='<svg xmlns="http://www.w3.org/2000/svg" width="26" height="44" viewBox="0 0 26 44">'
+    // sombra base
+    +'<ellipse cx="13" cy="43" rx="6" ry="2.5" fill="rgba(0,0,0,0.15)"/>'
+    // haste
+    +'<line x1="13" y1="40" x2="13" y2="18" stroke="'+color+'" stroke-width="2.2" stroke-linecap="round"/>'
+    // anel externo (borda)
+    +'<circle cx="13" cy="10" r="10" fill="#fff" stroke="'+color+'" stroke-width="3"/>'
+    // disco interno colorido
+    +'<circle cx="13" cy="10" r="5" fill="'+color+'"/>'
+    // brilho
+    +'<circle cx="10" cy="7" r="2.5" fill="#fff" opacity="0.35"/>'
     +'</svg>';
   var icon=L.divIcon({
-    html:svgPin,iconSize:[28,36],iconAnchor:[14,36],popupAnchor:[0,-36],className:''
+    html:svgPin,iconSize:[26,44],iconAnchor:[13,43],popupAnchor:[0,-43],className:''
   });
   var marker=L.marker([lat,lng],{icon:icon}).addTo(orgMap);
   marker.on('click',function(e){
