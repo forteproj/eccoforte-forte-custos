@@ -708,6 +708,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
       <div><div class="org-st">Organograma</div><div class="org-ss">Gerado pelas equipes cadastradas — scroll ou Ctrl+roda para zoom</div></div>
       <div style="margin-left:auto;display:flex;gap:5px">
         <button class="org-btn" onclick="orgBuild()">⟳ Gerar</button>
+        <button class="org-btn" onclick="orgPrint()">🖨️ Imprimir</button>
       </div>
     </div>
     <div class="org-bar" id="org-filters">
@@ -778,10 +779,13 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
     <div style="background:var(--sf);border:1px solid var(--bd);border-radius:4px;overflow:hidden">
       <table style="width:100%;border-collapse:collapse">
         <thead><tr style="background:var(--sf2)">
-          <th style="padding:5px 10px;text-align:left;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">#</th>
+          <th style="padding:5px 10px;text-align:center;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">Nível</th>
           <th style="padding:5px 10px;text-align:left;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">Ícone</th>
           <th style="padding:5px 10px;text-align:left;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">Cargo</th>
           <th style="padding:5px 10px;text-align:left;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">Aliases</th>
+          <th style="padding:5px 10px;text-align:center;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">Cor fundo</th>
+          <th style="padding:5px 10px;text-align:center;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">Cor texto</th>
+          <th style="padding:5px 10px;text-align:center;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">Lateral</th>
           <th style="padding:5px 10px;text-align:center;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--bd2)">Compartilhado</th>
           <th style="border-bottom:1px solid var(--bd2)"></th>
         </tr></thead>
@@ -3281,14 +3285,17 @@ var orgTeams=[],orgMestre=[],orgNodes=[],orgEdges=[],orgVisTeams=new Set();
 var orgScale=1,orgDrag=null,orgPan=null;
 
 var ORG_DM=[
-  {id:ouid(),cargo:'Diretor',    aliases:'diretor,diretoria',     icon:'🎯',shared:true},
-  {id:ouid(),cargo:'Gerente',    aliases:'gerente',               icon:'🏢',shared:true},
-  {id:ouid(),cargo:'Supervisão', aliases:'supervisão,supervisor', icon:'📋',shared:true},
-  {id:ouid(),cargo:'Encarregado',aliases:'encarregado',           icon:'👷',shared:false},
-  {id:ouid(),cargo:'Engenheiro', aliases:'engenheiro',            icon:'📐',shared:false},
-  {id:ouid(),cargo:'Soldador',   aliases:'soldador',              icon:'⚙️',shared:false},
-  {id:ouid(),cargo:'Caldereiro', aliases:'caldereiro',            icon:'🔥',shared:false},
-  {id:ouid(),cargo:'Ajudante',   aliases:'ajudante',              icon:'🧰',shared:false},
+  {id:ouid(),cargo:'Diretor Operacional',aliases:'diretor operacional,diretor,diretoria', icon:'🎯',shared:true,  bgColor:'#2a2060',txColor:'#b8adff',nivel:1},
+  {id:ouid(),cargo:'Dir. Comercial',     aliases:'diretor comercial,dir comercial',       icon:'💼',shared:true,  bgColor:'#1e3355',txColor:'#90c4ff',nivel:1},
+  {id:ouid(),cargo:'Dir. Financeiro',    aliases:'diretor financeiro,dir financeiro',     icon:'💰',shared:true,  bgColor:'#1e3355',txColor:'#90c4ff',nivel:1},
+  {id:ouid(),cargo:'Jurídico',         aliases:'juridico,corp juridico,juridica',  icon:'⚖️',shared:true,  bgColor:'#1a3020',txColor:'#5de0a0',nivel:1,lateral:true},
+  {id:ouid(),cargo:'Supervisão',         aliases:'supervisão,supervisor',                 icon:'📋',shared:true,  bgColor:'#1a3060',txColor:'#8bbfff',nivel:3},
+  {id:ouid(),cargo:'Encarregado',        aliases:'encarregado',                           icon:'👷',shared:false, bgColor:'#0d4030',txColor:'#5de0a0',nivel:4},
+  {id:ouid(),cargo:'Engenheiro',         aliases:'engenheiro',                            icon:'📐',shared:false, bgColor:'#0d4030',txColor:'#5de0a0',nivel:4},
+  {id:ouid(),cargo:'Operador',           aliases:'operador',                              icon:'🔧',shared:false, bgColor:'#1a2a50',txColor:'#7ab4ff',nivel:5},
+  {id:ouid(),cargo:'Soldador',           aliases:'soldador',                              icon:'⚙️',shared:false, bgColor:'#2a2060',txColor:'#b8adff',nivel:5},
+  {id:ouid(),cargo:'Caldereiro',         aliases:'caldereiro',                            icon:'🔥',shared:false, bgColor:'#3d2800',txColor:'#ffb940',nivel:5},
+  {id:ouid(),cargo:'Ajudante',           aliases:'ajudante,auxiliar',                     icon:'🧰',shared:false, bgColor:'#3a1a10',txColor:'#ff9070',nivel:6},
 ];
 
 function ouid(){return Math.random().toString(36).slice(2,9)}
@@ -3305,14 +3312,19 @@ function orgGetRK(raw){
 }
 function orgGetMeta(rk){
   var m=orgMestre.find(function(m){return onorm(m.cargo)===rk});
-  return m?{icon:m.icon,shared:m.shared,idx:orgMestre.indexOf(m)}:{icon:'👤',shared:false,idx:99};
+  return m?{icon:m.icon,shared:m.shared,idx:m.nivel||orgMestre.indexOf(m)}:{icon:'👤',shared:false,idx:99};
 }
 function orgGetBadge(rk){
+  // lê cores do mestre se disponível
+  var m=orgMestre.find(function(m){return onorm(m.cargo)===rk});
+  if(m&&m.bgColor&&m.txColor) return 'background:'+m.bgColor+';color:'+m.txColor;
+  // fallback hardcoded
   var s={diretor:'background:#2a2060;color:#b8adff',gerente:'background:#1a3060;color:#8bbfff',
     'supervisão':'background:#1a3060;color:#8bbfff',supervisor:'background:#1a3060;color:#8bbfff',
     encarregado:'background:#0d4030;color:#5de0a0',engenheiro:'background:#0d4030;color:#5de0a0',
+    operador:'background:#1a2a50;color:#7ab4ff',
     caldereiro:'background:#3d2800;color:#ffb940',soldador:'background:#2a2060;color:#b8adff',
-    ajudante:'background:#3a1a10;color:#ff9070'};
+    ajudante:'background:#3a1a10;color:#ff9070','auxiliar':'background:#3a1a10;color:#ff9070'};
   return s[rk]||'background:#2a2820;color:#908D86';
 }
 
@@ -3404,19 +3416,119 @@ function orgUpCell(tid,ri,f,v){var t=orgTeams.find(function(t){return t.id===tid
 // ── MESTRE ────────────────────────────────────────────────────
 function orgRenderMestre(){
   var tb=document.getElementById('org-mestre-body');tb.innerHTML='';
-  orgMestre.forEach(function(m,i){
+  // ordenar por nivel para exibição
+  var sorted=orgMestre.slice().sort(function(a,b){return (a.nivel||99)-(b.nivel||99)});
+  sorted.forEach(function(m,i){
+    var bg=m.bgColor||'#2a2820', tx=m.txColor||'#908D86';
+    var nv=m.nivel||i+1;
     var tr=document.createElement('tr');
-    tr.innerHTML='<td style="padding:4px 10px;color:var(--mu);font-weight:700;text-align:center;width:26px">'+(i+1)+'</td>'
+    tr.innerHTML=
+      // nível editável
+      '<td style="padding:4px 8px;text-align:center;width:60px">'
+        +'<input type="number" value="'+nv+'" min="1" max="99" title="Nível hierárquico — mesmo número = mesma linha no organograma" '
+        +'style="width:46px;border:1px solid var(--bd);border-radius:2px;background:var(--sf2);text-align:center;padding:3px 4px;font-family:var(--head);font-weight:700;font-size:11px;color:var(--ambm)" '
+        +'onchange="orgUpM(\''+m.id+'\',\'nivel\',parseInt(this.value)||1);orgRenderMestre()">'
+      +'</td>'
       +'<td style="padding:4px 10px"><input value="'+oesc(m.icon)+'" style="width:30px;border:1px solid var(--bd);border-radius:2px;background:var(--sf2);text-align:center;padding:2px;font-size:14px" onchange="orgUpM(\''+m.id+'\',\'icon\',this.value)"></td>'
-      +'<td style="padding:4px 10px"><input value="'+oesc(m.cargo)+'" style="border:1px solid var(--bd);border-radius:2px;background:var(--sf2);padding:3px 7px;font-family:var(--head);font-weight:700;font-size:10px;width:120px" onchange="orgUpM(\''+m.id+'\',\'cargo\',this.value)"></td>'
-      +'<td style="padding:4px 10px"><input value="'+oesc(m.aliases)+'" placeholder="alias1,alias2" style="border:1px solid var(--bd);border-radius:2px;background:var(--sf2);padding:3px 7px;font-size:11px;width:180px;color:var(--txs)" onchange="orgUpM(\''+m.id+'\',\'aliases\',this.value)"></td>'
+      +'<td style="padding:4px 10px"><input value="'+oesc(m.cargo)+'" style="border:1px solid var(--bd);border-radius:2px;background:var(--sf2);padding:3px 7px;font-family:var(--head);font-weight:700;font-size:10px;width:140px" onchange="orgUpM(\''+m.id+'\',\'cargo\',this.value)"></td>'
+      +'<td style="padding:4px 10px"><input value="'+oesc(m.aliases)+'" placeholder="alias1,alias2" style="border:1px solid var(--bd);border-radius:2px;background:var(--sf2);padding:3px 7px;font-size:11px;width:160px;color:var(--txs)" onchange="orgUpM(\''+m.id+'\',\'aliases\',this.value)"></td>'
+      +'<td style="padding:4px 10px;text-align:center">'
+        +'<div style="display:flex;align-items:center;gap:5px;justify-content:center">'
+          +'<input type="color" value="'+bg+'" title="Cor do fundo" style="width:28px;height:24px;border:1px solid var(--bd);border-radius:2px;cursor:pointer;padding:1px" onchange="orgUpM(\''+m.id+'\',\'bgColor\',this.value);orgMstreRefreshBadge(\'badge-'+m.id+'\',this.value,null)">'
+          +'<span id="badge-'+m.id+'" style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:2px;background:'+bg+';color:'+tx+'">'+oesc(m.cargo)+'</span>'
+        +'</div>'
+      +'</td>'
+      +'<td style="padding:4px 10px;text-align:center">'
+        +'<input type="color" value="'+tx+'" title="Cor do texto" style="width:28px;height:24px;border:1px solid var(--bd);border-radius:2px;cursor:pointer;padding:1px" onchange="orgUpM(\''+m.id+'\',\'txColor\',this.value);orgMstreRefreshBadge(\'badge-'+m.id+'\',null,this.value)">'
+      +'</td>'
+      +'<td style="padding:4px 10px;text-align:center"><input type="checkbox" '+(m.lateral?'checked':'')+' title="Fica na mesma altura do nível anterior, posicionado lateralmente" onchange="orgUpM(\''+m.id+'\',\'lateral\',this.checked)"></td>'
       +'<td style="padding:4px 10px;text-align:center"><input type="checkbox" '+(m.shared?'checked':'')+' title="Aparece uma vez no topo, compartilhado por todas as equipes" onchange="orgUpM(\''+m.id+'\',\'shared\',this.checked)"></td>'
       +'<td style="padding:4px 10px"><button class="org-btn" style="padding:2px 7px;color:#D44;border-color:#D4444422" onclick="orgRmM(\''+m.id+'\')">✕</button></td>';
     tr.style.borderBottom='1px solid var(--bd)';
     tb.appendChild(tr);
   });
 }
-function orgAddMestre(){orgMestre.push({id:ouid(),cargo:'Novo cargo',aliases:'',icon:'👤',shared:false});orgRenderMestre()}
+
+function orgPrint(){
+  if(!orgNodes.length){alert('Gere o organograma antes de imprimir.');return;}
+
+  var cv=document.getElementById('org-cv-canvas');
+  var w=parseInt(cv.width)||1200;
+  var h=parseInt(cv.height)||800;
+
+  // linhas como imagem
+  var imgData=cv.toDataURL('image/png');
+
+  // montar nodes com estilos inline
+  var nodesHtml='';
+  orgNodes.forEach(function(nd){
+    if(!nd.shared&&!orgVisTeams.has(nd.teamIdx))return;
+    var color=nd.teamIdx>=0?ORG_TC[nd.teamIdx%ORG_TC.length]:'#555';
+
+    if(nd.type==='chip'){
+      var isObra=nd.kind==='obra';
+      nodesHtml+='<div style="position:absolute;left:'+nd.x+'px;top:'+nd.y+'px;width:'+ORG_NW+'px;background:#F2F0EB;border:1px solid #C8C5BE;border-radius:3px;overflow:hidden;font-family:Montserrat,sans-serif">'
+        +'<div style="height:2px;background:'+color+';border-radius:3px 3px 0 0"></div>'
+        +'<div style="display:flex;align-items:center;padding:5px 7px 6px;gap:5px">'
+        +'<span style="font-size:12px">'+(isObra?'📍':'🚗')+'</span>'
+        +'<div><div style="font-weight:700;font-size:7px;letter-spacing:.07em;text-transform:uppercase;color:#908D86;line-height:1;margin-bottom:1px">'+(isObra?'Obra':'Veículo')+'</div>'
+        +'<div style="font-weight:700;font-size:9px;color:#1A1916;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+oesc(nd.label)+'</div>'
+        +'</div></div></div>';
+      return;
+    }
+
+    var meta=orgGetMeta(nd.rk);
+    var badge=orgGetBadge(nd.rk);
+    nodesHtml+='<div style="position:absolute;left:'+nd.x+'px;top:'+nd.y+'px;width:'+ORG_NW+'px;background:#F2F0EB;border:1px solid '+(nd.shared?'#AEA9A0':'#C8C5BE')+';border-style:'+(nd.shared?'dashed':'solid')+';border-radius:3px;font-family:Montserrat,sans-serif">'
+      +(nd.shared?'<div style="height:2px;border-radius:3px 3px 0 0"></div>':'<div style="height:2px;background:'+color+';border-radius:3px 3px 0 0"></div>')
+      +'<span style="font-size:14px;display:block;padding:4px 7px 1px">'+meta.icon+'</span>'
+      +'<div style="font-weight:700;font-size:10px;padding:0 7px 1px;line-height:1.25;word-break:break-word;color:#1A1916">'+oesc(nd.name)+'</div>'
+      +'<span style="display:inline-block;font-weight:700;font-size:8px;letter-spacing:.04em;text-transform:uppercase;padding:1px 5px;border-radius:2px;margin:2px 7px 6px;'+badge+'">'+oesc(nd.cargoRaw)+'</span>'
+      +'</div>';
+  });
+
+  var html='<!DOCTYPE html><html><head>'
+    +'<meta charset="UTF-8">'
+    +'<title>ECCOFORTE — Organograma</title>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{background:#fff;font-family:Montserrat,Arial,sans-serif;padding:12px}'
+    +'.pbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:3px solid #C99200}'
+    +'@media print{'
+    +'  @page{size:landscape;margin:6mm}'
+    +'  .no-print{display:none!important}'
+    +'  body{padding:0}'
+    +'}'
+    +'</style>'
+    +'</head><body>'
+    +'<div class="pbar no-print" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:3px solid #C99200">'
+    +'<span style="font-weight:800;font-size:18px;color:#C99200;letter-spacing:.06em;font-family:Arial,sans-serif">ECCOFORTE</span>'
+    +'<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#5A5852;margin-right:auto">Organograma</span>'
+    +'<span style="font-size:11px;color:#908D86">'+new Date().toLocaleDateString('pt-BR')+'</span>'
+    +'<button onclick="window.print()" style="padding:5px 14px;background:#C99200;color:#1E1C18;border:none;border-radius:3px;font-weight:700;font-size:11px;cursor:pointer">🖨️ Imprimir</button>'
+    +'<button onclick="window.close()" style="padding:5px 12px;background:#3A3835;color:#aaa;border:none;border-radius:3px;font-weight:700;font-size:11px;cursor:pointer">✕ Fechar</button>'
+    +'</div>'
+    +'<div style="position:relative;width:'+w+'px;height:'+h+'px">'
+    +'<img src="'+imgData+'" style="position:absolute;top:0;left:0;width:'+w+'px;height:'+h+'px;z-index:0">'
+    +'<div style="position:absolute;top:0;left:0;width:'+w+'px;height:'+h+'px;z-index:1">'+nodesHtml+'</div>'
+    +'</div>'
+    +'</body></html>';
+
+  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  window.open(url,'_blank');
+  setTimeout(function(){URL.revokeObjectURL(url);},20000);
+}
+
+function orgMstreRefreshBadge(badgeId,newBg,newTx){
+  if(newBg)el.style.background=newBg;
+  if(newTx)el.style.color=newTx;
+}
+function orgAddMestre(){
+  var maxNivel=orgMestre.reduce(function(acc,m){return Math.max(acc,m.nivel||1)},1);
+  orgMestre.push({id:ouid(),cargo:'Novo cargo',aliases:'',icon:'👤',shared:false,bgColor:'#2a2820',txColor:'#908D86',nivel:maxNivel+1});
+  orgRenderMestre();
+}
 function orgUpM(id,f,v){var m=orgMestre.find(function(m){return m.id===id});if(m)m[f]=v}
 function orgRmM(id){orgMestre=orgMestre.filter(function(m){return m.id!==id});orgRenderMestre()}
 
@@ -3424,91 +3536,181 @@ function orgRmM(id){orgMestre=orgMestre.filter(function(m){return m.id!==id});or
 function orgBuild(){
   orgNodes=[];orgEdges=[];
   document.getElementById('org-empty').style.display='none';
-  if(!orgTeams.length||orgTeams.every(function(t){return !t.rows.some(function(r){return r.name})})){
+  if(!orgTeams.length){
     document.getElementById('org-empty').style.display='flex';return;
   }
   var idc=0;
-  var COL_W = ORG_NW + 24; // largura de cada coluna de equipe
+  var COL_W=ORG_NW+24;
 
-  // ── nós compartilhados (Diretor, Gerente, Supervisão) ──
-  // aparecem uma vez no topo, centralizados
+  // ── nós compartilhados: vem de TODAS as equipes ──
   var sMap={};
   orgTeams.forEach(function(t){
     t.rows.forEach(function(r){
       if(!r.name)return;
       var rk=orgGetRK(r.cargo),meta=orgGetMeta(rk);
-      if(meta.shared){var k=onorm(r.name)+'|'+rk;if(!sMap[k])sMap[k]={id:'n'+(++idc),type:'person',name:r.name,cargoRaw:r.cargo,rk:rk,shared:true,teamIdx:-1,nH:ORG_NH,x:0,y:0};}
+      if(meta.shared){
+        var k=onorm(r.name)+'|'+rk;
+        if(!sMap[k])sMap[k]={id:'n'+(++idc),type:'person',name:r.name,cargoRaw:r.cargo,rk:rk,shared:true,teamIdx:-1,nH:ORG_NH,x:0,y:0};
+      }
     });
   });
   var sNodes=Object.values(sMap);
+
+  // agrupar por nivel
   var sByLvl={};
-  sNodes.forEach(function(nd){var l=orgGetMeta(nd.rk).idx;if(!sByLvl[l])sByLvl[l]=[];sByLvl[l].push(nd);});
+  sNodes.forEach(function(nd){
+    var l=orgGetMeta(nd.rk).idx;
+    if(!sByLvl[l])sByLvl[l]=[];
+    sByLvl[l].push(nd);
+  });
   var sLvls=Object.keys(sByLvl).map(Number).sort(function(a,b){return a-b});
 
-  var canvasW=Math.max(900, orgTeams.length*COL_W+80);
+  // equipes de campo = têm pelo menos 1 membro NÃO compartilhado OU têm obra/veículo
+  var fieldTeams=orgTeams.filter(function(t){
+    var hasNonShared=t.rows.some(function(r){return r.name&&!orgGetMeta(orgGetRK(r.cargo)).shared});
+    var hasLocation=(t.obra&&t.obra.trim())||(t.veiculo&&t.veiculo.trim());
+    return hasNonShared||hasLocation;
+  });
+
+  var canvasW=Math.max(900, fieldTeams.length*COL_W+80);
   var curY=28;
+
+  // separar laterais dos centrais
+  var lateralNodes=sNodes.filter(function(nd){
+    var m=orgMestre.find(function(m){return onorm(m.cargo)===nd.rk});
+    return m&&m.lateral;
+  });
+  var centralNodes=sNodes.filter(function(nd){
+    var m=orgMestre.find(function(m){return onorm(m.cargo)===nd.rk});
+    return !m||!m.lateral;
+  });
+
+  // agrupar centrais por nivel
+  var sByLvl={};
+  centralNodes.forEach(function(nd){
+    var l=orgGetMeta(nd.rk).idx;
+    if(!sByLvl[l])sByLvl[l]=[];
+    sByLvl[l].push(nd);
+  });
+  var sLvls=Object.keys(sByLvl).map(Number).sort(function(a,b){return a-b});
+
+  // posicionar centrais — cada nível em uma linha, centralizados
   sLvls.forEach(function(lvl){
-    var g=sByLvl[lvl],tw=g.length*(ORG_NW+ORG_GX)-ORG_GX,sx=(canvasW-tw)/2;
-    g.forEach(function(nd,i){nd.x=sx+i*(ORG_NW+ORG_GX);nd.y=curY;orgNodes.push(nd);});
+    var g=sByLvl[lvl];
+    var tw=g.length*(ORG_NW+ORG_GX)-ORG_GX;
+    var sx=(canvasW-tw)/2;
+    g.forEach(function(nd,i){
+      nd.x=sx+i*(ORG_NW+ORG_GX);
+      nd.y=curY;
+      orgNodes.push(nd);
+    });
     curY+=ORG_NH+ORG_GY;
   });
-  for(var li=1;li<sLvls.length;li++){
-    var p=sByLvl[sLvls[li-1]],ch=sByLvl[sLvls[li]];
-    ch.forEach(function(cn,ci){var pi=Math.floor(ci*p.length/ch.length);orgEdges.push({from:p[pi].id,to:cn.id});});
+
+  // posicionar laterais — mesma altura do nível 1, logo à esquerda do grupo central
+  if(sLvls.length && lateralNodes.length){
+    var lvl1=sByLvl[sLvls[0]];
+    var firstLvlY=lvl1[0].y;
+    var firstLvlX=lvl1[0].x; // borda esquerda do grupo central
+    lateralNodes.forEach(function(nd,i){
+      nd.x = firstLvlX - (lateralNodes.length-i)*(ORG_NW+ORG_GX);
+      nd.y = firstLvlY;
+      orgNodes.push(nd);
+    });
   }
+
+  // conectar centrais entre si por nível adjacente
+  for(var li=1;li<sLvls.length;li++){
+    var parents=sByLvl[sLvls[li-1]];
+    var children=sByLvl[sLvls[li]];
+    children.forEach(function(cn){
+      var closest=parents[0];
+      var minDist=Math.abs((cn.x||0)-(closest.x||0));
+      parents.forEach(function(p){
+        var d=Math.abs((cn.x||0)-(p.x||0));
+        if(d<minDist){minDist=d;closest=p;}
+      });
+      orgEdges.push({from:closest.id,to:cn.id});
+    });
+  }
+
+  // conectar laterais ao nível 1 central mais próximo
+  if(sLvls.length && lateralNodes.length){
+    var lvl1Nodes=sByLvl[sLvls[0]];
+    lateralNodes.forEach(function(ln){
+      var closest=lvl1Nodes[0];
+      var minDist=Math.abs((ln.x||0)-(closest.x||0));
+      lvl1Nodes.forEach(function(p){
+        var d=Math.abs((ln.x||0)-(p.x||0));
+        if(d<minDist){minDist=d;closest=p;}
+      });
+      orgEdges.push({from:closest.id,to:ln.id});
+    });
+  }
+
   var sBottom=curY;
   orgVisTeams=new Set(orgTeams.map(function(_,i){return i}));
 
-  // ── equipes em colunas verticais — tudo em linha reta para baixo ──
-  orgTeams.forEach(function(team,ti){
-    var cx = 40 + ti*COL_W + ORG_NW/2;
-    var cy = sBottom + 14;
-    var tNodes=[], chips=[], prevNode=null;
+  // nível mais baixo dos centrais → conecta às equipes
+  var lowestSharedLvl=sLvls.length?sLvls[sLvls.length-1]:null;
+  var lowestSharedNodes=lowestSharedLvl!=null?sByLvl[lowestSharedLvl]:[];
 
-    // 1. chips de obra e veículo
-    if(team.obra||team.veiculo){
-      var chipX=cx-ORG_NW/2;
-      if(team.obra){
-        var c={id:'n'+(++idc),type:'chip',kind:'obra',label:team.obra,teamIdx:ti,shared:false,nH:ORG_CHH,x:chipX,y:cy};
-        orgNodes.push(c);tNodes.push(c);chips.push(c);cy+=ORG_CHH+6;
-      }
-      if(team.veiculo){
-        var c2={id:'n'+(++idc),type:'chip',kind:'veiculo',label:team.veiculo,teamIdx:ti,shared:false,nH:ORG_CHH,x:chipX,y:cy};
-        orgNodes.push(c2);tNodes.push(c2);chips.push(c2);cy+=ORG_CHH+6;
-      }
-      cy+=ORG_GY/2;
+  // ── equipes de campo em colunas ──
+  fieldTeams.forEach(function(team,ti){
+    var origTi=orgTeams.indexOf(team);
+    var cx=40+ti*COL_W+ORG_NW/2;
+    var cy=sBottom+14;
+    var tNodes=[],chips=[];
+
+    // chips obra/veículo (sempre mostrar se preenchido)
+    var chipX=cx-ORG_NW/2;
+    if(team.obra&&team.obra.trim()){
+      var c={id:'n'+(++idc),type:'chip',kind:'obra',label:team.obra,teamIdx:origTi,shared:false,nH:ORG_CHH,x:chipX,y:cy};
+      orgNodes.push(c);tNodes.push(c);chips.push(c);cy+=ORG_CHH+6;
     }
+    if(team.veiculo&&team.veiculo.trim()){
+      var c2={id:'n'+(++idc),type:'chip',kind:'veiculo',label:team.veiculo,teamIdx:origTi,shared:false,nH:ORG_CHH,x:chipX,y:cy};
+      orgNodes.push(c2);tNodes.push(c2);chips.push(c2);cy+=ORG_CHH+6;
+    }
+    if(chips.length) cy+=ORG_GY/2;
 
-    // 2. membros — TODOS em linha reta para baixo, um por um
+    // membros não compartilhados em linha reta
     var members=team.rows.filter(function(r){return r.name&&!orgGetMeta(orgGetRK(r.cargo)).shared});
     members.sort(function(a,b){return orgGetMeta(orgGetRK(a.cargo)).idx-orgGetMeta(orgGetRK(b.cargo)).idx});
-
     members.forEach(function(m){
       var nd={id:'n'+(++idc),type:'person',name:m.name,cargoRaw:m.cargo,
-        rk:orgGetRK(m.cargo),shared:false,teamIdx:ti,nH:ORG_NH,
-        x:cx-ORG_NW/2, y:cy};
-      orgNodes.push(nd); tNodes.push(nd);
+        rk:orgGetRK(m.cargo),shared:false,teamIdx:origTi,nH:ORG_NH,x:cx-ORG_NW/2,y:cy};
+      orgNodes.push(nd);tNodes.push(nd);
       cy+=ORG_NH+ORG_GY;
     });
 
     var pNodes=tNodes.filter(function(nd){return nd.type==='person'});
 
-    // 3. ligar chips em cadeia
+    // chips → primeiro person
     if(chips.length&&pNodes.length){
       for(var ci=1;ci<chips.length;ci++) orgEdges.push({from:chips[ci-1].id,to:chips[ci].id,chip:true});
       orgEdges.push({from:chips[chips.length-1].id,to:pNodes[0].id,chip:true});
     }
-
-    // 4. ligar pessoas em linha reta — cada um conecta ao próximo
+    // chips entre si quando não há persons
+    if(chips.length&&!pNodes.length){
+      for(var ci2=1;ci2<chips.length;ci2++) orgEdges.push({from:chips[ci2-1].id,to:chips[ci2].id,chip:true});
+    }
+    // persons em linha reta
     for(var pi2=1;pi2<pNodes.length;pi2++){
       orgEdges.push({from:pNodes[pi2-1].id,to:pNodes[pi2].id});
     }
 
-    // 5. conectar compartilhado → topo da equipe
-    if(sNodes.length&&tNodes.length){
-      var ls=sNodes.slice().sort(function(a,b){return orgGetMeta(b.rk).idx-orgGetMeta(a.rk).idx})[0];
+    // compartilhado mais baixo → topo da equipe (chip ou primeiro person)
+    if(lowestSharedNodes.length&&tNodes.length){
+      // encontra o nó compartilhado mais próximo horizontalmente
       var ft=chips.length?chips[0]:pNodes[0];
-      if(ls&&ft) orgEdges.push({from:ls.id,to:ft.id});
+      var closest2=lowestSharedNodes[0];
+      var minD=Math.abs((ft.x||0)-(closest2.x||0));
+      lowestSharedNodes.forEach(function(sn){
+        var d=Math.abs((ft.x||0)-(sn.x||0));
+        if(d<minD){minD=d;closest2=sn;}
+      });
+      if(closest2&&ft) orgEdges.push({from:closest2.id,to:ft.id});
     }
   });
 
@@ -3723,7 +3925,6 @@ function orgMapBuild(){
 
     var TC_MAP=['#C99200','#2563eb','#16a34a','#d97706','#7c3aed','#db2777','#0891b2','#059669','#dc2626','#0d9488'];
     var teams=orgTeams.filter(function(t){return t.obra&&t.obra.trim()});
-
     if(!teams.length){
       document.getElementById('org-map-empty').style.display='flex';
       return;
