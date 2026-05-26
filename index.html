@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ECCOFORTE  Fábrica 2026</title>
+<title>ECCOFORTE — Fábrica 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -109,7 +109,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--mono);font-size:12px
 /* TABLE */
 table{border-collapse:collapse;width:max-content;table-layout:fixed}
 
-/* COPY COLUMN BUTTON  sempre visível no hover do TH */
+/* COPY COLUMN BUTTON — sempre visível no hover do TH */
 .col-copy-btn{
   display:none;
   background:var(--ambm);border:none;border-radius:2px;
@@ -148,7 +148,7 @@ td.has-f::after{content:'';position:absolute;top:2px;right:2px;width:0;height:0;
 .db{opacity:0;cursor:pointer;background:none;border:none;border-radius:2px;color:#A03030;font-size:13px;line-height:1;padding:2px 5px}
 tr:hover .db{opacity:1}.db:hover{background:rgba(160,30,30,.1)}
 
-/* PRODUCT TITLE ROW  nome completo acima das linhas do produto */
+/* PRODUCT TITLE ROW — nome completo acima das linhas do produto */
 tr.ph-title-row td{
   background:#1E1C18!important;
   padding:0;border-bottom:2px solid var(--ambm);border-top:6px solid var(--bg);
@@ -204,7 +204,7 @@ tr.tr td.tdl{background:#EDE0A0!important;text-transform:uppercase;letter-spacin
 .ab{font-family:var(--head);font-weight:700;font-size:11px;letter-spacing:.07em;text-transform:uppercase;background:var(--sf);border:1px dashed var(--bd2);color:var(--txs);border-radius:3px;padding:5px 13px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:border-color .12s,color .12s,background .12s}
 .ab:hover{border-color:var(--ambm);color:var(--amb);background:var(--abg)}
 
-/* MODAL  novo produto */
+/* MODAL — novo produto */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
 .modal{background:var(--sf);border:1px solid var(--bd2);border-radius:8px;width:440px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2);max-height:90vh;display:flex;flex-direction:column}
@@ -274,7 +274,7 @@ tr.sg-tog-hdr:hover td.tdl{background:#DEDAD2!important;border-right:2px solid v
 .sg-tog-icon{color:var(--amb);font-size:11px;margin-right:6px;display:inline-block;transition:transform .12s}
 .sg-tog-icon.cl{transform:rotate(-90deg)}
 
-/* Toggle "$" do sub-grupo  botão para mostrar/ocultar linhas R$ dos ingredientes */
+/* Toggle "$" do sub-grupo — botão para mostrar/ocultar linhas R$ dos ingredientes */
 .sg-rs-btn{
   float:right;margin-right:8px;margin-top:1px;
   background:none;border:1px solid var(--bd2);border-radius:3px;
@@ -285,7 +285,7 @@ tr.sg-tog-hdr:hover td.tdl{background:#DEDAD2!important;border-right:2px solid v
 .sg-rs-btn:hover{color:var(--amb);border-color:var(--ambm);background:var(--abg)}
 .sg-rs-btn.on{color:var(--amb);border-color:var(--ambm);background:var(--abg)}
 
-/* Linha " R$" abaixo do ingrediente  read-only, discreta */
+/* Linha "↳ R$" abaixo do ingrediente — read-only, discreta */
 tr.ing-rs td{background:#FAFAF6!important;border-bottom:1px dotted var(--bd)!important;height:26px}
 tr.ing-rs td.tdl{background:#FAFAF6!important;padding-left:48px;color:var(--mu);font-size:10.5px;font-style:italic}
 tr.ing-rs td:not(.tdl){color:var(--mu);font-size:11px}
@@ -389,7 +389,7 @@ table.pt .sep-row td{background:#f0ede8;height:2px;padding:0;border:none;}
 /* coluna do mes atual destacada no header */
 table.pt th.cur{background:#3A3000;color:#FFD040;}
 
-/* PRINT MEDIA  paisagem, todas as colunas em 1 pagina */
+/* PRINT MEDIA — paisagem, todas as colunas em 1 pagina */
 @media print{
   @page{size:A4 landscape;margin:8mm 6mm;}
   body *{visibility:hidden;}
@@ -421,8 +421,8 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
 <div id="print-modal-bg" onclick="if(event.target===this)closePrintModal()">
   <div id="print-modal">
     <div id="print-modal-head">
-      <span id="print-modal-title">Composição  </span>
-      <button class="pm-btn primary" onclick="window.print()"> Imprimir</button>
+      <span id="print-modal-title">Composição — </span>
+      <button class="pm-btn primary" onclick="window.print()">🖨 Imprimir</button>
       <button class="pm-btn cancel" onclick="closePrintModal()">Fechar</button>
     </div>
     <div id="print-content"></div>
@@ -440,14 +440,14 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
   <div class="login-box">
     <div class="login-top">
       <div class="login-logo">ECCOFORTE</div>
-      <div class="login-tag">Sistema de Custos  Fábrica 2026</div>
+      <div class="login-tag">Sistema de Custos — Fábrica 2026</div>
     </div>
     <div class="login-body">
       <div class="lf"><label>E-mail</label><input type="email" id="l-user" placeholder="admin@eccoforte.com.br" autocomplete="email"></div>
-      <div class="lf"><label>Senha</label><input type="password" id="l-pass" placeholder="" autocomplete="current-password"></div>
+      <div class="lf"><label>Senha</label><input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"></div>
       <div class="login-err" id="l-err"></div>
       <button class="btn-login" onclick="doLogin()">Entrar</button>
-      <div class="login-note">Acesso restrito  uso interno ECCOFORTE</div>
+      <div class="login-note">Acesso restrito — uso interno ECCOFORTE</div>
     </div>
   </div>
 </div>
@@ -457,7 +457,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
   <div class="chpw-box">
     <div class="chpw-head">Alterar Senha</div>
     <div class="chpw-body">
-      <div class="lf"><label>Senha Atual</label><input type="password" id="cp-old" placeholder=""></div>
+      <div class="lf"><label>Senha Atual</label><input type="password" id="cp-old" placeholder="••••••••"></div>
       <div class="lf"><label>Nova Senha</label><input type="password" id="cp-new" placeholder="mínimo 6 caracteres"></div>
       <div class="lf"><label>Confirmar Nova Senha</label><input type="password" id="cp-conf" placeholder="repita a nova senha"></div>
       <div class="login-err" id="cp-err"></div>
@@ -478,8 +478,8 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
       <div class="mf">
         <label>Tipo</label>
         <div class="tipo-btns">
-          <div class="tipo-btn sel" id="tb-ext" onclick="selTipo('extrudado')"> Extrudado</div>
-          <div class="tipo-btn" id="tb-sol" onclick="selTipo('solvente')"> Base Solvente</div>
+          <div class="tipo-btn sel" id="tb-ext" onclick="selTipo('extrudado')">🧱 Extrudado</div>
+          <div class="tipo-btn" id="tb-sol" onclick="selTipo('solvente')">🪣 Base Solvente</div>
         </div>
       </div>
       <div class="mf-row">
@@ -488,7 +488,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
         </div>
         <div class="mf"><label>Unidade Secundária</label>
           <select id="m-unit2">
-            <option value=""> nenhuma </option>
+            <option value="">— nenhuma —</option>
             <option value="SC25">Saco 25 KG</option>
             <option value="BD18">Balde 18 LT</option>
             <option value="BD20">Balde 20 LT</option>
@@ -497,11 +497,11 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
       </div>
       <div class="mf-sep">Equipe Operacional</div>
       <div class="staff-list" id="staff-list"></div>
-      <div class="staff-total" id="staff-total">Total MO: R$ </div>
+      <div class="staff-total" id="staff-total">Total MO: R$ —</div>
       <div class="den-fields" id="den-fields">
         <div class="mf-sep">Conversão Base Solvente</div>
         <div class="mf-row">
-          <div class="mf"><label>Fator Densidade (kglt)</label><input type="number" id="m-den" placeholder="1.5" step="0.01" value="1.5"></div>
+          <div class="mf"><label>Fator Densidade (kg→lt)</label><input type="number" id="m-den" placeholder="1.5" step="0.01" value="1.5"></div>
           <div class="mf"><label>Volume Embalagem (LT)</label><input type="number" id="m-vol" placeholder="18" value="18"></div>
         </div>
       </div>
@@ -527,14 +527,14 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
     <option value="2028">2028</option>
   </select>
   <span class="save-status" id="save-status"></span>
-  <button class="tb-btn" onclick="openChpw()"> Senha</button>
+  <button class="tb-btn" onclick="openChpw()">🔑 Senha</button>
   <button class="tb-btn danger" onclick="doLogout()">Sair</button>
 </div>
 
 <div class="page" id="page-fabrica">
   <div class="grp collapsed" id="g-custos">
     <div class="grp-head" onclick="toggleGrp('g-custos')">
-      <span class="grp-tog cl" id="g-custos-tog"></span>
+      <span class="grp-tog cl" id="g-custos-tog">▼</span>
       <span class="grp-title">Custos Base</span>
       <span class="grp-sub">Cargos e Salários · Predial</span>
     </div>
@@ -545,7 +545,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
   </div>
   <div class="grp collapsed" id="g-insumos">
     <div class="grp-head" onclick="toggleGrp('g-insumos')">
-      <span class="grp-tog cl" id="g-insumos-tog"></span>
+      <span class="grp-tog cl" id="g-insumos-tog">▼</span>
       <span class="grp-title">Insumos</span>
       <span class="grp-sub">Matéria-Prima · Frete</span>
     </div>
@@ -556,7 +556,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
   </div>
   <div class="grp collapsed" id="g-producao">
     <div class="grp-head" onclick="toggleGrp('g-producao')">
-      <span class="grp-tog cl" id="g-producao-tog"></span>
+      <span class="grp-tog cl" id="g-producao-tog">▼</span>
       <span class="grp-title">Produção</span>
       <span class="grp-sub">Composição · Produção Real</span>
     </div>
@@ -570,9 +570,9 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
 <div class="page" id="page-forte" style="display:none">
   <div class="grp collapsed" id="g-forte-cargos">
     <div class="grp-head" onclick="toggleGrp('g-forte-cargos')">
-      <span class="grp-tog cl" id="g-forte-cargos-tog"></span>
+      <span class="grp-tog cl" id="g-forte-cargos-tog">▼</span>
       <span class="grp-title">Cargos e Salários</span>
-      <span class="grp-sub">Salário · Encargos (editável) · VA  por função</span>
+      <span class="grp-sub">Salário · Encargos (editável) · VA — por função</span>
     </div>
     <div class="grp-body">
       <div id="forte-cargos" class="sec"></div>
@@ -580,9 +580,9 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
   </div>
   <div class="grp collapsed" id="g-forte-comp">
     <div class="grp-head" onclick="toggleGrp('g-forte-comp')">
-      <span class="grp-tog cl" id="g-forte-comp-tog"></span>
+      <span class="grp-tog cl" id="g-forte-comp-tog">▼</span>
       <span class="grp-title">Composição e Custo Equipe</span>
-      <span class="grp-sub">Total por equipe  membros vinculados a Cargos e Salários</span>
+      <span class="grp-sub">Total por equipe — membros vinculados a Cargos e Salários</span>
     </div>
     <div class="grp-body">
       <div id="forte-comp" class="sec"></div>
@@ -590,9 +590,9 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
   </div>
   <div class="grp collapsed" id="g-forte-ceq">
     <div class="grp-head" onclick="toggleGrp('g-forte-ceq')">
-      <span class="grp-tog cl" id="g-forte-ceq-tog"></span>
+      <span class="grp-tog cl" id="g-forte-ceq-tog">▼</span>
       <span class="grp-title">Custo Equipamentos</span>
-      <span class="grp-sub">Manutenção · Depreciação · Combustível  por tipo</span>
+      <span class="grp-sub">Manutenção · Depreciação · Combustível — por tipo</span>
     </div>
     <div class="grp-body">
       <div id="forte-ceq" class="sec"></div>
@@ -600,9 +600,9 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
   </div>
   <div class="grp collapsed" id="g-forte-m2dia">
     <div class="grp-head" onclick="toggleGrp('g-forte-m2dia')">
-      <span class="grp-tog cl" id="g-forte-m2dia-tog"></span>
+      <span class="grp-tog cl" id="g-forte-m2dia-tog">▼</span>
       <span class="grp-title">Custo M.O. / Equipamento por M²/Dia</span>
-      <span class="grp-sub">R$/M² e R$/Dia  M.O. e Equipamento por equipe</span>
+      <span class="grp-sub">R$/M² e R$/Dia — M.O. e Equipamento por equipe</span>
     </div>
     <div class="grp-body">
       <div id="forte-m2dia" class="sec"></div>
@@ -611,16 +611,16 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
 </div>
 
 <script>
-// 
+// ═══════════════════════════════════════════════════════════════
 // VERSÃO: v4-nav-mi-fix
 // Melhorias:
 //  1. Enter navega para o campo abaixo na mesma coluna (corrigido)
-//  2. Botão "" no cabeçalho copia coluna para a próxima (com toast)
-// 
+//  2. Botão "→" no cabeçalho copia coluna para a próxima (com toast)
+// ═══════════════════════════════════════════════════════════════
 window.__ECCOFORTE_VERSION = 'v12-comp-ing-rs';
-console.log(' ECCOFORTE carregado  versão:', window.__ECCOFORTE_VERSION);
+console.log('🔥 ECCOFORTE carregado — versão:', window.__ECCOFORTE_VERSION);
 
-//  FIREBASE 
+// ── FIREBASE ──────────────────────────────────────────────────
 var firebaseConfig = {
   apiKey: "AIzaSyAlQEtx3-ym5qslFDYTyJEOELHI_puaJfk",
   authDomain: "eccoforte-forte-custos.firebaseapp.com",
@@ -632,11 +632,11 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
 var db   = firebase.firestore();
-//  SISTEMA DE ANOS 
+// ── SISTEMA DE ANOS ────────────────────────────────────────────
 var ACTIVE_YEAR = 2026;
 var DOC = db.collection('painel').doc('dados_' + ACTIVE_YEAR);
 
-// Páginas disponíveis  adicionar novas páginas aqui
+// Páginas disponíveis — adicionar novas páginas aqui
 var PAGES = [
   {
     id: 'fabrica',
@@ -667,7 +667,7 @@ function buildNav(){
     item.className = 'tnav-item';
     item.id = 'nav-' + page.id;
     var link = document.createElement('a');
-    link.innerHTML = page.label + ' <span class="nav-arrow"></span>';
+    link.innerHTML = page.label + ' <span class="nav-arrow">▼</span>';
     link.onclick = function(e){
       e.preventDefault();
       // switch page on click
@@ -722,7 +722,7 @@ function switchPage(pageId){
 function changeYear(yr){
   ACTIVE_YEAR = parseInt(yr);
   DOC = db.collection('painel').doc('dados_' + ACTIVE_YEAR);
-  document.title = 'ECCOFORTE  Fábrica ' + ACTIVE_YEAR;
+  document.title = 'ECCOFORTE — Fábrica ' + ACTIVE_YEAR;
   document.querySelector('.logo-s').textContent = '/ Fábrica ' + ACTIVE_YEAR;
   // reset data and reload
   DATA = JSON.parse(JSON.stringify(defaultData()));
@@ -734,7 +734,7 @@ function changeYear(yr){
   loadFromFirestore(buildAll);
 }
 
-//  DEFAULT DATA 
+// ── DEFAULT DATA ──────────────────────────────────────────────
 var MS=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 var CUR=3;
 function n12(){return new Array(12).fill(null);}
@@ -841,7 +841,7 @@ function defaultComp(){
 var DATA = defaultData();
 var COMP = defaultComp();
 
-//  MOF DATA (Custo M.O. Forte) 
+// ── MOF DATA (Custo M.O. Forte) ─────────────────────────────
 function defaultMOF(){
   return {
     funcoes:[
@@ -868,7 +868,7 @@ function defaultMOF(){
 }
 var MOF = defaultMOF();
 
-//  QEXEC DATA (Qntd Execução) 
+// ── QEXEC DATA (Qntd Execução) ──────────────────────────────
 function defaultQEXEC(){
   return [
     {n:'MO FRIO',      u:'M²',  execDia:p2(150), fatorDia:p2(23), moRef:'MO FRIO'},
@@ -883,7 +883,7 @@ function defaultQEXEC(){
 }
 var QEXEC = defaultQEXEC();
 
-//  CEQ DATA (Custos Equipamentos Forte) 
+// ── CEQ DATA (Custos Equipamentos Forte) ─────────────────────
 function defaultCEQ(){
   return [
     {n:'Frio', veic:p2(180000), equip:p2(170000), manut:p2(1750), deprec:p2(2916.67), combs:[{n:'Combustível',v:p2(3500)}], diasEquip:p2(23), custoDia:p2(355.07), qexecRef:'MO FRIO'},
@@ -898,7 +898,7 @@ function defaultCEQ(){
 }
 var CEQ = defaultCEQ();
 
-//  FIRESTORE SAVE / LOAD 
+// ── FIRESTORE SAVE / LOAD ─────────────────────────────────────
 var saveTimer = null;
 function setSaveStatus(s,msg){
   var el=document.getElementById('save-status');
@@ -906,7 +906,7 @@ function setSaveStatus(s,msg){
   el.textContent=msg;
 }
 function scheduleSave(){
-  setSaveStatus('saving',' Salvando...');
+  setSaveStatus('saving','● Salvando...');
   clearTimeout(saveTimer);
   saveTimer=setTimeout(function(){
     DOC.set({
@@ -921,10 +921,10 @@ function scheduleSave(){
       ceq:  JSON.stringify(CEQ),
       saved:firebase.firestore.FieldValue.serverTimestamp()
     }).then(function(){
-      setSaveStatus('saved',' Salvo');
+      setSaveStatus('saved','✓ Salvo');
       setTimeout(function(){setSaveStatus('','');},3000);
     }).catch(function(e){
-      setSaveStatus('error',' Erro ao salvar');
+      setSaveStatus('error','✕ Erro ao salvar');
       console.error(e);
     });
   },1800);
@@ -953,7 +953,7 @@ function loadFromFirestore(cb){
       try{if(d.pest) DATA.pest =JSON.parse(d.pest);}catch(e){}
       try{if(d.comp){COMP=JSON.parse(d.comp);
         COMP.forEach(function(p){
-          // Reset de estado de UI  nunca persistir entre sessões
+          // Reset de estado de UI — nunca persistir entre sessões
           p._open=false;
           if(!p._sg)p._sg={};
           p._sg.ing=false;p._sg.emb=false;p._sg.eq=false;p._sg.res=false;
@@ -1003,7 +1003,7 @@ function loadFromFirestore(cb){
   });
 }
 
-//  AUTH 
+// ── AUTH ──────────────────────────────────────────────────────
 auth.onAuthStateChanged(function(user){
   if(user){
     document.getElementById('login-bg').style.display='none';
@@ -1059,12 +1059,12 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Enter'&&document.getElementById('login-bg').style.display!=='none')doLogin();
 });
 
-//  HELPERS 
+// ── HELPERS ───────────────────────────────────────────────────
 function fR(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v))return '';return 'R$ '+Number(v).toFixed(d).replace('.',',');}
 function fN(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v))return '';return Number(v).toFixed(d).replace('.',',');}
 function pV(s){return parseFloat(String(s).replace(/R\$\s*/,'').replace(',','.'));}
 
-//  FÓRMULAS (estilo Excel) 
+// ── FÓRMULAS (estilo Excel) ──────────────────────────────────
 function evalFormula(expr){
   if(!expr||typeof expr!=='string') return NaN;
   // Normaliza separadores
@@ -1109,7 +1109,7 @@ function setHeat(td,val,arr,mi){
 function unit2Label(code,vol){if(!code)return '';if(code==='SC25')return 'SC 25kg';return 'BD '+(vol||18)+'lt';}
 function unit2Vol(code,vol){if(!code)return null;if(code==='SC25')return 25;return parseFloat(vol)||18;}
 
-//  TOAST 
+// ── TOAST ─────────────────────────────────────────────────────
 var toastTimer=null;
 function showToast(msg){
   var el=document.getElementById('col-copy-toast');
@@ -1119,7 +1119,7 @@ function showToast(msg){
   toastTimer=setTimeout(function(){el.classList.remove('show');},2200);
 }
 
-//  CALC 
+// ── CALC ──────────────────────────────────────────────────────
 // Valor R$ de um ingrediente em um mês = Qtd × (Preço MP + Frete)
 // Normaliza nome removendo sufixos de unidade para comparação tolerante
 function normName(n){
@@ -1215,21 +1215,21 @@ function refreshResult(pi){
     MS.forEach(function(_,mi){
       var el=document.getElementById('rc-'+pi+'-'+ri+'-'+mi);if(!el)return;
       var c=calcProduct(p,mi);var val=row.fn(c);
-      el.value=(val!==null&&val!==undefined&&!isNaN(val))?(row.isR?fR(val,row.dec):fN(val,row.dec)):'';
+      el.value=(val!==null&&val!==undefined&&!isNaN(val))?(row.isR?fR(val,row.dec):fN(val,row.dec)):'—';
     });
   });
   MS.forEach(function(_,mi){
-    // comp-hd agora aponta para a linha " Produto Final / LT" (ri:4)
+    // comp-hd agora aponta para a linha "➤ Produto Final / LT" (ri:4)
     var hd=document.getElementById('rc-'+pi+'-4-'+mi);
-    if(hd){var c=calcProduct(p,mi);hd.value=(c.final!==null&&c.final>0)?fR(c.final,4):'';}
+    if(hd){var c=calcProduct(p,mi);hd.value=(c.final!==null&&c.final>0)?fR(c.final,4):'—';}
     var el=document.getElementById('mo-'+pi+'-'+mi);if(!el)return;
     var anyData=p.staff.some(function(si){return DATA.mo[si]&&fabMoTotal(DATA.mo[si],mi)!==null;});
     var cop=anyData?p.staff.reduce(function(s,si){var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;return s+(v!==null&&v!==undefined?v:0);},0):null;
-    el.value=(cop!==null&&cop>0)?fR(cop,2):'';
+    el.value=(cop!==null&&cop>0)?fR(cop,2):'—';
   });
 }
 
-// Atualiza as células " R$" de um ingrediente específico nos 12 meses
+// Atualiza as células "↳ R$" de um ingrediente específico nos 12 meses
 function refreshIngRs(pi, ii){
   var p=COMP[pi];if(!p)return;
   var ing=p.i[ii];if(!ing)return;
@@ -1237,7 +1237,7 @@ function refreshIngRs(pi, ii){
     var el=document.getElementById('ing-rs-'+pi+'-'+ii+'-'+mi);
     if(!el)return;
     var v=ingValueR(ing,mi);
-    el.value=(v>0)?fR(v,2):'';
+    el.value=(v>0)?fR(v,2):'—';
   });
   // Atualiza % de TODOS os ingredientes do produto (denominador pode ter mudado)
   var p2=COMP[pi];if(!p2)return;
@@ -1247,12 +1247,12 @@ function refreshIngRs(pi, ii){
       if(!el)return;
       var totalCusto=p2.i.reduce(function(s,y){return s+ingValueR(y,mi);},0);
       var v=ingValueR(x,mi);
-      el.value=(v>0&&totalCusto>0)?fN(v/totalCusto*100,1)+' %':'';
+      el.value=(v>0&&totalCusto>0)?fN(v/totalCusto*100,1)+' %':'—';
     });
   });
 }
 
-// Atualiza TODAS as linhas " R$" de TODOS os produtos
+// Atualiza TODAS as linhas "↳ R$" de TODOS os produtos
 // (usado quando o usuário edita preços de MP ou frete, que afetam todos os produtos que usam aqueles insumos)
 function refreshAllCompRs(){
   COMP.forEach(function(p,pi){
@@ -1260,7 +1260,7 @@ function refreshAllCompRs(){
   });
 }
 
-//  KEYBOARD NAVIGATION 
+// ── KEYBOARD NAVIGATION ───────────────────────────────────────
 // Navegação: Enter/ArrowDown = próxima linha mesma coluna (mesmo _mi)
 //            ArrowUp         = linha anterior mesma coluna
 //            ArrowRight/Left = próximo/anterior mês na mesma linha
@@ -1281,14 +1281,14 @@ function addNavKeys(inp){
     e.stopPropagation();
 
     var thisTr = inp.parentElement.parentElement;
-    // O tr pode estar em THEAD ou TBODY  sobe até a TABLE e pega o TBODY
+    // O tr pode estar em THEAD ou TBODY — sobe até a TABLE e pega o TBODY
     var tSection = thisTr.parentElement;
     var tbl = tSection ? tSection.closest('table') : null;
     var tbody = tbl ? tbl.querySelector('tbody') : null;
     if(!tbody) return;
 
     var rows   = tbody.rows;
-    var thisMi = inp._mi; // índice do mês (0=JAN  11=DEZ)
+    var thisMi = inp._mi; // índice do mês (0=JAN … 11=DEZ)
 
     // índice da linha atual no tbody (-1 se vier do thead)
     var rowIdx=-1;
@@ -1331,13 +1331,13 @@ function addNavKeys(inp){
   },true);
 }
 
-//  CELL 
+// ── CELL ──────────────────────────────────────────────────────
 function mkCell(arr,mi,isR,dec,cb){
   isR=isR!==false;dec=dec!==undefined?dec:2;
   var td=document.createElement('td');
   var raw=arr[mi];var val=cellVal(raw);setHeat(td,val,arr,mi);
   var inp=document.createElement('input');inp.type='text';inp.className='ci';
-  inp.value=(val!==null&&val!==undefined)?(isR?fR(val,dec):fN(val,dec)):'';inp.placeholder='';
+  inp.value=(val!==null&&val!==undefined)?(isR?fR(val,dec):fN(val,dec)):'';inp.placeholder='—';
   inp.addEventListener('focus',function(){
     // Se tem fórmula, mostra a fórmula; senão mostra número limpo
     var f=cellFormula(arr[mi]);
@@ -1357,7 +1357,7 @@ function mkCell(arr,mi,isR,dec,cb){
         inp.value=isR?fR(result,dec):fN(result,dec);
         setHeat(td,result,arr,mi);
       } else {
-        // Fórmula inválida  tentar como número
+        // Fórmula inválida — tentar como número
         var r=pV(text);
         if(!isNaN(r)){cellSet(arr,mi,r,null);inp.value=isR?fR(r,dec):fN(r,dec);setHeat(td,r,arr,mi);}
         else{cellSet(arr,mi,null,null);arr[mi]=null;inp.value='';td.classList.remove('hv','has-f');}
@@ -1384,11 +1384,11 @@ function mkRO(val,isR,dec,cls,cellId){
   var td=document.createElement('td');td.classList.add(cls||'ro');
   var inp=document.createElement('input');inp.type='text';inp.className='ci';inp.readOnly=true;
   if(cellId)inp.id=cellId;
-  inp.value=(val!==null&&val!==undefined&&!isNaN(+val))?(isR?fR(val,dec):fN(val,dec)):'';
+  inp.value=(val!==null&&val!==undefined&&!isNaN(+val))?(isR?fR(val,dec):fN(val,dec)):'—';
   td.appendChild(inp);return td;
 }
 
-//  THEAD 
+// ── THEAD ─────────────────────────────────────────────────────
 function mkThead(tbl){
   var th=tbl.createTHead(),tr=th.insertRow();
   var tbody=tbl.createTBody(); // garante que tbody existe
@@ -1400,12 +1400,12 @@ function mkThead(tbl){
     // label do mês
     var span=document.createElement('span');span.textContent=m;
     t.appendChild(span);
-    // botão copiar  próxima coluna (aparece no hover do TH via CSS)
+    // botão copiar → próxima coluna (aparece no hover do TH via CSS)
     if(i<11){
       var cb=document.createElement('button');
       cb.className='col-copy-btn';
-      cb.title='Copiar '+m+'  '+MS[i+1];
-      cb.textContent=' '+MS[i+1];
+      cb.title='Copiar '+m+' → '+MS[i+1];
+      cb.textContent='→ '+MS[i+1];
       // i+1 = índice DOM da coluna (0=label, 1=JAN, ...)
       cb.onclick=(function(colIdx){return function(e){
         e.stopPropagation();
@@ -1418,7 +1418,7 @@ function mkThead(tbl){
   var td=document.createElement('th');td.className='thd';tr.appendChild(td);
 }
 
-//  COPY COLUMN 
+// ── COPY COLUMN ───────────────────────────────────────────────
 // srcColIdx / dstColIdx são índices DOM (0=label, 1=JAN, ..., 12=DEZ)
 function copyColumn(tbl,srcColIdx,dstColIdx){
   var tbody=tbl.querySelector('tbody');if(!tbody)return;
@@ -1441,21 +1441,21 @@ function copyColumn(tbl,srcColIdx,dstColIdx){
     scheduleSave();
     var srcName=MS[srcColIdx-1];
     var dstName=MS[dstColIdx-1];
-    showToast(' '+count+' células copiadas: '+srcName+'  '+dstName);
+    showToast('✓ '+count+' células copiadas: '+srcName+' → '+dstName);
   }else{
     showToast('Nenhum valor para copiar em '+MS[srcColIdx-1]);
   }
 }
 
-//  SEC HEAD 
+// ── SEC HEAD ──────────────────────────────────────────────────
 function mkSecHead(sec,title,sub,badgeId){
   var sh=document.createElement('div');sh.className='sh';
-  var tog=document.createElement('button');tog.className='stog';tog.textContent='';
-  tog.onclick=function(){sec.classList.toggle('collapsed');tog.textContent=sec.classList.contains('collapsed')?'':'';};
+  var tog=document.createElement('button');tog.className='stog';tog.textContent='▼';
+  tog.onclick=function(){sec.classList.toggle('collapsed');tog.textContent=sec.classList.contains('collapsed')?'▶':'▼';};
   var si=document.createElement('div');si.className='si';
   si.innerHTML='<div class="st">'+title+'</div><div class="ss">'+sub+'</div>';
   sh.appendChild(tog);sh.appendChild(si);
-  if(badgeId){var b=document.createElement('div');b.className='badge';b.id=badgeId;b.textContent='';sh.appendChild(b);}
+  if(badgeId){var b=document.createElement('div');b.className='badge';b.id=badgeId;b.textContent='—';sh.appendChild(b);}
   sec.appendChild(sh);
 }
 function toggleGrp(id){
@@ -1463,8 +1463,8 @@ function toggleGrp(id){
   document.getElementById(id+'-tog').classList.toggle('cl',g.classList.contains('collapsed'));
 }
 
-//  SIMPLE GRID 
-//  FÁBRICA: CARGOS E SALÁRIOS 
+// ── SIMPLE GRID ───────────────────────────────────────────────
+// ── FÁBRICA: CARGOS E SALÁRIOS ────────────────────────────────
 // Default do Adicional (periculosidade/insalubridade): 30%
 // Editável por função/mês; cargos que não recebem adicional ficam com 0%.
 var FAB_ADIC_DEFAULT = 0.30;
@@ -1476,7 +1476,7 @@ function fabMoCalcFunc(mo, mi){
     return {sal:0,adicRate:0,adic:0,encRate:0.70,enc:0,valor:0,va:0,vr:0,vt:0,outros:0,total:lkv(mo.v||[],mi)||0};
   }
   var sal=lkv(mo.sal,mi);
-  // adic pode não existir em dados antigos  assume default 30%
+  // adic pode não existir em dados antigos → assume default 30%
   var adicRate=Array.isArray(mo.adic)?lkv(mo.adic,mi):FAB_ADIC_DEFAULT;
   if(adicRate===null||adicRate===undefined||isNaN(adicRate)) adicRate=FAB_ADIC_DEFAULT;
   var adic=sal*adicRate;
@@ -1493,12 +1493,12 @@ function fabMoCalcFunc(mo, mi){
 
 function bFabricaCargos(){
   var sec=document.getElementById('mo');sec.innerHTML='';
-  mkSecHead(sec,'Cargos e Salários','Sal. Base · Adicional (editável) · Encargos (editável) · VA · VR · VT · Outros  Total por função',null);
+  mkSecHead(sec,'Cargos e Salários','Sal. Base · Adicional (editável) · Encargos (editável) · VA · VR · VT · Outros → Total por função',null);
   var body=document.createElement('div');body.className='sb';
   var gw=document.createElement('div');gw.className='gw';gw.style.maxHeight='500px';
   var tbl=document.createElement('table');mkThead(tbl);
 
-  //  MIGRAÇÃO DE SCHEMA: garantir todos os campos novos 
+  // ── MIGRAÇÃO DE SCHEMA: garantir todos os campos novos ──
   DATA.mo.forEach(function(f){
     if(!Array.isArray(f.enc))   f.enc   =p2(f.enc||0.70);
     if(!f.sal){f.sal=f.v||n12();}
@@ -1510,14 +1510,14 @@ function bFabricaCargos(){
     if(!f.outros) f.outros=n12();
   });
 
-  //  LINHA "TOTAL GERAL" (cabeçalho-resumo do grupo) 
+  // ── LINHA "TOTAL GERAL" (cabeçalho-resumo do grupo) ──
   var totTr=tbl._tbody.insertRow();totTr.className='tr';
   var totL=document.createElement('td');totL.className='tdl';totL.textContent='Total Geral';totTr.appendChild(totL);
   MS.forEach(function(_,mi){
     var td=document.createElement('td');
     var inp=document.createElement('input');inp.type='text';inp.className='ci';inp.readOnly=true;
     inp.id='fabmo-grandtot-'+mi;
-    inp.value='';
+    inp.value='—';
     td.appendChild(inp);totTr.appendChild(td);
   });
   totTr.appendChild(document.createElement('td')).className='tdd';
@@ -1530,16 +1530,16 @@ function bFabricaCargos(){
     var htr=tbl._tbody.insertRow();htr.className='ph';
     var hl=document.createElement('td');hl.className='tdl';
     var wrap=document.createElement('div');wrap.className='ph-lbl';
-    var tog=document.createElement('button');tog.className='ptog';tog.textContent=f._sg?'':'';
+    var tog=document.createElement('button');tog.className='ptog';tog.textContent=f._sg?'▼':'▶';
     tog.onclick=(function(func,togBtn,parKey){return function(){
-      func._sg=!func._sg;togBtn.textContent=func._sg?'':'';
+      func._sg=!func._sg;togBtn.textContent=func._sg?'▼':'▶';
       tbl.querySelectorAll('[data-par="'+parKey+'"]').forEach(function(r){r.style.display=func._sg?'':'none';});
     };})(f,tog,par);
     var nm=document.createElement('span');nm.className='ph-name';nm.textContent=f.n;
     wrap.appendChild(tog);wrap.appendChild(nm);hl.appendChild(wrap);htr.appendChild(hl);
     MS.forEach(function(_,mi){htr.appendChild(mkRO(fabMoCalcFunc(f,mi).total||null,true,2,'ro-val','fabmo-t-'+fi+'-'+mi));});
     var hdd=document.createElement('td');hdd.className='tdd';
-    var hdb=document.createElement('button');hdb.className='db';hdb.textContent='';
+    var hdb=document.createElement('button');hdb.className='db';hdb.textContent='✕';
     hdb.onclick=(function(idx){return function(){
       if(!confirm('Remover "'+DATA.mo[idx].n+'"?'))return;
       DATA.mo.splice(idx,1);bFabricaCargos();bComp();scheduleSave();
@@ -1552,7 +1552,7 @@ function bFabricaCargos(){
     MS.forEach(function(_,mi){salTr.appendChild(mkCell(f.sal,mi,true,2,function(){refreshFabMo(fi);}));});
     salTr.appendChild(document.createElement('td')).className='tdd';
 
-    // Sub: Adicional % (editável)  default 30%, pode ser 0% para quem não recebe
+    // Sub: Adicional % (editável) — default 30%, pode ser 0% para quem não recebe
     var adTr=tbl._tbody.insertRow();adTr.className='ir';adTr.dataset.par=par;adTr.style.display=f._sg?'':'none';
     var adL=document.createElement('td');adL.className='tdl';adL.textContent='Adicional %';adTr.appendChild(adL);
     MS.forEach(function(_,mi){
@@ -1576,14 +1576,14 @@ function bFabricaCargos(){
 
     // Sub: Adicional R$ (read-only) = Sal * Adicional%
     var adRTr=tbl._tbody.insertRow();adRTr.className='ir';adRTr.dataset.par=par;adRTr.style.display=f._sg?'':'none';
-    var adRL=document.createElement('td');adRL.className='tdl';adRL.style.paddingLeft='28px';adRL.innerHTML='<span style="color:var(--mu)"></span> Valor R$';adRTr.appendChild(adRL);
+    var adRL=document.createElement('td');adRL.className='tdl';adRL.style.paddingLeft='28px';adRL.innerHTML='<span style="color:var(--mu)">↳</span> Valor R$';adRTr.appendChild(adRL);
     MS.forEach(function(_,mi){
       var v=fabMoCalcFunc(f,mi).adic;
       adRTr.appendChild(mkRO((v===null||v===undefined||isNaN(v))?null:v,true,2,'ro','fabmo-ad-'+fi+'-'+mi));
     });
     adRTr.appendChild(document.createElement('td')).className='tdd';
 
-    // Sub: Encargos % (editável)  incide sobre (Sal + Adic)
+    // Sub: Encargos % (editável) — incide sobre (Sal + Adic)
     var encTr=tbl._tbody.insertRow();encTr.className='ir';encTr.dataset.par=par;encTr.style.display=f._sg?'':'none';
     var encL=document.createElement('td');encL.className='tdl';encL.textContent='Encargos %';encTr.appendChild(encL);
     MS.forEach(function(_,mi){
@@ -1606,14 +1606,14 @@ function bFabricaCargos(){
 
     // Sub: Encargos R$ (read-only) = (Sal + Adic) * Encargos%
     var encRTr=tbl._tbody.insertRow();encRTr.className='ir';encRTr.dataset.par=par;encRTr.style.display=f._sg?'':'none';
-    var encRL=document.createElement('td');encRL.className='tdl';encRL.style.paddingLeft='28px';encRL.innerHTML='<span style="color:var(--mu)"></span> Valor R$';encRTr.appendChild(encRL);
+    var encRL=document.createElement('td');encRL.className='tdl';encRL.style.paddingLeft='28px';encRL.innerHTML='<span style="color:var(--mu)">↳</span> Valor R$';encRTr.appendChild(encRL);
     MS.forEach(function(_,mi){
       var v=fabMoCalcFunc(f,mi).enc;
       encRTr.appendChild(mkRO((v===null||v===undefined||isNaN(v))?null:v,true,2,'ro','fabmo-enc-'+fi+'-'+mi));
     });
     encRTr.appendChild(document.createElement('td')).className='tdd';
 
-    // Sub: SUBTOTAL (Salário + Adicional R$ + Encargos R$)  read-only destacado
+    // Sub: SUBTOTAL (Salário + Adicional R$ + Encargos R$) — read-only destacado
     var subTr=tbl._tbody.insertRow();subTr.className='res-sub';subTr.dataset.par=par;subTr.style.display=f._sg?'':'none';
     var subL=document.createElement('td');subL.className='tdl';subL.textContent='Subtotal';subTr.appendChild(subL);
     MS.forEach(function(_,mi){
@@ -1651,7 +1651,7 @@ function bFabricaCargos(){
 
   gw.appendChild(tbl);body.appendChild(gw);
   var aa=document.createElement('div');aa.className='aa';
-  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span></span> Adicionar Função';
+  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span>＋</span> Adicionar Função';
   ab.onclick=function(){openFabFuncModal();};
   aa.appendChild(ab);body.appendChild(aa);
   sec.appendChild(body);
@@ -1666,7 +1666,7 @@ function refreshFabMoGrandTotal(){
     var sum=0;
     DATA.mo.forEach(function(f){sum+=fabMoTotal(f,mi);});
     var el=document.getElementById('fabmo-grandtot-'+mi);
-    if(el)el.value=sum>0?fR(sum,2):'';
+    if(el)el.value=sum>0?fR(sum,2):'—';
   });
 }
 
@@ -1674,14 +1674,14 @@ function refreshFabMo(fi){
   var f=DATA.mo[fi];if(!f)return;
   MS.forEach(function(_,mi){
     var c=fabMoCalcFunc(f,mi);
-    var tEl=document.getElementById('fabmo-t-'+fi+'-'+mi);if(tEl)tEl.value=c.total>0?fR(c.total):'';
+    var tEl=document.getElementById('fabmo-t-'+fi+'-'+mi);if(tEl)tEl.value=c.total>0?fR(c.total):'—';
     var aEl=document.getElementById('fabmo-ad-'+fi+'-'+mi);
-    if(aEl)aEl.value=(c.adic===null||c.adic===undefined||isNaN(c.adic))?'':fR(c.adic);
+    if(aEl)aEl.value=(c.adic===null||c.adic===undefined||isNaN(c.adic))?'—':fR(c.adic);
     var eEl=document.getElementById('fabmo-enc-'+fi+'-'+mi);
-    if(eEl)eEl.value=(c.enc===null||c.enc===undefined||isNaN(c.enc))?'':fR(c.enc);
+    if(eEl)eEl.value=(c.enc===null||c.enc===undefined||isNaN(c.enc))?'—':fR(c.enc);
     var sEl=document.getElementById('fabmo-sub-'+fi+'-'+mi);
     var sub=c.sal+c.adic+c.enc;
-    if(sEl)sEl.value=sub>0?fR(sub):'';
+    if(sEl)sEl.value=sub>0?fR(sub):'—';
   });
   // refresh linha Total Geral
   refreshFabMoGrandTotal();
@@ -1728,7 +1728,7 @@ var _fabStaffTarget=null;
 function openFabStaffModal(prod){
   _fabStaffTarget=prod;
   var html='<div class="modal-bg open" id="fab-staff-modal" onclick="if(event.target===this)closeFabStaffModal()">'+
-    '<div class="modal"><div class="modal-head">Equipe Operacional  '+prod.n+'</div><div class="modal-body">'+
+    '<div class="modal"><div class="modal-head">Equipe Operacional — '+prod.n+'</div><div class="modal-body">'+
     '<div class="staff-list" id="fab-staff-list"></div>'+
     '</div><div class="modal-foot">'+
     '<button class="btn-cancel" onclick="closeFabStaffModal()">Fechar</button>'+
@@ -1738,7 +1738,7 @@ function openFabStaffModal(prod){
   DATA.mo.forEach(function(mo,idx){
     var already=prod.staff.indexOf(idx)>=0;
     var item=document.createElement('div');item.className='staff-item'+(already?' checked':'');
-    var chk=document.createElement('div');chk.className='staff-check';chk.textContent=already?'':'';
+    var chk=document.createElement('div');chk.className='staff-check';chk.textContent=already?'✓':'';
     var nmEl=document.createElement('span');nmEl.className='staff-name';nmEl.textContent=mo.n;
     var sv=document.createElement('span');sv.className='staff-sal';sv.textContent=fR(fabMoCalcFunc(mo,0).total);
     item.appendChild(chk);item.appendChild(nmEl);item.appendChild(sv);
@@ -1789,7 +1789,7 @@ function bSimple(sid,key,title,sub,badgeId,hasTot,isR){
       }
     }));});
     var td=document.createElement('td');td.className='tdd';
-    var b=document.createElement('button');b.className='db';b.textContent='';
+    var b=document.createElement('button');b.className='db';b.textContent='✕';
     b.onclick=function(){DATA[key].splice(ri,1);bSimple(sid,key,title,sub,badgeId,hasTot,isR);refreshTots();scheduleSave();};
     td.appendChild(b);tr.appendChild(td);
   });
@@ -1802,14 +1802,14 @@ function bSimple(sid,key,title,sub,badgeId,hasTot,isR){
   }
   gw.appendChild(tbl);body.appendChild(gw);
   var aa=document.createElement('div');aa.className='aa';
-  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span></span> Adicionar Item';
+  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span>＋</span> Adicionar Item';
   ab.onclick=function(){DATA[key].push({n:'Novo Item',u:'',v:n12()});bSimple(sid,key,title,sub,badgeId,hasTot,isR);refreshTots();scheduleSave();setTimeout(function(){gw.scrollTop=gw.scrollHeight;},40);};
   aa.appendChild(ab);body.appendChild(aa);
   sec.appendChild(body);refreshTots();
 }
 
-//  COMP GRID 
-//  FÁBRICA MO HELPER 
+// ── COMP GRID ─────────────────────────────────────────────────
+// ── FÁBRICA MO HELPER ─────────────────────────────────────────
 function fabMoTotal(mo, mi){
   if(!mo) return 0;
   if(mo.sal){
@@ -1851,33 +1851,33 @@ function bComp(){
     if(p._sg.ingR===undefined)p._sg.ingR=false;
     if(p._sg.embR===undefined)p._sg.embR=false;
 
-    //  Título completo do produto (linha separada, full-width) 
+    // ── Título completo do produto (linha separada, full-width) ──
     var titleTr=tbl._tbody.insertRow();titleTr.className='ph-title-row';
     var titleTd=document.createElement('td');titleTd.colSpan=14;
     var titleWrap=document.createElement('div');titleWrap.className='ph-title-wrap';
     var titleTog=document.createElement('button');titleTog.className='ptog';
     var titleName=document.createElement('span');titleName.className='ph-title-name';titleName.textContent=p.n;
-    var titleType=document.createElement('span');titleType.className='ph-type';titleType.textContent=p.tipo==='extrudado'?' Extrudado':' Solvente';
+    var titleType=document.createElement('span');titleType.className='ph-type';titleType.textContent=p.tipo==='extrudado'?'🧱 Extrudado':'🪣 Solvente';
     var titleUnit=document.createElement('span');titleUnit.className='utag';titleUnit.style.marginLeft='6px';titleUnit.textContent='R$/'+p.u;
-    var titleDel=document.createElement('button');titleDel.className='db';titleDel.style.cssText='opacity:1;margin-left:6px;flex-shrink:0';titleDel.textContent='';
+    var titleDel=document.createElement('button');titleDel.className='db';titleDel.style.cssText='opacity:1;margin-left:6px;flex-shrink:0';titleDel.textContent='✕';
     titleDel.onclick=function(){COMP.splice(pi,1);bComp();scheduleSave();};
     var titleSpacer=document.createElement('span');titleSpacer.style.flex='1';
-    var titlePrint=document.createElement('button');titlePrint.className='print-item-btn';titlePrint.textContent=' Imprimir';
+    var titlePrint=document.createElement('button');titlePrint.className='print-item-btn';titlePrint.textContent='🖨 Imprimir';
     titlePrint.onclick=(function(prod){return function(e){e.stopPropagation();printCompItem(prod);};})(p);
     titleWrap.appendChild(titleTog);titleWrap.appendChild(titleName);titleWrap.appendChild(titleType);titleWrap.appendChild(titleSpacer);titleWrap.appendChild(titlePrint);titleWrap.appendChild(titleDel);
     titleTd.appendChild(titleWrap);titleTr.appendChild(titleTd);
 
     if(p._open===undefined)p._open=false;
-    titleTog.textContent=p._open?'':'';
+    titleTog.textContent=p._open?'▼':'▶';
     titleTog.onclick=function(e){
       e.stopPropagation();
       p._open=!p._open;
-      titleTog.textContent=p._open?'':'';
+      titleTog.textContent=p._open?'▼':'▶';
       ['ing','emb','eq','res'].forEach(function(sg){p._sg[sg]=p._open;});
       tbl.querySelectorAll('[data-par="'+par+'"]').forEach(function(r){
         if(r.dataset.alwaysvis==='1'){r.style.display='';return;}
         if(r.classList.contains('sg-tog-hdr')){r.style.display=p._open?'':'none';return;}
-        // linhas R$ dos ingredientes (data-rs)  ocultar junto com os sub-grupos
+        // linhas R$ dos ingredientes (data-rs) — ocultar junto com os sub-grupos
         if(r.dataset.rs){r.style.display='none';return;}
         var sg=r.dataset.sg;
         r.style.display=(sg&&p._sg[sg]===false)?'none':'';
@@ -1886,21 +1886,21 @@ function bComp(){
 
     var tog=titleTog;
 
-    //  Helper: cria linha de sub-grupo toggle 
+    // ── Helper: cria linha de sub-grupo toggle ──
     // rsKey opcional: se passado, adiciona botão "R$" que mostra/oculta linhas de valor R$ dos itens
     function mkSgTogRow(label,sgKey,icon,rsKey){
       var r=tbl._tbody.insertRow();
       r.className='sg-tog-hdr';r.dataset.par=par;
       r.style.display=p._open?'':'none';
-      // tdl sticky  mesma estrutura de todas as linhas da tabela
+      // tdl sticky — mesma estrutura de todas as linhas da tabela
       var tdl=document.createElement('td');tdl.className='tdl';
       tdl.style.height='26px';
       var iconEl=document.createElement('span');
       iconEl.className='sg-tog-icon'+(p._sg[sgKey]===false?' cl':'');
-      iconEl.textContent='';
+      iconEl.textContent='▼';
       tdl.appendChild(iconEl);
       tdl.appendChild(document.createTextNode(' '+icon+' '+label));
-      // Botão R$ (mostrar/ocultar valores monetários)  só para ingredientes/embalagens
+      // Botão R$ (mostrar/ocultar valores monetários) — só para ingredientes/embalagens
       var rsBtn=null;
       if(rsKey){
         rsBtn=document.createElement('button');
@@ -1945,14 +1945,14 @@ function bComp(){
       return r;
     }
 
-    //  Helper: linha de ingrediente (+ linha R$ oculta logo abaixo) 
+    // ── Helper: linha de ingrediente (+ linha R$ oculta logo abaixo) ──
     function ingRow(ing,ii,cls,sgKey,rsKey){
       var tr=tbl._tbody.insertRow();tr.className=cls;tr.dataset.par=par;tr.dataset.sg=sgKey;
       tr.style.display=(p._sg[sgKey]!==false)?'':'none';
       var tl=document.createElement('td');tl.className='tdl';
-      var fl=document.createElement('button');fl.className='flag';fl.textContent=ing.emb?'':'';
+      var fl=document.createElement('button');fl.className='flag';fl.textContent=ing.emb?'📦':'✅';
       fl.onclick=(function(theIng,theTr,theFl){return function(){
-        theIng.emb=!theIng.emb;theFl.textContent=theIng.emb?'':'';
+        theIng.emb=!theIng.emb;theFl.textContent=theIng.emb?'📦':'✅';
         theTr.className=theIng.emb?'emb':'ir';theTr.dataset.par=par;
         bComp();scheduleSave();
       };})(ing,tr,fl);
@@ -1960,47 +1960,47 @@ function bComp(){
       tr.appendChild(tl);
       MS.forEach(function(_,mi){tr.appendChild(mkCell(ing.v,mi,false,2,function(){refreshResult(pi);refreshIngRs(pi,ii);}));});
       var idl=document.createElement('td');idl.className='tdd';
-      var idb=document.createElement('button');idb.className='db';idb.textContent='';
+      var idb=document.createElement('button');idb.className='db';idb.textContent='✕';
       idb.onclick=(function(arr,idx){return function(){arr.splice(idx,1);bComp();scheduleSave();};})(p.i,ii);
       idl.appendChild(idb);tr.appendChild(idl);
 
-      //  Linha  R$ (read-only, oculta por padrão) 
+      // ── Linha ↳ R$ (read-only, oculta por padrão) ──
       var rsTr=tbl._tbody.insertRow();rsTr.className='ing-rs';rsTr.dataset.par=par;rsTr.dataset.rs=rsKey;
       var sgOpen=p._sg[sgKey]!==false;
       rsTr.style.display=(sgOpen && p._sg[rsKey])?'':'none';
-      var rsL=document.createElement('td');rsL.className='tdl';rsL.innerHTML='<span style="color:var(--mu)"></span> Valor R$';rsTr.appendChild(rsL);
+      var rsL=document.createElement('td');rsL.className='tdl';rsL.innerHTML='<span style="color:var(--mu)">↳</span> Valor R$';rsTr.appendChild(rsL);
       MS.forEach(function(_,mi){
         var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');
         var inp=document.createElement('input');inp.type='text';inp.className='ci';inp.readOnly=true;
         inp.id='ing-rs-'+pi+'-'+ii+'-'+mi;
         var v=ingValueR(ing,mi);
-        inp.value=(v>0)?fR(v,2):'';
+        inp.value=(v>0)?fR(v,2):'—';
         td.appendChild(inp);rsTr.appendChild(td);
       });
       rsTr.appendChild(document.createElement('td')).className='tdd';
 
-      //  Linha  % na fórmula (mesmo data-rs, aparece junto com R$) 
+      // ── Linha ↳ % na fórmula (mesmo data-rs, aparece junto com R$) ──
       var pctTr=tbl._tbody.insertRow();pctTr.className='ing-rs ing-pct';pctTr.dataset.par=par;pctTr.dataset.rs=rsKey;
       pctTr.style.display=(sgOpen && p._sg[rsKey])?'':'none';
-      var pctL=document.createElement('td');pctL.className='tdl';pctL.innerHTML='<span style="color:var(--mu)"></span> <span style="color:#7A60B0;font-size:10px;">% na fórmula</span>';pctTr.appendChild(pctL);
+      var pctL=document.createElement('td');pctL.className='tdl';pctL.innerHTML='<span style="color:var(--mu)">↳</span> <span style="color:#7A60B0;font-size:10px;">% na fórmula</span>';pctTr.appendChild(pctL);
       MS.forEach(function(_,mi){
         var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');
         var inp=document.createElement('input');inp.type='text';inp.className='ci';inp.readOnly=true;
         inp.id='ing-pct-'+pi+'-'+ii+'-'+mi;
         var totalCusto=p.i.reduce(function(s,x){return s+ingValueR(x,mi);},0);
         var v=ingValueR(ing,mi);
-        inp.value=(v>0&&totalCusto>0)?fN(v/totalCusto*100,1)+' %':'';
+        inp.value=(v>0&&totalCusto>0)?fN(v/totalCusto*100,1)+' %':'—';
         td.appendChild(inp);pctTr.appendChild(td);
       });
       pctTr.appendChild(document.createElement('td')).className='tdd';
     }
 
-    //  SUB-GRUPO: INGREDIENTES 
-    mkSgTogRow('Ingredientes','ing','','ingR');
+    // ─── SUB-GRUPO: INGREDIENTES ───
+    mkSgTogRow('Ingredientes','ing','🌿','ingR');
     p.i.forEach(function(ing,ii){if(!ing.emb)ingRow(ing,ii,'ir','ing','ingR');});
 
-    //  SUB-GRUPO: EMBALAGENS 
-    mkSgTogRow('Embalagens','emb','','embR');
+    // ─── SUB-GRUPO: EMBALAGENS ───
+    mkSgTogRow('Embalagens','emb','📦','embR');
     p.i.forEach(function(ing,ii){if(ing.emb)ingRow(ing,ii,'emb','emb','embR');});
 
     // Botão adicionar ingrediente
@@ -2009,22 +2009,22 @@ function bComp(){
     aitr.style.borderBottom='1px dashed var(--bd)';
     var aitd=document.createElement('td');aitd.colSpan=14;aitd.style.padding='4px 14px';
     var aib=document.createElement('button');aib.className='ab';aib.style.cssText='font-size:10px;padding:3px 10px';
-    aib.innerHTML=' Ingrediente';
+    aib.innerHTML='＋ Ingrediente';
     aib.onclick=(function(prod,pidx){return function(){openIngModal(prod,pidx);};})(p,pi);
     aitd.appendChild(aib);aitr.appendChild(aitd);
 
-    //  SUB-GRUPO: EQUIPE OPERACIONAL 
-    mkSgTogRow('Equipe Operacional','eq','');
+    // ─── SUB-GRUPO: EQUIPE OPERACIONAL ───
+    mkSgTogRow('Equipe Operacional','eq','👥');
     p.staff.forEach(function(si,sIdx){
       var mo=DATA.mo[si];if(!mo)return;
       var tr=tbl._tbody.insertRow();tr.className='staff-r';tr.dataset.par=par;tr.dataset.sg='eq';
       tr.style.display=(p._sg['eq']!==false)?'':'none';
       var tl=document.createElement('td');tl.className='tdl';
-      tl.innerHTML='<span style="color:var(--mu);font-size:11px"></span> '+mo.n;
+      tl.innerHTML='<span style="color:var(--mu);font-size:11px">👤</span> '+mo.n;
       tr.appendChild(tl);
       MS.forEach(function(_,mi){tr.appendChild(mkRO(fabMoTotal(mo,mi)||null,true,2,'ro'));});
       var dtd=document.createElement('td');dtd.className='tdd';
-      var ddb=document.createElement('button');ddb.className='db';ddb.textContent='';
+      var ddb=document.createElement('button');ddb.className='db';ddb.textContent='✕';
       ddb.onclick=(function(prod,idx){return function(){prod.staff.splice(idx,1);bComp();scheduleSave();};})(p,sIdx);
       dtd.appendChild(ddb);tr.appendChild(dtd);
     });
@@ -2033,7 +2033,7 @@ function bComp(){
     staffAddTr.style.display=(p._sg['eq']!==false)?'':'none';
     var staffAddTd=document.createElement('td');staffAddTd.colSpan=14;staffAddTd.style.padding='2px 14px';
     var staffAddBtn=document.createElement('button');staffAddBtn.className='ab';staffAddBtn.style.cssText='font-size:10px;padding:3px 10px';
-    staffAddBtn.innerHTML=' Membro';
+    staffAddBtn.innerHTML='＋ Membro';
     staffAddBtn.onclick=(function(prod){return function(){openFabStaffModal(prod);};})(p);
     staffAddTd.appendChild(staffAddBtn);staffAddTr.appendChild(staffAddTd);
 
@@ -2056,7 +2056,7 @@ function bComp(){
     if(p.tipo==='solvente'){
       var denTr=tbl._tbody.insertRow();denTr.className='staff-r';denTr.dataset.par=par;denTr.dataset.sg='eq';
       denTr.style.display=(p._sg['eq']!==false)?'':'none';
-      var denL=document.createElement('td');denL.className='tdl';denL.textContent='Fator Densidade (kglt)';denTr.appendChild(denL);
+      var denL=document.createElement('td');denL.className='tdl';denL.textContent='Fator Densidade (kg→lt)';denTr.appendChild(denL);
       MS.forEach(function(_,mi){
         var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');
         var inp=document.createElement('input');inp.type='text';inp.className='ci';inp.value=fN(p.den,2);
@@ -2067,16 +2067,16 @@ function bComp(){
       var ddt=document.createElement('td');ddt.className='tdd';denTr.appendChild(ddt);
     }
 
-    //  SUB-GRUPO: RESULTADO CALCULADO 
-    mkSgTogRow('Resultado Calculado','res','');
+    // ─── SUB-GRUPO: RESULTADO CALCULADO ───
+    mkSgTogRow('Resultado Calculado','res','📊');
     var resRows=[
       {lbl:'Volume lote ('+p.u+')',   fn:function(c){return c.vol;},         isR:false,dec:2,cls:'res-sub',ri:0,av:false},
       {lbl:'Custo MP / '+p.u,         fn:function(c){return c.mpUnit;},      isR:true, dec:4,cls:'res-sub',ri:1,av:false},
       {lbl:'Custo Predial / '+p.u,    fn:function(c){return c.predialUnit;}, isR:true, dec:4,cls:'res-sub',ri:2,av:false},
       {lbl:'Custo MO / '+p.u,         fn:function(c){return c.copUnit;},     isR:true, dec:4,cls:'res-sub',ri:3,av:false},
-      {lbl:' Produto Final / '+p.u,  fn:function(c){return c.final;},       isR:true, dec:4,cls:'res',    ri:4,av:true},
+      {lbl:'➤ Produto Final / '+p.u,  fn:function(c){return c.final;},       isR:true, dec:4,cls:'res',    ri:4,av:true},
     ];
-    if(p.unit2)resRows.push({lbl:' Produto Final / '+unit2Label(p.unit2,p.vol2),fn:function(c){return c.final2;},isR:true,dec:4,cls:'res',ri:5,av:true});
+    if(p.unit2)resRows.push({lbl:'➤ Produto Final / '+unit2Label(p.unit2,p.vol2),fn:function(c){return c.final2;},isR:true,dec:4,cls:'res',ri:5,av:true});
     resRows.forEach(function(row){
       var rtr=tbl._tbody.insertRow();rtr.className=row.cls;rtr.dataset.par=par;
       if(row.av){rtr.dataset.alwaysvis='1';}else{rtr.dataset.sg='res';}
@@ -2092,12 +2092,12 @@ function bComp(){
 
   gw.appendChild(tbl);body.appendChild(gw);
   var aa=document.createElement('div');aa.className='aa';
-  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span></span> Adicionar Produto';
+  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span>＋</span> Adicionar Produto';
   ab.onclick=openModal;aa.appendChild(ab);body.appendChild(aa);
   sec.appendChild(body);
 }
 
-//  TOTALS 
+// ── TOTALS ────────────────────────────────────────────────────
 function refreshTots(){
   ['adm'].forEach(function(k){
     MS.forEach(function(_,mi){
@@ -2108,7 +2108,7 @@ function refreshTots(){
         var v=cellVal(r.v[mi]);
         return s+(v!==null&&v!==undefined?v:0);
       },0);
-      el.textContent=t>0?fR(t):'';
+      el.textContent=t>0?fR(t):'—';
     });
     var el=document.getElementById(k+'B');if(!el)return;
     var jan=DATA[k].reduce(function(s,r){
@@ -2120,7 +2120,7 @@ function refreshTots(){
   });
 }
 
-//  MODAL 
+// ── MODAL ─────────────────────────────────────────────────────
 var modalTipo='extrudado';
 var modalStaff=[];
 var STAFF_DEF={extrudado:[0,1,2,3,4],solvente:[0,1,2]};
@@ -2130,7 +2130,7 @@ function renderStaffList(){
     var checked=modalStaff.indexOf(si)>=0;
     var sal=fabMoCalcFunc(mo,0).total;
     var item=document.createElement('div');item.className='staff-item'+(checked?' checked':'');
-    var chk=document.createElement('div');chk.className='staff-check';chk.textContent=checked?'':'';
+    var chk=document.createElement('div');chk.className='staff-check';chk.textContent=checked?'✓':'';
     var nm=document.createElement('span');nm.className='staff-name';nm.textContent=mo.n;
     var sv=document.createElement('span');sv.className='staff-sal';sv.textContent=fR(sal);
     item.appendChild(chk);item.appendChild(nm);item.appendChild(sv);
@@ -2181,7 +2181,7 @@ function createProduct(){
 }
 document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
-//  MOF: CÁLCULOS 
+// ── MOF: CÁLCULOS ────────────────────────────────────────────
 function mofCalcFunc(f, mi){
   var sal = lkv(f.sal, mi);
   // enc pode ser array (novo) ou número fixo (legado)
@@ -2197,10 +2197,10 @@ function mofLookupFunc(nome){
   return null;
 }
 
-//  CARGOS E SALÁRIOS 
+// ── CARGOS E SALÁRIOS ────────────────────────────────────────
 function bMofFuncoes(){
   var sec=document.getElementById('forte-cargos');sec.innerHTML='';
-  mkSecHead(sec,'Cargos e Salários','Salário · Encargos (editável com fórmula) · VA  Total por função',null);
+  mkSecHead(sec,'Cargos e Salários','Salário · Encargos (editável com fórmula) · VA → Total por função',null);
   var body=document.createElement('div');body.className='sb';
   var gw=document.createElement('div');gw.className='gw';gw.style.maxHeight='600px';
   var tbl=document.createElement('table');mkThead(tbl);
@@ -2215,9 +2215,9 @@ function bMofFuncoes(){
     var htr=tbl._tbody.insertRow();htr.className='ph';
     var hl=document.createElement('td');hl.className='tdl';
     var wrap=document.createElement('div');wrap.className='ph-lbl';
-    var tog=document.createElement('button');tog.className='ptog';tog.textContent=f._sg?'':'';
+    var tog=document.createElement('button');tog.className='ptog';tog.textContent=f._sg?'▼':'▶';
     tog.onclick=(function(func,togBtn,parKey){return function(){
-      func._sg=!func._sg;togBtn.textContent=func._sg?'':'';
+      func._sg=!func._sg;togBtn.textContent=func._sg?'▼':'▶';
       tbl.querySelectorAll('[data-par="'+parKey+'"]').forEach(function(r){r.style.display=func._sg?'':'none';});
     };})(f,tog,par);
     var nm=document.createElement('span');nm.className='ph-name';nm.textContent=f.n;
@@ -2227,7 +2227,7 @@ function bMofFuncoes(){
       htr.appendChild(mkRO(c.total>0?c.total:null,true,2,'ro-val','mof-t-'+fi+'-'+mi));
     });
     var hdd=document.createElement('td');hdd.className='tdd';
-    var hdb=document.createElement('button');hdb.className='db';hdb.textContent='';
+    var hdb=document.createElement('button');hdb.className='db';hdb.textContent='✕';
     hdb.onclick=(function(idx){return function(){
       if(!confirm('Remover função "'+MOF.funcoes[idx].n+'"?'))return;
       MOF.funcoes.splice(idx,1);bMofFuncoes();bForteComp();bForteM2Dia();scheduleSave();
@@ -2240,7 +2240,7 @@ function bMofFuncoes(){
     MS.forEach(function(_,mi){salTr.appendChild(mkCell(f.sal,mi,true,2,function(){refreshMofFunc(fi);}));});
     salTr.appendChild(document.createElement('td')).className='tdd';
 
-    // Sub: Encargos % (editável  aceita fórmula ex: 70%, 0.7, 7500*70%)
+    // Sub: Encargos % (editável — aceita fórmula ex: 70%, 0.7, 7500*70%)
     var encTr=tbl._tbody.insertRow();encTr.className='ir';encTr.dataset.par=par;encTr.style.display=f._sg?'':'none';
     var encL=document.createElement('td');encL.className='tdl';encL.textContent='Encargos %';encTr.appendChild(encL);
     MS.forEach(function(_,mi){
@@ -2260,7 +2260,7 @@ function bMofFuncoes(){
         if(isFormula(text)){result=evalFormula(text);}
         else{result=parseFloat(text.replace('%','').replace(',','.'));}
         if(!isNaN(result)){
-          // Se valor > 1, assume percentual (ex: 70  0.70)
+          // Se valor > 1, assume percentual (ex: 70 → 0.70)
           var rate2=result>1?result/100:result;
           cellSet(f.enc,mi,rate2,isFormula(text)?text:null);
           inp.value=(rate2*100)+'%';
@@ -2273,7 +2273,7 @@ function bMofFuncoes(){
 
     // Sub: Encargos R$ (read-only calculado)
     var encRTr=tbl._tbody.insertRow();encRTr.className='ir';encRTr.dataset.par=par;encRTr.style.display=f._sg?'':'none';
-    var encRL=document.createElement('td');encRL.className='tdl';encRL.style.paddingLeft='28px';encRL.innerHTML='<span style="color:var(--mu)"></span> Valor R$';encRTr.appendChild(encRL);
+    var encRL=document.createElement('td');encRL.className='tdl';encRL.style.paddingLeft='28px';encRL.innerHTML='<span style="color:var(--mu)">↳</span> Valor R$';encRTr.appendChild(encRL);
     MS.forEach(function(_,mi){var c=mofCalcFunc(f,mi);encRTr.appendChild(mkRO(c.enc>0?c.enc:null,true,2,'ro','mof-enc-'+fi+'-'+mi));});
     encRTr.appendChild(document.createElement('td')).className='tdd';
 
@@ -2286,7 +2286,7 @@ function bMofFuncoes(){
 
   gw.appendChild(tbl);body.appendChild(gw);
   var aa=document.createElement('div');aa.className='aa';
-  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span></span> Adicionar Função';
+  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span>＋</span> Adicionar Função';
   ab.onclick=function(){openMofFuncModal();};
   aa.appendChild(ab);body.appendChild(aa);
   sec.appendChild(body);
@@ -2297,15 +2297,15 @@ function refreshMofFunc(fi){
   MS.forEach(function(_,mi){
     var c=mofCalcFunc(f,mi);
     var tInp=document.getElementById('mof-t-'+fi+'-'+mi);
-    if(tInp) tInp.value=c.total>0?fR(c.total):'';
+    if(tInp) tInp.value=c.total>0?fR(c.total):'—';
     var eInp=document.getElementById('mof-enc-'+fi+'-'+mi);
-    if(eInp) eInp.value=c.enc>0?fR(c.enc):'';
+    if(eInp) eInp.value=c.enc>0?fR(c.enc):'—';
   });
   refreshForteComp();
   refreshForteM2Dia();
 }
 
-//  HELPERS 
+// ── HELPERS ───────────────────────────────────────────────────
 function findQexecByRef(moRef){
   for(var i=0;i<QEXEC.length;i++){if(QEXEC[i].moRef===moRef||QEXEC[i].n===moRef)return QEXEC[i];}
   return null;
@@ -2328,10 +2328,10 @@ function eqMoTotal(eq,mi){
   return eq.membros.reduce(function(s,nome){var fn=mofLookupFunc(nome);return s+(fn?mofCalcFunc(fn,mi).total:0);},0);
 }
 
-//  SEÇÃO 2: COMPOSIÇÃO E CUSTO EQUIPE 
+// ── SEÇÃO 2: COMPOSIÇÃO E CUSTO EQUIPE ───────────────────────
 function bForteComp(){
   var sec=document.getElementById('forte-comp');sec.innerHTML='';
-  mkSecHead(sec,'Composição e Custo Equipe','Total por equipe  membros vinculados a Cargos e Salários',null);
+  mkSecHead(sec,'Composição e Custo Equipe','Total por equipe — membros vinculados a Cargos e Salários',null);
   var body=document.createElement('div');body.className='sb';
   var gw=document.createElement('div');gw.className='gw';gw.style.maxHeight='600px';
   var tbl=document.createElement('table');mkThead(tbl);
@@ -2344,9 +2344,9 @@ function bForteComp(){
     var htr=tbl._tbody.insertRow();htr.className='ph';
     var hl=document.createElement('td');hl.className='tdl';
     var wrap=document.createElement('div');wrap.className='ph-lbl';
-    var tog=document.createElement('button');tog.className='ptog';tog.textContent=eq._sg?'':'';
+    var tog=document.createElement('button');tog.className='ptog';tog.textContent=eq._sg?'▼':'▶';
     tog.onclick=(function(e,tb,pk){return function(){
-      e._sg=!e._sg;tb.textContent=e._sg?'':'';
+      e._sg=!e._sg;tb.textContent=e._sg?'▼':'▶';
       tbl.querySelectorAll('[data-par="'+pk+'"]').forEach(function(r){r.style.display=e._sg?'':'none';});
     };})(eq,tog,par);
     var nm=document.createElement('span');nm.className='ph-name';nm.textContent=eq.n+' M.O.';
@@ -2354,7 +2354,7 @@ function bForteComp(){
     wrap.appendChild(tog);wrap.appendChild(nm);wrap.appendChild(cnt);hl.appendChild(wrap);htr.appendChild(hl);
     MS.forEach(function(_,mi){htr.appendChild(mkRO(eqMoTotal(eq,mi)||null,true,2,'ro-val','fc-hd-'+ei+'-'+mi));});
     var hdd=document.createElement('td');hdd.className='tdd';
-    var hdb=document.createElement('button');hdb.className='db';hdb.textContent='';
+    var hdb=document.createElement('button');hdb.className='db';hdb.textContent='✕';
     hdb.onclick=(function(idx){return function(){
       if(!confirm('Remover equipe "'+MOF.equipes[idx].n+'"?'))return;
       MOF.equipes.splice(idx,1);bForteComp();bForteM2Dia();scheduleSave();
@@ -2366,11 +2366,11 @@ function bForteComp(){
       var fn=mofLookupFunc(nome);
       var mtr=tbl._tbody.insertRow();mtr.className='staff-r';mtr.dataset.par=par;mtr.style.display=eq._sg?'':'none';
       var ml=document.createElement('td');ml.className='tdl';
-      ml.innerHTML='<span style="color:var(--mu);font-size:11px"></span> '+nome;
+      ml.innerHTML='<span style="color:var(--mu);font-size:11px">👤</span> '+nome;
       mtr.appendChild(ml);
       MS.forEach(function(_,mi){mtr.appendChild(mkRO(fn?mofCalcFunc(fn,mi).total:null,true,2,'ro','fc-mo-'+ei+'-'+mi2+'-'+mi));});
       var mdd=document.createElement('td');mdd.className='tdd';
-      var mdb=document.createElement('button');mdb.className='db';mdb.textContent='';
+      var mdb=document.createElement('button');mdb.className='db';mdb.textContent='✕';
       mdb.onclick=(function(equipe,midx){return function(){equipe.membros.splice(midx,1);bForteComp();bForteM2Dia();scheduleSave();};})(eq,mi2);
       mdd.appendChild(mdb);mtr.appendChild(mdd);
     });
@@ -2378,7 +2378,7 @@ function bForteComp(){
     var aitr=tbl._tbody.insertRow();aitr.dataset.par=par;aitr.style.display=eq._sg?'':'none';
     var aitd=document.createElement('td');aitd.colSpan=14;aitd.style.padding='2px 14px';
     var aib=document.createElement('button');aib.className='ab';aib.style.cssText='font-size:10px;padding:3px 10px';
-    aib.innerHTML=' Membro';
+    aib.innerHTML='＋ Membro';
     aib.onclick=(function(equipe){return function(){openMofMembroModal(equipe,function(){bForteComp();bForteM2Dia();scheduleSave();});};})(eq);
     aitd.appendChild(aib);aitr.appendChild(aitd);
   });
@@ -2386,7 +2386,7 @@ function bForteComp(){
   gw.appendChild(tbl);body.appendChild(gw);
   // Botão nova equipe
   var aa=document.createElement('div');aa.className='aa';
-  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span></span> Adicionar Equipe';
+  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span>＋</span> Adicionar Equipe';
   ab.onclick=function(){openMofEquipeModal();};
   aa.appendChild(ab);body.appendChild(aa);
   sec.appendChild(body);
@@ -2396,20 +2396,20 @@ function refreshForteComp(){
   MOF.equipes.forEach(function(eq,ei){
     MS.forEach(function(_,mi){
       var tot=eqMoTotal(eq,mi);
-      var hd=document.getElementById('fc-hd-'+ei+'-'+mi);if(hd)hd.value=tot?fR(tot):'';
+      var hd=document.getElementById('fc-hd-'+ei+'-'+mi);if(hd)hd.value=tot?fR(tot):'—';
       eq.membros.forEach(function(nome,mi2){
         var fn=mofLookupFunc(nome);
         var el=document.getElementById('fc-mo-'+ei+'-'+mi2+'-'+mi);
-        if(el)el.value=fn?fR(mofCalcFunc(fn,mi).total):'';
+        if(el)el.value=fn?fR(mofCalcFunc(fn,mi).total):'—';
       });
     });
   });
 }
 
-//  SEÇÃO 3: CUSTO EQUIPAMENTOS 
+// ── SEÇÃO 3: CUSTO EQUIPAMENTOS ──────────────────────────────
 function bForteCeq(){
   var sec=document.getElementById('forte-ceq');sec.innerHTML='';
-  mkSecHead(sec,'Custo Equipamentos','Grade anual  todos os campos aceitam fórmulas',null);
+  mkSecHead(sec,'Custo Equipamentos','Grade anual — todos os campos aceitam fórmulas',null);
   var body=document.createElement('div');body.className='sb';
   var gw=document.createElement('div');gw.className='gw';gw.style.maxHeight='600px';
   var tbl=document.createElement('table');mkThead(tbl);
@@ -2422,9 +2422,9 @@ function bForteCeq(){
     var htr=tbl._tbody.insertRow();htr.className='ph';
     var hl=document.createElement('td');hl.className='tdl';
     var wrap=document.createElement('div');wrap.className='ph-lbl';
-    var tog=document.createElement('button');tog.className='ptog';tog.textContent=tipo._sg?'':'';
+    var tog=document.createElement('button');tog.className='ptog';tog.textContent=tipo._sg?'▼':'▶';
     tog.onclick=(function(t,tb,pk){return function(){
-      t._sg=!t._sg;tb.textContent=t._sg?'':'';
+      t._sg=!t._sg;tb.textContent=t._sg?'▼':'▶';
       tbl.querySelectorAll('[data-par="'+pk+'"]').forEach(function(r){r.style.display=t._sg?'':'none';});
     };})(tipo,tog,par);
     var nm=document.createElement('span');nm.className='ph-name';nm.textContent=tipo.n;
@@ -2435,7 +2435,7 @@ function bForteCeq(){
       htr.appendChild(mkRO(tot>0?tot:null,true,2,'ro-val','fceq-hd-'+ti+'-'+mi));
     });
     var hdd=document.createElement('td');hdd.className='tdd';
-    var hdb=document.createElement('button');hdb.className='db';hdb.textContent='';
+    var hdb=document.createElement('button');hdb.className='db';hdb.textContent='✕';
     hdb.onclick=(function(idx){return function(){
       if(!confirm('Remover "'+CEQ[idx].n+'"?'))return;CEQ.splice(idx,1);bForteCeq();scheduleSave();
     };})(ti);
@@ -2456,7 +2456,7 @@ function bForteCeq(){
       var cl=document.createElement('td');cl.className='tdl';cl.textContent=comb.n;ctr.appendChild(cl);
       MS.forEach(function(_,mi){ctr.appendChild(mkCell(comb.v,mi,true,2,function(){refreshForteCeq();scheduleSave();}));});
       var cdd=document.createElement('td');cdd.className='tdd';
-      if(ci>0){var cdb=document.createElement('button');cdb.className='db';cdb.textContent='';
+      if(ci>0){var cdb=document.createElement('button');cdb.className='db';cdb.textContent='✕';
         cdb.onclick=(function(t,cidx){return function(){t.combs.splice(cidx,1);bForteCeq();scheduleSave();};})(tipo,ci);
         cdd.appendChild(cdb);}
       ctr.appendChild(cdd);
@@ -2464,7 +2464,7 @@ function bForteCeq(){
     var actr=tbl._tbody.insertRow();actr.dataset.par=par;actr.style.display=tipo._sg?'':'none';
     var actd=document.createElement('td');actd.colSpan=14;actd.style.padding='2px 14px';
     var acb=document.createElement('button');acb.className='ab';acb.style.cssText='font-size:10px;padding:3px 10px';
-    acb.innerHTML=' Combustível';
+    acb.innerHTML='＋ Combustível';
     acb.onclick=(function(t){return function(){t.combs.push({n:'Combustível '+(t.combs.length+1),v:n12()});bForteCeq();scheduleSave();};})(tipo);
     actd.appendChild(acb);actr.appendChild(actd);
 
@@ -2489,7 +2489,7 @@ function bForteCeq(){
 
   gw.appendChild(tbl);body.appendChild(gw);
   var aa=document.createElement('div');aa.className='aa';
-  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span></span> Adicionar Tipo';
+  var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span>＋</span> Adicionar Tipo';
   ab.onclick=function(){openCeqModal();};
   aa.appendChild(ab);body.appendChild(aa);
   sec.appendChild(body);
@@ -2503,7 +2503,7 @@ function refreshForteCeq(){
       // Header veic+equip
       var tot=(lkv(tipo.veic,mi)||0)+(lkv(tipo.equip,mi)||0);
       var hd=document.getElementById('fceq-hd-'+ti+'-'+mi);
-      if(hd)hd.value=tot>0?fR(tot):'';
+      if(hd)hd.value=tot>0?fR(tot):'—';
 
       // Custo/Dia = (manut + deprec + todos combs) / dias
       var somaTotal=(lkv(tipo.manut,mi)||0)
@@ -2514,17 +2514,17 @@ function refreshForteCeq(){
       tipo.custoDia[mi]=val;
       // Atualiza via referência direta (evita getElementById com DOM não-anexado)
       if(tipo._cdInputs&&tipo._cdInputs[mi]){
-        tipo._cdInputs[mi].value=(val!==null)?fR(val,2):'';
+        tipo._cdInputs[mi].value=(val!==null)?fR(val,2):'—';
       }
     });
   });
   refreshForteM2Dia();
 }
 
-//  SEÇÃO 4: CUSTO M.O./EQUIPAMENTO POR M²/DIA 
+// ── SEÇÃO 4: CUSTO M.O./EQUIPAMENTO POR M²/DIA ───────────────
 function bForteM2Dia(){
   var sec=document.getElementById('forte-m2dia');sec.innerHTML='';
-  mkSecHead(sec,'Custo M.O. / Equipamento por M²/Dia','R$/M² e R$/Dia  M.O. e Equipamento por equipe',null);
+  mkSecHead(sec,'Custo M.O. / Equipamento por M²/Dia','R$/M² e R$/Dia — M.O. e Equipamento por equipe',null);
   var body=document.createElement('div');body.className='sb';
   var gw=document.createElement('div');gw.className='gw';gw.style.maxHeight='none';
   var tbl=document.createElement('table');
@@ -2544,7 +2544,7 @@ function bForteM2Dia(){
     var qe=findQexecByRef(eq.n);
     var ceq=findCeqByRef(eq.n);
 
-    //  HEADER ROW: 4 valores 
+    // ── HEADER ROW: 4 valores ──
     // Linha 1: M.O. R$/M² e Equip R$/M²
     var calcVals=function(mi){
       var moTot=eqMoTotal(eq,mi);
@@ -2560,13 +2560,13 @@ function bForteM2Dia(){
       };
     };
 
-    //  HEADER: nome equipe + toggle (cells vazias) 
+    // ── HEADER: nome equipe + toggle (cells vazias) ──
     var htr=tbl._tbody.insertRow();htr.className='ph';
     var hl=document.createElement('td');hl.className='tdl';
     var wrap=document.createElement('div');wrap.className='ph-lbl';
-    var tog=document.createElement('button');tog.className='ptog';tog.textContent=eq._fsg?'':'';
+    var tog=document.createElement('button');tog.className='ptog';tog.textContent=eq._fsg?'▼':'▶';
     tog.onclick=(function(e,tb,pk){return function(){
-      e._fsg=!e._fsg;tb.textContent=e._fsg?'':'';
+      e._fsg=!e._fsg;tb.textContent=e._fsg?'▼':'▶';
       tbl.querySelectorAll('[data-par="'+pk+'"]').forEach(function(r){r.style.display=e._fsg?'':'none';});
     };})(eq,tog,par);
     var nm=document.createElement('span');nm.className='ph-name';nm.textContent=eq.n;
@@ -2574,7 +2574,7 @@ function bForteM2Dia(){
     MS.forEach(function(){htr.appendChild(document.createElement('td'));});
     htr.appendChild(document.createElement('td'));
 
-    //  4 linhas de resultado  sempre visíveis (sem data-par) 
+    // ── 4 linhas de resultado — sempre visíveis (sem data-par) ──
     var mkResultRow=function(label,idPre,valFn,dec){
       var tr=tbl._tbody.insertRow();tr.className='ir';
       var tdl=document.createElement('td');tdl.className='tdl';tdl.style.fontWeight='700';tdl.style.paddingLeft='28px';tdl.textContent=label;tr.appendChild(tdl);
@@ -2586,7 +2586,7 @@ function bForteM2Dia(){
     mkResultRow(eq.n+' Equip R$/M²',  'fm-ceqM2-', function(mi){return calcVals(mi).ceqM2;},4);
     mkResultRow(eq.n+' Equip R$/Dia', 'fm-ceqDia-',function(mi){return calcVals(mi).ceqDia;},2);
 
-    //  Sub-linhas colapsáveis 
+    // ── Sub-linhas colapsáveis ──
     var mkSubEdit=function(label,arr,isR,dec){
       var tr=tbl._tbody.insertRow();tr.className='ir';tr.dataset.par=par;tr.style.display=eq._fsg?'':'none';
       var tdl=document.createElement('td');tdl.className='tdl';tdl.textContent=label;tr.appendChild(tdl);
@@ -2615,17 +2615,17 @@ function bForteM2Dia(){
       var fn=mofLookupFunc(nome);
       var mtr=tbl._tbody.insertRow();mtr.className='staff-r';mtr.dataset.par=par;mtr.style.display=eq._fsg?'':'none';
       var ml=document.createElement('td');ml.className='tdl';
-      ml.innerHTML='<span style="color:var(--mu);font-size:11px"></span> '+nome;mtr.appendChild(ml);
+      ml.innerHTML='<span style="color:var(--mu);font-size:11px">👤</span> '+nome;mtr.appendChild(ml);
       MS.forEach(function(_,mi){mtr.appendChild(mkRO(fn?mofCalcFunc(fn,mi).total:null,true,2,'ro',null));});
       var mdd=document.createElement('td');mdd.className='tdd';
-      var mdb=document.createElement('button');mdb.className='db';mdb.textContent='';
+      var mdb=document.createElement('button');mdb.className='db';mdb.textContent='✕';
       mdb.onclick=(function(equipe,midx){return function(){equipe.membros.splice(midx,1);bForteM2Dia();scheduleSave();};})(eq,mi2);
       mdd.appendChild(mdb);mtr.appendChild(mdd);
     });
     var aitr=tbl._tbody.insertRow();aitr.dataset.par=par;aitr.style.display=eq._fsg?'':'none';
     var aitd=document.createElement('td');aitd.colSpan=14;aitd.style.padding='2px 14px';
     var aib=document.createElement('button');aib.className='ab';aib.style.cssText='font-size:10px;padding:3px 10px';
-    aib.innerHTML=' Membro';
+    aib.innerHTML='＋ Membro';
     aib.onclick=(function(equipe){return function(){openMofMembroModal(equipe,function(){bForteM2Dia();scheduleSave();});};})(eq);
     aitd.appendChild(aib);aitr.appendChild(aitd);
   });
@@ -2644,7 +2644,7 @@ function refreshForteM2Dia(){
       var fatorDia=qe?lkv(qe.fatorDia,mi):23;
       var ceqTot=ceq?ceqCalc(ceq,mi).custoTotal:0;
       var custoDia=ceq?lkv(ceq.custoDia,mi):0;
-      var set=function(id,val,dec){var el=document.getElementById(id+ei+'-'+mi);if(el)el.value=val>0?fR(val,dec||2):'';};
+      var set=function(id,val,dec){var el=document.getElementById(id+ei+'-'+mi);if(el)el.value=val>0?fR(val,dec||2):'—';};
       set('fm-moM2-',  execMes?moTot/execMes:0);
       set('fm-moDia-', fatorDia?moTot/fatorDia:0);
       set('fm-ceqM2-', execMes?ceqTot/execMes:0,4);
@@ -2653,7 +2653,7 @@ function refreshForteM2Dia(){
   });
 }
 
-//  MODAL: NOVA EQUIPE 
+// ── MODAL: NOVA EQUIPE ───────────────────────────────────────
 function openMofEquipeModal(){
   var html='<div class="modal-bg open" id="mof-eq-modal" onclick="if(event.target===this)closeMofEqModal()">'+
     '<div class="modal"><div class="modal-head">Nova Equipe</div><div class="modal-body">'+
@@ -2676,7 +2676,7 @@ function openMofEquipeModal(){
     item.onclick=function(){
       var idx=window._mofEqSel.indexOf(fi);
       if(idx>=0){window._mofEqSel.splice(idx,1);item.classList.remove('checked');chk.textContent='';}
-      else{window._mofEqSel.push(fi);item.classList.add('checked');chk.textContent='';}
+      else{window._mofEqSel.push(fi);item.classList.add('checked');chk.textContent='✓';}
     };
     list.appendChild(item);
   });
@@ -2691,7 +2691,7 @@ function createMofEquipe(){
   closeMofEqModal();bForteComp();bForteM2Dia();scheduleSave();
 }
 
-//  MODAL: CEQ 
+// ── MODAL: CEQ ───────────────────────────────────────────────
 function openCeqModal(){
   var html='<div class="modal-bg open" id="ceq-modal" onclick="if(event.target===this)closeCeqModal()">'+
     '<div class="modal"><div class="modal-head">Novo Tipo de Equipamento</div><div class="modal-body">'+
@@ -2701,7 +2701,7 @@ function openCeqModal(){
     '<div class="mf"><label>Equipamento (R$)</label><input type="number" id="ceq-equip" placeholder="170000"></div>'+
     '</div>'+
     '<div class="mf"><label>Combustível (R$)</label><input type="number" id="ceq-comb" placeholder="3500"></div>'+
-    '<div class="mf"><label>Ref. Equipe</label><select id="ceq-ref"><option value=""> nenhum </option>';
+    '<div class="mf"><label>Ref. Equipe</label><select id="ceq-ref"><option value="">— nenhum —</option>';
   MOF.equipes.forEach(function(eq){html+='<option value="'+eq.n+'">'+eq.n+'</option>';});
   html+='</select></div></div><div class="modal-foot">'+
     '<button class="btn-cancel" onclick="closeCeqModal()">Cancelar</button>'+
@@ -2723,7 +2723,7 @@ function createCeq(){
 }
 
 
-//  MODAIS: FUNÇÃO / MEMBRO 
+// ── MODAIS: FUNÇÃO / MEMBRO ──────────────────────────────────
 function openMofFuncModal(){
   var html='<div class="modal-bg open" id="mof-func-modal" onclick="if(event.target===this)closeMofFuncModal()">'+
     '<div class="modal"><div class="modal-head">Nova Função</div><div class="modal-body">'+
@@ -2757,7 +2757,7 @@ var _mofMembroCb=null;
 function openMofMembroModal(equipe,cb){
   _mofMembroCb=cb;
   var html='<div class="modal-bg open" id="mof-mb-modal" onclick="if(event.target===this)closeMofMbModal()">'+
-    '<div class="modal"><div class="modal-head">Adicionar Membro  '+equipe.n+'</div><div class="modal-body">'+
+    '<div class="modal"><div class="modal-head">Adicionar Membro — '+equipe.n+'</div><div class="modal-body">'+
     '<div class="staff-list" id="mof-mb-list"></div>'+
     '</div><div class="modal-foot">'+
     '<button class="btn-cancel" onclick="closeMofMbModal()">Fechar</button>'+
@@ -2767,7 +2767,7 @@ function openMofMembroModal(equipe,cb){
   MOF.funcoes.forEach(function(f){
     var already=equipe.membros.indexOf(f.n)>=0;
     var item=document.createElement('div');item.className='staff-item'+(already?' checked':'');
-    var chk=document.createElement('div');chk.className='staff-check';chk.textContent=already?'':'';
+    var chk=document.createElement('div');chk.className='staff-check';chk.textContent=already?'✓':'';
     var nmEl=document.createElement('span');nmEl.className='staff-name';nmEl.textContent=f.n;
     var sv=document.createElement('span');sv.className='staff-sal';sv.textContent=fR(mofCalcFunc(f,0).total);
     item.appendChild(chk);item.appendChild(nmEl);item.appendChild(sv);
@@ -2782,13 +2782,13 @@ function openMofMembroModal(equipe,cb){
 }
 function closeMofMbModal(){var m=document.getElementById('mof-mb-modal');if(m)m.remove();}
 
-//  MODAL: NOVO INGREDIENTE 
+// ── MODAL: NOVO INGREDIENTE ───────────────────────────────────
 function openIngModal(prod, pi){
   var html='<div class="modal-bg open" id="ing-modal" onclick="if(event.target===this)closeIngModal()">'+
-    '<div class="modal"><div class="modal-head">Novo Ingrediente  '+prod.n+'</div><div class="modal-body">'+
+    '<div class="modal"><div class="modal-head">Novo Ingrediente — '+prod.n+'</div><div class="modal-body">'+
     '<div class="mf"><label>Matéria-Prima</label>'+
     '<select id="ing-mp-sel" style="width:100%;background:var(--sf2);border:1px solid var(--bd2);border-radius:4px;padding:7px 10px;font-family:var(--mono);font-size:12px;color:var(--tx);outline:none">'+
-    '<option value="-1"> Nenhuma (digitar manualmente) </option>';
+    '<option value="-1">— Nenhuma (digitar manualmente) —</option>';
   DATA.mp.forEach(function(mp,idx){
     html+='<option value="'+idx+'">'+mp.n+(mp.u?' · '+mp.u:'')+'</option>';
   });
@@ -2846,15 +2846,15 @@ function createIng(pi){
   },50);
 }
 
-//  PRINT COMP ITEM 
+// ── PRINT COMP ITEM ───────────────────────────────────────────
 function closePrintModal(){
   document.getElementById('print-modal-bg').classList.remove('open');
 }
 
 function printCompItem(p){
   // Helpers de formatacao
-  function _fR(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v)||v===0)return '';return 'R$ '+Number(v).toFixed(d).replace('.',',');}
-  function _fN(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v))return '';return Number(v).toFixed(d).replace('.',',');}
+  function _fR(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v)||v===0)return '—';return 'R$ '+Number(v).toFixed(d).replace('.',',');}
+  function _fN(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v))return '—';return Number(v).toFixed(d).replace('.',',');}
 
   var tipo=p.tipo==='extrudado'?'Extrudado':'Solvente';
   var c0=calcProduct(p,0);
@@ -2867,7 +2867,7 @@ function printCompItem(p){
   var COL_W=(78/12).toFixed(2)+'%';
   var CUR_W=COL_W; // mes atual mesma largura, so muda cor
 
-  //  Gera HTML da tabela 
+  // ── Gera HTML da tabela ──
   function secLabel(icon,title){
     return '<div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:7.5pt;letter-spacing:.07em;text-transform:uppercase;color:#A87600;border-left:3px solid #C99200;padding:2pt 0 2pt 7pt;margin:10pt 0 3pt;">'+icon+' '+title+'</div>';
   }
@@ -2891,7 +2891,7 @@ function printCompItem(p){
     MS.forEach(function(_,mi){
       var bg=rowBg||(mi===CUR?'#FFFAE0':'#fff');
       var v=typeof vals==='function'?vals(mi):(vals?vals[mi]:null);
-      var txt=(v===null||v===undefined||isNaN(+v)||v===0)?'':(isR?_fR(v,dec):_fN(v,dec));
+      var txt=(v===null||v===undefined||isNaN(+v)||v===0)?'—':(isR?_fR(v,dec):_fN(v,dec));
       s+='<td style="text-align:right;padding:2.5pt 3pt;font-size:7pt;border:1px solid #ddd;background:'+bg+';white-space:nowrap;">'+txt+'</td>';
     });
     s+='</tr>';
@@ -2904,7 +2904,7 @@ function printCompItem(p){
     MS.forEach(function(_,mi){
       var bg=mi===CUR?'#E0C840':'#EDE0A0';
       var v=typeof vals==='function'?vals(mi):(vals?vals[mi]:null);
-      var txt=(v===null||v===undefined||isNaN(+v)||v===0)?'':(isR?_fR(v,dec):_fN(v,dec));
+      var txt=(v===null||v===undefined||isNaN(+v)||v===0)?'—':(isR?_fR(v,dec):_fN(v,dec));
       s+='<td style="text-align:right;padding:3pt 3pt;font-size:8pt;font-weight:800;border:1px solid #bbb;background:'+bg+';color:#A87600;white-space:nowrap;">'+txt+'</td>';
     });
     s+='</tr>';
@@ -2921,7 +2921,7 @@ function printCompItem(p){
     MS.forEach(function(_,mi){
       var bg=mi===CUR?'#FFFFF0':'#FAFAF6';
       var v=typeof vals==='function'?vals(mi):null;
-      var txt=(v===null||v===undefined||isNaN(+v)||v===0)?'':_fR(v,2);
+      var txt=(v===null||v===undefined||isNaN(+v)||v===0)?'—':_fR(v,2);
       s+='<td style="text-align:right;padding:1.5pt 3pt;font-size:6pt;border:1px solid #eee;background:'+bg+';color:#aaa;white-space:nowrap;">'+txt+'</td>';
     });
     s+='</tr>';
@@ -2937,7 +2937,7 @@ function printCompItem(p){
       var totalCusto=p.i.reduce(function(s,ing){return s+ingValueR(ing,mi);},0);
       var v=typeof vals==='function'?vals(mi):null;
       var pct=(v!==null&&v!==undefined&&totalCusto>0)?(v/totalCusto*100):null;
-      var txt=(pct===null||isNaN(pct))?'':pct.toFixed(1).replace('.',',')+' %';
+      var txt=(pct===null||isNaN(pct))?'—':pct.toFixed(1).replace('.',',')+' %';
       s+='<td style="text-align:right;padding:1.5pt 3pt;font-size:6pt;border:1px solid #eee;background:'+bg+';color:#7A60B0;font-weight:600;white-space:nowrap;">'+txt+'</td>';
     });
     s+='</tr>';
@@ -2948,10 +2948,10 @@ function printCompItem(p){
     return '<tr><td colspan="13" style="background:#f0ede8;height:2pt;padding:0;border:none;"></td></tr>';
   }
 
-  //  Monta o HTML completo 
+  // ── Monta o HTML completo ──
   var html='<!DOCTYPE html><html><head>';
   html+='<meta charset="UTF-8">';
-  html+='<title>Composicao  '+p.n+'</title>';
+  html+='<title>Composicao — '+p.n+'</title>';
   html+='<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">';
   html+='<style>';
   html+='*{box-sizing:border-box;margin:0;padding:0;}';
@@ -2965,7 +2965,7 @@ function printCompItem(p){
   // Cabecalho
   html+='<div style="background:#1E1C18;border-bottom:3px solid #C99200;padding:6pt 10pt;display:flex;align-items:center;gap:16pt;margin-bottom:6pt;">';
   html+='<div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:14pt;letter-spacing:.07em;color:#C99200;">ECCOFORTE</div>';
-  html+='<div style="font-family:Montserrat,sans-serif;font-size:8pt;color:#888;letter-spacing:.05em;text-transform:uppercase;">Composicao por Produto  '+ACTIVE_YEAR+'</div>';
+  html+='<div style="font-family:Montserrat,sans-serif;font-size:8pt;color:#888;letter-spacing:.05em;text-transform:uppercase;">Composicao por Produto — '+ACTIVE_YEAR+'</div>';
   html+='<div style="flex:1;"></div>';
   // chips
   function chip(l,v){return '<div style="font-size:7pt;color:#ccc;"><span style="color:#888;font-size:6.5pt;text-transform:uppercase;letter-spacing:.05em;">'+l+'</span><br><strong style="font-size:9pt;color:#C99200;">'+v+'</strong></div>';}
@@ -2973,16 +2973,16 @@ function printCompItem(p){
   html+=chip('Tipo',tipo);
   html+=chip('Unidade','R$/'+p.u);
   if(p.unit2)html+=chip('Emb. Sec.',unit2Label(p.unit2,p.vol2));
-  if(p.tipo==='solvente')html+=chip('Densidade',_fN(p.den,2)+' kglt');
+  if(p.tipo==='solvente')html+=chip('Densidade',_fN(p.den,2)+' kg→lt');
   html+='</div>';
 
-  // SECAO 1  Ingredientes
+  // SECAO 1 — Ingredientes
   html+='<div class="no-break">';
-  html+=secLabel('','INGREDIENTES  Quantidade por lote');
+  html+=secLabel('','INGREDIENTES — Quantidade por lote');
   html+='<table>'+thRow()+'<tbody>';
   ings.forEach(function(ing){
     html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){var v=cellVal(ing.v[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,2,false);
-    html+=rowRS(' R$ custo',function(mi){
+    html+=rowRS('↳ R$ custo',function(mi){
       var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
       return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
     });
@@ -2994,13 +2994,13 @@ function printCompItem(p){
   if(!ings.length)html+='<tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhum ingrediente cadastrado</td></tr>';
   html+='</tbody></table></div>';
 
-  // SECAO 2  Embalagens
+  // SECAO 2 — Embalagens
   html+='<div class="no-break">';
-  html+=secLabel('','EMBALAGENS  Quantidade por lote');
+  html+=secLabel('','EMBALAGENS — Quantidade por lote');
   html+='<table>'+thRow()+'<tbody>';
   embs.forEach(function(ing){
     html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){var v=cellVal(ing.v[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,2,false);
-    html+=rowRS(' R$ custo',function(mi){
+    html+=rowRS('↳ R$ custo',function(mi){
       var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
       return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
     });
@@ -3012,9 +3012,9 @@ function printCompItem(p){
   if(!embs.length)html+='<tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhuma embalagem cadastrada</td></tr>';
   html+='</tbody></table></div>';
 
-  // SECAO 3  Equipe
+  // SECAO 3 — Equipe
   html+='<div class="no-break">';
-  html+=secLabel('','EQUIPE OPERACIONAL  Custo MO / mes');
+  html+=secLabel('','EQUIPE OPERACIONAL — Custo MO / mes');
   html+='<table>'+thRow()+'<tbody>';
   p.staff.forEach(function(si){
     var mo=DATA.mo[si];if(!mo)return;
@@ -3027,12 +3027,12 @@ function printCompItem(p){
     return p.staff.reduce(function(s,si){var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;return s+(v!==null?v:0);},0);
   },true,2);
   html+=row('Produtividade '+p.u+'/mes','#f5f4f0',function(mi){var v=cellVal(p.prod[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,0,false);
-  if(p.tipo==='solvente'){html+=row('Fator Densidade (kglt)','#f5f4f0',function(mi){return p.den;},null,false,2,false);}
+  if(p.tipo==='solvente'){html+=row('Fator Densidade (kg→lt)','#f5f4f0',function(mi){return p.den;},null,false,2,false);}
   html+='</tbody></table></div>';
 
-  // SECAO 4  Resultado
+  // SECAO 4 — Resultado
   html+='<div class="no-break">';
-  html+=secLabel('','RESULTADO CALCULADO  por '+p.u);
+  html+=secLabel('','RESULTADO CALCULADO — por '+p.u);
   html+='<table>'+thRow()+'<tbody>';
   html+=rowSub('Volume lote ('+p.u+')',function(mi){return calcProduct(p,mi).vol;},false,2);
   html+=rowSub('Custo MP / '+p.u,function(mi){return calcProduct(p,mi).mpUnit;},true,4);
@@ -3044,7 +3044,7 @@ function printCompItem(p){
   html+='</tbody></table></div>';
 
   // Rodape
-  html+='<div style="margin-top:10pt;font-size:6pt;color:#aaa;font-family:Montserrat,sans-serif;text-align:right;">ECCOFORTE  Gerado em '+new Date().toLocaleDateString('pt-BR')+'</div>';
+  html+='<div style="margin-top:10pt;font-size:6pt;color:#aaa;font-family:Montserrat,sans-serif;text-align:right;">ECCOFORTE — Gerado em '+new Date().toLocaleDateString('pt-BR')+'</div>';
   html+='</body></html>';
 
   // Abre janela e imprime
@@ -3054,16 +3054,16 @@ function printCompItem(p){
   win.onload=function(){win.focus();win.print();};
 }
 
-//  BUILD ALL 
+// ── BUILD ALL ─────────────────────────────────────────────────
 function buildAll(){
   bFabricaCargos();
   bSimple('adm',  'adm',  'Predial',             'Despesas fixas prediais',                            null,  true,  true);
-  bSimple('mp',   'mp',   'Matéria-Prima',       'Preço de compra por unidade  acompanhamento anual', null,  false, true);
+  bSimple('mp',   'mp',   'Matéria-Prima',       'Preço de compra por unidade — acompanhamento anual', null,  false, true);
   bSimple('frete','frete','Frete Matéria-Prima', 'Custo de frete por kg / lt / un',                    null,  false, true);
   bComp();
   bSimple('pest', 'pest', 'Produção Real do Item','Apontamento mensal de quantidade produzida',         null,  false, false);
   refreshTots();
-  // FORTE  4 seções
+  // FORTE — 4 seções
   bMofFuncoes();
   bForteComp();
   bForteCeq();
@@ -3071,7 +3071,7 @@ function buildAll(){
   // Colapsar subseções ao iniciar
   ['mo','adm','mp','frete','comp','pest','forte-cargos','forte-comp','forte-ceq','forte-m2dia'].forEach(function(id){
     var sec=document.getElementById(id);
-    if(sec){sec.classList.add('collapsed');var tog=sec.querySelector('.stog');if(tog)tog.textContent='';}
+    if(sec){sec.classList.add('collapsed');var tog=sec.querySelector('.stog');if(tog)tog.textContent='▶';}
   });
 }
 </script>
