@@ -4,7 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ECCOFORTE — Fábrica 2026</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+:root{
+  --ds-font:'Montserrat',sans-serif;--ds-mono:'Montserrat',sans-serif;
+  --ds-or:#F5A623;--ds-ord:#D4841A;--ds-or-light:#FFF3DC;
+  --ds-dark:#1E1C18;--ds-dark2:#252320;--ds-dark3:#2C2A26;--ds-dark4:#383530;--ds-dark5:#4A4845;
+  --ds-bg:#F4F4F0;--ds-bg2:#ECEAE4;--ds-bg3:#E2DFD8;--ds-bg4:#D8D5CE;--ds-wh:#FFFFFF;
+  --ds-bd:#E2E0D8;--ds-bd2:#C8C5BE;--ds-bd3:#AEA9A0;
+  --ds-tx:#1A1916;--ds-tx2:#5A5852;--ds-tx3:#908D86;--ds-fv:#ECEAE4;
+  --ds-grn:#2D7D46;--ds-grn-l:#E6F4EB;--ds-grn-bg:rgba(45,125,70,0.12);--ds-grn-bd:rgba(45,125,70,0.3);
+  --ds-red:#C0392B;--ds-red-l:#FDECEA;--ds-red-bg:rgba(192,57,43,0.12);--ds-red-bd:rgba(192,57,43,0.3);
+  --ds-blu:#2E6DA4;--ds-blu-l:#E8F2FB;--ds-blu-bg:rgba(46,109,164,0.12);--ds-blu-bd:rgba(46,109,164,0.3);
+  --ds-ylw:#B8860B;--ds-ylw-l:#FEF3DC;--ds-ylw-bg:rgba(184,134,11,0.12);--ds-ylw-bd:rgba(184,134,11,0.3);
+  --ds-roxo:#6B46C1;--ds-roxo-l:#EDE9FE;
+  --ds-r:10px;--ds-r-sm:6px;--ds-r-lg:14px;
+  --ds-sh:0 2px 8px rgba(0,0,0,.08);--ds-sh2:0 4px 16px rgba(0,0,0,.1);--ds-sh3:0 20px 60px rgba(0,0,0,.25);
+}
+</style>
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -12,11 +29,11 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
-  --bg:#E6E4DE;--sf:#F2F0EB;--sf2:#E2DFD8;--sf3:#D8D5CE;
-  --bd:#C8C5BE;--bd2:#AEA9A0;
-  --amb:#A87600;--ambm:#C99200;--abg:#FFF5CC;--abdr:#E0C040;
-  --tx:#1A1916;--txs:#5A5852;--mu:#908D86;--fv:#ECEAE4;
-  --mono:'Montserrat',sans-serif;--head:'Montserrat',sans-serif;
+  --bg:var(--ds-bg2);--sf:var(--ds-bg);--sf2:var(--ds-bg3);--sf3:var(--ds-bg4);
+  --bd:var(--ds-bd2);--bd2:var(--ds-bd3);
+  --amb:var(--ds-or);--ambm:var(--ds-ord);--abg:var(--ds-or-light);--abdr:var(--ds-ord);
+  --tx:var(--ds-tx);--txs:var(--ds-tx2);--mu:var(--ds-tx3);--fv:var(--ds-bg2);
+  --mono:var(--ds-mono);--head:var(--ds-font);
   --lbl:230px;--col:90px;--del:32px;--rh:34px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -69,7 +86,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--mono);font-size:12px
 .yr-sel{font-family:var(--head);font-weight:700;font-size:13px;color:var(--ambm);
   background:#282522;border:1px solid #383530;border-radius:3px;padding:3px 11px;
   cursor:pointer;appearance:none;-webkit-appearance:none;outline:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23A87600'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23F5A623'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 8px center;padding-right:22px}
 .yr-sel option{background:#282522;color:var(--ambm)}
 
@@ -235,21 +252,39 @@ tr.tr td.tdl{background:#EDE0A0!important;text-transform:uppercase;letter-spacin
 .btn-create{font-family:var(--head);font-weight:700;font-size:12px;background:var(--ambm);border:none;border-radius:4px;padding:7px 18px;cursor:pointer;color:#fff}
 .btn-create:hover{background:var(--amb)}
 
-/* LOGIN */
-.login-bg{position:fixed;inset:0;background:#151310;z-index:1000;display:flex;align-items:center;justify-content:center}
-.login-box{background:var(--sf);border:1px solid var(--bd2);border-radius:10px;width:360px;max-width:94vw;overflow:hidden;box-shadow:0 16px 56px rgba(0,0,0,.5)}
-.login-top{background:#1E1C18;border-bottom:3px solid var(--ambm);padding:24px 28px 20px}
-.login-logo{font-family:var(--head);font-weight:800;font-size:22px;letter-spacing:.06em;color:var(--ambm)}
-.login-tag{font-family:var(--head);font-size:11px;color:#555;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
-.login-body{padding:24px 28px}
+/* ── Login 50/50 ── */
+#login-bg{position:fixed;inset:0;display:flex;z-index:1000;}
+.ln-esq{width:50%;background:var(--ds-dark);position:relative;display:flex;flex-direction:column;padding:48px 52px;overflow:hidden;}
+.ln-grade{position:absolute;inset:0;background-image:linear-gradient(rgba(245,166,35,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(245,166,35,.05) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;}
+.ln-brilho{position:absolute;top:-120px;right:-80px;width:460px;height:460px;background:radial-gradient(circle,rgba(245,166,35,.12) 0%,transparent 65%);pointer-events:none;}
+.ln-logo{position:relative;z-index:1;margin-bottom:40px;}
+.ln-logo-tag{font-size:10px;font-weight:800;letter-spacing:5px;text-transform:uppercase;color:var(--ds-dark5);margin-bottom:14px;}
+.ln-logo-l1{font-family:var(--ds-font);font-size:52px;font-weight:900;line-height:.9;color:var(--ds-wh);text-transform:uppercase;letter-spacing:-1px;}
+.ln-logo-l2{font-family:var(--ds-font);font-size:52px;font-weight:900;line-height:.9;color:var(--ds-or);text-transform:uppercase;letter-spacing:-1px;margin-bottom:16px;}
+.ln-logo-l3{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ds-dark5);border-top:1px solid var(--ds-dark4);padding-top:14px;margin-top:16px;}
+.ln-niv-lbl{font-size:9px;font-weight:800;letter-spacing:4px;text-transform:uppercase;color:var(--ds-dark5);margin-bottom:12px;position:relative;z-index:1;}
+.ln-niv-card{position:relative;z-index:1;background:var(--ds-dark2);border:1px solid var(--ds-dark4);border-left:3px solid var(--ds-or);border-radius:var(--ds-r-sm);padding:12px 16px;margin-bottom:8px;}
+.ln-niv-card h4{font-size:11px;font-weight:800;color:var(--ds-wh);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;}
+.ln-niv-card p{font-size:11px;color:var(--ds-dark5);line-height:1.5;}
+.ln-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:2px;letter-spacing:.5px;text-transform:uppercase;margin-top:6px;margin-right:4px;background:var(--ds-or-light);color:var(--ds-ord);}
+.ln-rod{position:relative;z-index:1;margin-top:auto;font-size:10px;color:var(--ds-dark5);border-top:1px solid var(--ds-dark4);padding-top:16px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+.ln-dir{width:50%;background:var(--ds-bg);display:flex;flex-direction:column;justify-content:center;align-items:center;padding:48px 52px;border-left:1px solid var(--ds-bd);}
+.ln-form{width:100%;max-width:360px;}
+.ln-titulo{font-family:var(--ds-font);font-size:20px;font-weight:800;color:var(--ds-tx);margin-bottom:4px;letter-spacing:.04em;text-transform:uppercase;}
+.ln-sub{font-size:11px;color:var(--ds-tx3);margin-bottom:28px;font-weight:500;letter-spacing:.04em;}
+.ln-campo{margin-bottom:14px;}
+.ln-lbl{display:block;font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--ds-tx3);margin-bottom:6px;}
+.ln-input{width:100%;height:40px;padding:0 12px;background:var(--ds-wh);border:1px solid var(--ds-bd);border-radius:var(--ds-r-sm);font-family:var(--ds-font);font-size:13px;color:var(--ds-tx);outline:none;transition:border-color .15s;}
+.ln-input:focus{border-color:var(--ds-or);box-shadow:0 0 0 3px var(--ds-or-light);}
+.ln-btn{width:100%;height:42px;background:var(--ds-dark);color:var(--ds-wh);border:none;border-radius:var(--ds-r-sm);font-family:var(--ds-font);font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .15s;margin-top:8px;}
+.ln-btn:hover{background:var(--ds-dark2);}
+.ln-btn:active{transform:scale(.99);}
+@media(max-width:768px){.ln-esq{display:none;}.ln-dir{width:100%;}}
 .lf{margin-bottom:16px}
-.lf label{font-family:var(--head);font-weight:700;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--txs);display:block;margin-bottom:5px}
-.lf input{width:100%;background:var(--sf2);border:1px solid var(--bd2);border-radius:4px;padding:9px 12px;font-family:var(--mono);font-size:13px;color:var(--tx);outline:none}
+.lf label{font-family:var(--ds-font);font-weight:700;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--txs);display:block;margin-bottom:5px}
+.lf input{width:100%;background:var(--sf2);border:1px solid var(--bd2);border-radius:4px;padding:9px 12px;font-family:var(--ds-font);font-size:13px;color:var(--tx);outline:none}
 .lf input:focus{border-color:var(--ambm)}
-.login-err{font-family:var(--head);font-size:11px;color:#C03030;letter-spacing:.04em;margin-bottom:12px;min-height:16px}
-.btn-login{width:100%;font-family:var(--head);font-weight:800;font-size:14px;letter-spacing:.07em;text-transform:uppercase;background:var(--ambm);border:none;border-radius:4px;padding:11px;cursor:pointer;color:#fff}
-.btn-login:hover{background:var(--amb)}
-.login-note{font-family:var(--head);font-size:10px;color:#555;text-align:center;margin-top:14px;letter-spacing:.05em}
+.login-err{font-family:var(--ds-font);font-size:11px;color:var(--ds-red);letter-spacing:.04em;margin-bottom:12px;min-height:16px}
 
 /* LOADING OVERLAY */
 .loading-bg{position:fixed;inset:0;background:rgba(230,228,222,.85);z-index:900;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
@@ -331,21 +366,21 @@ tr.ing-pct td.tdc.tdl{background:#EDE4FF!important}
   box-shadow:0 16px 56px rgba(0,0,0,.35);overflow:hidden;
 }
 #print-modal-head{
-  background:#1E1C18;border-bottom:3px solid #C99200;
+  background:var(--ds-dark);border-bottom:3px solid var(--ambm);
   padding:14px 20px;display:flex;align-items:center;gap:12px;
 }
 #print-modal-title{
-  font-family:'Montserrat',sans-serif;font-weight:800;font-size:15px;
-  letter-spacing:.07em;text-transform:uppercase;color:#C99200;flex:1;
+  font-family:var(--head);font-weight:800;font-size:15px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--ambm);flex:1;
 }
 #print-modal-head .pm-btn{
-  font-family:'Montserrat',sans-serif;font-weight:700;font-size:10px;
+  font-family:var(--head);font-weight:700;font-size:10px;
   letter-spacing:.06em;text-transform:uppercase;padding:5px 14px;border-radius:3px;
   cursor:pointer;border:none;white-space:nowrap;
 }
-#print-modal-head .pm-btn.primary{background:#C99200;color:#fff;}
-#print-modal-head .pm-btn.primary:hover{background:#A87600;}
-#print-modal-head .pm-btn.cancel{background:none;border:1px solid #3A3835;color:#888;}
+#print-modal-head .pm-btn.primary{background:var(--ambm);color:#fff;}
+#print-modal-head .pm-btn.primary:hover{background:var(--amb);}
+#print-modal-head .pm-btn.cancel{background:none;border:1px solid var(--ds-dark4);color:#888;}
 #print-modal-head .pm-btn.cancel:hover{border-color:#888;color:#ccc;}
 
 #print-content{padding:14px 16px 22px;overflow-x:auto;}
@@ -353,16 +388,16 @@ tr.ing-pct td.tdc.tdl{background:#EDE4FF!important}
 /* PRINT TABLE */
 .pt-wrap{margin-bottom:16px;}
 .pt-section{
-  font-family:'Montserrat',sans-serif;font-weight:800;font-size:9px;
-  letter-spacing:.09em;text-transform:uppercase;color:#A87600;
-  border-left:3px solid #C99200;padding:3px 0 3px 8px;margin-bottom:5px;margin-top:14px;
+  font-family:var(--head);font-weight:800;font-size:9px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--amb);
+  border-left:3px solid var(--ambm);padding:3px 0 3px 8px;margin-bottom:5px;margin-top:14px;
 }
 .pt-section:first-child{margin-top:0;}
 table.pt{
-  border-collapse:collapse;width:100%;table-layout:fixed;font-family:'Montserrat',sans-serif;font-size:8.5px;
+  border-collapse:collapse;width:100%;table-layout:fixed;font-family:var(--head);font-size:8.5px;
 }
 table.pt th{
-  background:#2A2724;color:#C99200;font-family:'Montserrat',sans-serif;font-weight:700;
+  background:var(--ds-dark2);color:var(--ambm);font-family:var(--head);font-weight:700;
   font-size:8px;letter-spacing:.05em;text-transform:uppercase;
   padding:4px 4px;text-align:right;border:1px solid #3A3835;white-space:nowrap;
 }
@@ -375,12 +410,12 @@ table.pt td.pt-lbl{text-align:left;color:#333;font-size:8.5px;background:#f9f8f5
 table.pt td.pt-lbl.ing{padding-left:14px;color:#555;}
 table.pt td.pt-lbl.emb{padding-left:14px;color:#888;font-style:italic;}
 table.pt td.pt-lbl.rs{padding-left:24px;color:#aaa;font-style:italic;font-size:7.5px;}
-table.pt td.pt-lbl.res{background:#FFF8E0;color:#A87600;font-weight:700;}
+table.pt td.pt-lbl.res{background:var(--abg);color:var(--amb);font-weight:700;}
 table.pt td.pt-lbl.res-sub{background:#FEFCF0;color:#666;padding-left:12px;}
 table.pt td.pt-lbl.mo{color:#444;}
-table.pt tr.res-row td{background:#FFF5CC!important;font-weight:700;color:#A87600;}
+table.pt tr.res-row td{background:var(--abg)!important;font-weight:700;color:var(--amb);}
 table.pt tr.res-sub-row td{background:#FEFCF0!important;color:#555;}
-table.pt tr.total-row td{background:#EDE0A0!important;font-weight:800;color:#A87600;font-size:9.5px;}
+table.pt tr.total-row td{background:#EDE0A0!important;font-weight:800;color:var(--amb);font-size:9.5px;}
 table.pt tr.rs-row td{background:#FAFAF6;color:#aaa;font-size:7.5px;}
 table.pt td.cur{background:#FFFAE0!important;}
 table.pt tr.res-row td.cur{background:#FFF0A0!important;}
@@ -436,18 +471,43 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
 </div>
 
 <!-- LOGIN -->
-<div class="login-bg" id="login-bg">
-  <div class="login-box">
-    <div class="login-top">
-      <div class="login-logo">ECCOFORTE</div>
-      <div class="login-tag">Sistema de Custos — Fábrica 2026</div>
+<div id="login-bg">
+  <div class="ln-esq">
+    <div class="ln-grade"></div>
+    <div class="ln-brilho"></div>
+    <div class="ln-logo">
+      <div class="ln-logo-tag">Sistema ECCOFORTE</div>
+      <div class="ln-logo-l1">ECCO</div>
+      <div class="ln-logo-l2">FORTE</div>
+      <div class="ln-logo-l3">Sistema de Custos · Fábrica 2026</div>
     </div>
-    <div class="login-body">
-      <div class="lf"><label>E-mail</label><input type="email" id="l-user" placeholder="admin@eccoforte.com.br" autocomplete="email"></div>
-      <div class="lf"><label>Senha</label><input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"></div>
+    <div class="ln-niv-lbl">Perfis de Acesso</div>
+    <div class="ln-niv-card">
+      <h4>Administrador</h4>
+      <p>Gestão de custos, produtos e relatórios</p>
+      <span class="ln-badge">Precificação</span><span class="ln-badge">BDI</span><span class="ln-badge">Relatórios</span>
+    </div>
+    <div class="ln-niv-card" style="border-left-color:var(--ds-grn)">
+      <h4>Usuário</h4>
+      <p>Consulta de preços e simulações</p>
+      <span class="ln-badge">Consulta</span><span class="ln-badge">Simulação</span>
+    </div>
+    <div class="ln-rod">ECCOFORTE &copy; 2026</div>
+  </div>
+  <div class="ln-dir">
+    <div class="ln-form">
+      <div class="ln-titulo">Entrar no Sistema</div>
+      <div class="ln-sub">Acesso restrito — uso interno ECCOFORTE</div>
       <div class="login-err" id="l-err"></div>
-      <button class="btn-login" onclick="doLogin()">Entrar</button>
-      <div class="login-note">Acesso restrito — uso interno ECCOFORTE</div>
+      <div class="ln-campo">
+        <label class="ln-lbl" for="l-user">E-mail</label>
+        <input class="ln-input" type="email" id="l-user" placeholder="admin@eccoforte.com.br" autocomplete="email" />
+      </div>
+      <div class="ln-campo">
+        <label class="ln-lbl" for="l-pass">Senha</label>
+        <input class="ln-input" type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="ln-btn" onclick="doLogin()">Entrar no Sistema</button>
     </div>
   </div>
 </div>
