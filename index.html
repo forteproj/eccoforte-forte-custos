@@ -304,6 +304,47 @@ tr.tr td.tdl{background:#EDE0A0!important;text-transform:uppercase;letter-spacin
 .chpw-body{padding:16px 20px}
 .chpw-foot{padding:10px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end}
 
+/* ADMIN PANEL */
+.adm-bg{display:none;position:fixed;inset:0;background:rgba(26,25,22,.75);backdrop-filter:blur(4px);z-index:700;align-items:center;justify-content:center}
+.adm-bg.open{display:flex}
+.adm-box{background:var(--ds-bg);border:1px solid var(--ds-bd);border-top:3px solid var(--ds-or);border-radius:var(--ds-r-lg);width:100%;max-width:620px;max-height:82vh;overflow-y:auto;padding:28px 32px}
+.adm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.adm-head h2{font-family:var(--ds-font);font-size:15px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ds-tx)}
+.adm-close{background:none;border:none;font-size:18px;color:var(--ds-tx3);cursor:pointer;padding:4px 8px;border-radius:4px}
+.adm-close:hover{background:var(--ds-bg3);color:var(--ds-tx)}
+.adm-msg{font-size:11px;font-weight:600;padding:8px 12px;border-radius:var(--ds-r-sm);margin-bottom:14px;display:none}
+.adm-msg.err{background:var(--ds-red-bg);color:var(--ds-red);border:1px solid var(--ds-red-bd);display:block}
+.adm-msg.ok{background:var(--ds-grn-bg);color:var(--ds-grn);border:1px solid var(--ds-grn-bd);display:block}
+.adm-add{background:var(--ds-bg2);border:1px solid var(--ds-bd);border-radius:var(--ds-r-sm);padding:18px;margin-bottom:14px;display:none}
+.adm-add.open{display:block}
+.adm-add-tit{font-size:9px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--ds-tx3);margin-bottom:12px}
+.adm-row{display:flex;gap:10px;margin-bottom:10px}
+.adm-row .adm-campo{flex:1;margin-bottom:0}
+.adm-campo{margin-bottom:10px}
+.adm-campo label{display:block;font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--ds-tx3);margin-bottom:5px}
+.adm-campo input,.adm-campo select{width:100%;height:36px;padding:0 10px;background:var(--ds-wh);border:1px solid var(--ds-bd);border-radius:var(--ds-r-sm);font-family:var(--ds-font);font-size:12px;color:var(--ds-tx);outline:none}
+.adm-campo input:focus,.adm-campo select:focus{border-color:var(--ds-or)}
+.adm-tbl{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:12px}
+.adm-tbl th{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ds-tx3);padding:7px 10px;text-align:left;border-bottom:1px solid var(--ds-bd);background:var(--ds-bg2)}
+.adm-tbl td{padding:9px 10px;color:var(--ds-tx2);border-bottom:1px solid var(--ds-bd2)}
+.adm-tbl tr:last-child td{border-bottom:none}
+.adm-tbl tr:hover td{background:var(--ds-fv)}
+.adm-tag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:2px;letter-spacing:.5px;text-transform:uppercase}
+.adm-tag-adm{background:var(--ds-or-light);color:var(--ds-ord)}
+.adm-tag-usr{background:var(--ds-blu-bg);color:var(--ds-blu)}
+.adm-tag-on{background:var(--ds-grn-bg);color:var(--ds-grn)}
+.adm-tag-off{background:var(--ds-red-bg);color:var(--ds-red)}
+.adm-btn-tog{font-size:10px;font-weight:700;padding:3px 10px;border-radius:3px;cursor:pointer;font-family:var(--ds-font);letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--ds-bd2);background:none;color:var(--ds-tx3)}
+.adm-btn-tog:hover{border-color:var(--ds-tx3);color:var(--ds-tx)}
+.adm-btn-add{width:100%;padding:9px;background:none;border:1px dashed var(--ds-bd2);border-radius:var(--ds-r-sm);font-family:var(--ds-font);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ds-tx3);cursor:pointer;margin-top:4px}
+.adm-btn-add:hover{border-color:var(--ds-or);color:var(--ds-or);background:var(--ds-or-light)}
+.adm-foot-btns{display:flex;gap:8px;margin-top:6px}
+.adm-btn-confirm{flex:1;padding:8px 16px;background:var(--ds-or);border:none;border-radius:var(--ds-r-sm);font-family:var(--ds-font);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;color:var(--ds-dark)}
+.adm-btn-confirm:hover{background:var(--ds-ord);color:#fff}
+.adm-btn-confirm:disabled{opacity:.5;cursor:not-allowed}
+.adm-btn-cancel{padding:8px 16px;background:none;border:1px solid var(--ds-bd2);border-radius:var(--ds-r-sm);font-family:var(--ds-font);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;color:var(--ds-tx3)}
+.adm-btn-cancel:hover{border-color:var(--ds-tx3);color:var(--ds-tx)}
+
 /* SUB-GROUP TOGGLE dentro de produto na Composição */
 tr.sg-tog-hdr td{background:#E8E5DE!important;height:26px;border-bottom:1px solid var(--bd2);border-right:1px solid var(--bd);cursor:pointer;user-select:none}
 tr.sg-tog-hdr td.tdl{background:#E8E5DE!important;font-family:var(--head);font-weight:700;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--txs);padding-left:14px;border-right:2px solid var(--bd2)!important;width:var(--lbl)!important;min-width:var(--lbl)!important;max-width:var(--lbl)!important;overflow:hidden;white-space:nowrap;}
@@ -530,6 +571,39 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
   </div>
 </div>
 
+<!-- ADMIN PANEL -->
+<div class="adm-bg" id="adm-bg" onclick="adm_bgClick(event)">
+  <div class="adm-box">
+    <div class="adm-head">
+      <h2>Gerenciar Usuários</h2>
+      <button class="adm-close" onclick="fecharAdmin()">✕</button>
+    </div>
+    <div class="adm-msg" id="adm-msg"></div>
+    <div class="adm-add" id="adm-add">
+      <div class="adm-add-tit">Novo Usuário</div>
+      <div class="adm-row">
+        <div class="adm-campo"><label>Nome completo</label><input type="text" id="add-nome" placeholder="Nome"></div>
+        <div class="adm-campo"><label>Nível</label>
+          <select id="add-nivel">
+            <option value="usuario">Usuário</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+      </div>
+      <div class="adm-campo"><label>E-mail</label><input type="email" id="add-email" placeholder="email@eccoforte.com.br"></div>
+      <div class="adm-foot-btns">
+        <button class="adm-btn-confirm" id="btn-confirmar-add" onclick="confirmarAdd()">✓ Criar Usuário</button>
+        <button class="adm-btn-cancel" onclick="cancelarAdd()">Cancelar</button>
+      </div>
+    </div>
+    <table class="adm-tbl">
+      <thead><tr><th>Nome</th><th>E-mail</th><th>Nível</th><th>Status</th><th>Ação</th></tr></thead>
+      <tbody id="adm-tbody"></tbody>
+    </table>
+    <button class="adm-btn-add" onclick="toggleAddForm()">+ Adicionar novo usuário</button>
+  </div>
+</div>
+
 <!-- CHANGE PASSWORD -->
 <div class="chpw-bg" id="chpw-bg">
   <div class="chpw-box">
@@ -605,6 +679,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
     <option value="2028">2028</option>
   </select>
   <span class="save-status" id="save-status"></span>
+  <button class="tb-btn" id="btn-admin" style="display:none" onclick="abrirAdmin()">👥 Usuários</button>
   <button class="tb-btn" onclick="openChpw()">🔑 Senha</button>
   <button class="tb-btn danger" onclick="doLogout()">Sair</button>
 </div>
@@ -710,6 +785,9 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
 var db   = firebase.firestore();
+var authSec = firebase.initializeApp(firebaseConfig, 'sec').auth();
+var USUARIOS = db.collection('usuarios');
+var currentPerfil = null;
 // ── SISTEMA DE ANOS ────────────────────────────────────────────
 var ACTIVE_YEAR = 2026;
 var DOC = db.collection('painel').doc('dados_' + ACTIVE_YEAR);
@@ -1084,14 +1162,116 @@ function loadFromFirestore(cb){
 // ── AUTH ──────────────────────────────────────────────────────
 auth.onAuthStateChanged(function(user){
   if(user){
-    document.getElementById('login-bg').style.display='none';
-    buildNav();
-    var sel=document.getElementById('yr-sel');if(sel)sel.value=String(ACTIVE_YEAR);
-    loadFromFirestore(buildAll);
-  }else{
+    USUARIOS.doc(user.uid).get().then(function(snap){
+      if(!snap.exists()){
+        USUARIOS.limit(1).get().then(function(q){
+          if(q.empty){
+            var perfil={nome:user.email.split('@')[0],email:user.email,nivel:'admin',status:'ativo',criado:firebase.firestore.FieldValue.serverTimestamp()};
+            USUARIOS.doc(user.uid).set(perfil).then(function(){
+              currentPerfil=Object.assign({uid:user.uid},perfil);
+              afterLogin();
+            });
+          } else {
+            auth.signOut();
+            document.getElementById('l-err').textContent='Usuário não cadastrado. Contate o administrador.';
+            document.getElementById('login-bg').style.display='flex';
+          }
+        });
+      } else if(snap.data().status!=='ativo'){
+        auth.signOut();
+        document.getElementById('l-err').textContent='Usuário inativo. Contate o administrador.';
+        document.getElementById('login-bg').style.display='flex';
+      } else {
+        currentPerfil=Object.assign({uid:user.uid},snap.data());
+        afterLogin();
+      }
+    });
+  } else {
+    currentPerfil=null;
     document.getElementById('login-bg').style.display='flex';
   }
 });
+function afterLogin(){
+  document.getElementById('login-bg').style.display='none';
+  document.getElementById('btn-admin').style.display=currentPerfil&&currentPerfil.nivel==='admin'?'':'none';
+  buildNav();
+  var sel=document.getElementById('yr-sel');if(sel)sel.value=String(ACTIVE_YEAR);
+  loadFromFirestore(buildAll);
+}
+// ── ADMIN USUARIOS ─────────────────────────────────────────────
+function abrirAdmin(){
+  if(!currentPerfil||currentPerfil.nivel!=='admin')return;
+  document.getElementById('adm-bg').classList.add('open');
+  renderTabela();
+}
+function fecharAdmin(){
+  document.getElementById('adm-bg').classList.remove('open');
+  cancelarAdd();
+}
+function adm_bgClick(e){if(e.target===document.getElementById('adm-bg'))fecharAdmin();}
+function toggleAddForm(){document.getElementById('adm-add').classList.toggle('open');}
+function cancelarAdd(){
+  document.getElementById('adm-add').classList.remove('open');
+  document.getElementById('add-nome').value='';
+  document.getElementById('add-email').value='';
+  document.getElementById('add-nivel').value='usuario';
+  mostrarMsgAdm('');
+}
+function mostrarMsgAdm(txt,tipo){
+  var el=document.getElementById('adm-msg');
+  el.textContent=txt||'';
+  el.className='adm-msg'+(tipo?' '+tipo:'');
+}
+function renderTabela(){
+  var tbody=document.getElementById('adm-tbody');
+  tbody.innerHTML='<tr><td colspan="5" style="padding:14px;text-align:center;color:var(--ds-tx3)">Carregando...</td></tr>';
+  USUARIOS.orderBy('nome').get().then(function(q){
+    if(q.empty){tbody.innerHTML='<tr><td colspan="5" style="padding:14px;text-align:center;color:var(--ds-tx3)">Nenhum usuário.</td></tr>';return;}
+    tbody.innerHTML=q.docs.map(function(d){
+      var u=d.data();
+      var nTag=u.nivel==='admin'?'<span class="adm-tag adm-tag-adm">Admin</span>':'<span class="adm-tag adm-tag-usr">Usuário</span>';
+      var sTag=u.status==='ativo'?'<span class="adm-tag adm-tag-on">Ativo</span>':'<span class="adm-tag adm-tag-off">Inativo</span>';
+      var isSelf=d.id===auth.currentUser.uid;
+      var togBtn=isSelf?'<span style="font-size:10px;color:var(--ds-tx3)">(você)</span>':'<button class="adm-btn-tog" onclick="toggleStatus(\''+d.id+'\',\''+u.status+'\')">'+( u.status==='ativo'?'Desativar':'Ativar')+'</button>';
+      return '<tr><td style="font-weight:700;color:var(--ds-tx)">'+u.nome+'</td><td style="font-size:11px">'+u.email+'</td><td>'+nTag+'</td><td>'+sTag+'</td><td>'+togBtn+'</td></tr>';
+    }).join('');
+  }).catch(function(){tbody.innerHTML='<tr><td colspan="5">Erro ao carregar.</td></tr>';});
+}
+function toggleStatus(uid,current){
+  USUARIOS.doc(uid).update({status:current==='ativo'?'inativo':'ativo'}).then(renderTabela);
+}
+function confirmarAdd(){
+  var nome=document.getElementById('add-nome').value.trim();
+  var email=document.getElementById('add-email').value.trim().toLowerCase();
+  var nivel=document.getElementById('add-nivel').value;
+  if(!nome||!email){mostrarMsgAdm('Preencha nome e e-mail.','err');return;}
+  var btn=document.getElementById('btn-confirmar-add');
+  btn.disabled=true; btn.textContent='Criando...';
+  var tempPw='Forte@'+Math.random().toString(36).slice(2,8)+'2026!';
+  authSec.createUserWithEmailAndPassword(email,tempPw).then(function(cred){
+    return USUARIOS.doc(cred.user.uid).set({
+      nome:nome,email:email,nivel:nivel,status:'ativo',
+      criado:firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(){
+      return auth.sendPasswordResetEmail(email);
+    }).then(function(){
+      authSec.signOut();
+      mostrarMsgAdm(nome+' criado! E-mail de configuração de senha enviado.','ok');
+      document.getElementById('add-nome').value='';
+      document.getElementById('add-email').value='';
+      document.getElementById('add-nivel').value='usuario';
+      document.getElementById('adm-add').classList.remove('open');
+      btn.disabled=false; btn.textContent='✓ Criar Usuário';
+      renderTabela();
+    });
+  }).catch(function(e){
+    authSec.signOut();
+    if(e.code==='auth/email-already-in-use')mostrarMsgAdm('E-mail já cadastrado.','err');
+    else if(e.code==='auth/invalid-email')mostrarMsgAdm('E-mail inválido.','err');
+    else mostrarMsgAdm(e.message||'Erro ao criar usuário.','err');
+    btn.disabled=false; btn.textContent='✓ Criar Usuário';
+  });
+}
 function trocaAba(aba) {
   document.querySelectorAll('.ln-aba').forEach(function(b){ b.classList.remove('sel'); });
   document.querySelector('.ln-aba[onclick="trocaAba(\''+aba+'\')"]').classList.add('sel');
