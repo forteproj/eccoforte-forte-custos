@@ -253,7 +253,7 @@ tr.tr td.tdl{background:#EDE0A0!important;text-transform:uppercase;letter-spacin
 .btn-create:hover{background:var(--amb)}
 
 /* ── Login 50/50 ── */
-#login-bg{position:fixed;inset:0;display:flex;z-index:1000;--ds-or:var(--ds-ord);}
+#login-bg{position:fixed;inset:0;display:flex;z-index:1000;--ds-or:var(--ds-ord);--ds-r:4px;--ds-bd:var(--ds-bd2);}
 .ln-esq{width:52%;background:var(--ds-dark);position:relative;display:flex;flex-direction:column;padding:48px 52px;overflow:hidden;}
 .ln-linha-amb{position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ds-or);}
 .ln-grade{position:absolute;inset:0;background-image:linear-gradient(rgba(245,166,35,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(245,166,35,.06) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;}
@@ -575,7 +575,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
             <button class="ln-olho" type="button" onclick="toggleOlho('l-pass',this)">👁</button>
           </div>
         </div>
-        <button class="ln-btn" onclick="doLogin()">Entrar no Sistema</button>
+        <button class="ln-btn" onclick="doLogin()">Entrar</button>
       </div>
       <div id="ln-painel-reset" style="display:none">
         <div class="login-err" id="l-reset-err"></div>
