@@ -1166,7 +1166,7 @@ function loadFromFirestore(cb){
 auth.onAuthStateChanged(function(user){
   if(user){
     USUARIOS.doc(user.uid).get().then(function(snap){
-      if(!snap.exists()){
+      if(!snap.exists){
         USUARIOS.limit(1).get().then(function(q){
           if(q.empty){
             var perfil={nome:user.email.split('@')[0],email:user.email,nivel:'admin',status:'ativo',criado:firebase.firestore.FieldValue.serverTimestamp()};
