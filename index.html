@@ -1278,9 +1278,34 @@ function confirmarAdd(){
     });
   }).catch(function(e){
     authSec.signOut();
-    if(e.code==='auth/email-already-in-use')mostrarMsgAdm('E-mail já cadastrado.','err');
-    else if(e.code==='auth/invalid-email')mostrarMsgAdm('E-mail inválido.','err');
-    else mostrarMsgAdm(e.message||'Erro ao criar usuário.','err');
+    if(e.code==='auth/email-already-in-use'){
+      var currentUser=auth.currentUser;
+      if(currentUser&&currentUser.email.toLowerCase()===email){
+        USUARIOS.doc(currentUser.uid).set({
+          nome:nome,email:email,nivel:nivel,status:'ativo',
+          criado:firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function(){
+          currentPerfil=Object.assign({},currentPerfil,{nome:nome,nivel:nivel,status:'ativo'});
+          document.getElementById('btn-admin').style.display=currentPerfil.nivel==='admin'?'':'none';
+          mostrarMsgAdm(nome+' cadastrado com sucesso.','ok');
+          document.getElementById('add-nome').value='';
+          document.getElementById('add-email').value='';
+          document.getElementById('add-nivel').value='usuario';
+          document.getElementById('adm-add').classList.remove('open');
+          btn.disabled=false; btn.textContent='✓ Criar Usuário';
+          renderTabela();
+        }).catch(function(){
+          mostrarMsgAdm('Erro ao salvar perfil no banco de dados.','err');
+          btn.disabled=false; btn.textContent='✓ Criar Usuário';
+        });
+        return;
+      }
+      mostrarMsgAdm('Este e-mail já tem uma conta no sistema.','err');
+    } else if(e.code==='auth/invalid-email'){
+      mostrarMsgAdm('E-mail inválido.','err');
+    } else {
+      mostrarMsgAdm(e.message||'Erro ao criar usuário.','err');
+    }
     btn.disabled=false; btn.textContent='✓ Criar Usuário';
   });
 }
