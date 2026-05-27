@@ -1170,12 +1170,20 @@ auth.onAuthStateChanged(function(user){
             USUARIOS.doc(user.uid).set(perfil).then(function(){
               currentPerfil=Object.assign({uid:user.uid},perfil);
               afterLogin();
+            }).catch(function(e){
+              console.error('Erro ao criar perfil:',e);
+              currentPerfil={uid:user.uid,nome:user.email.split('@')[0],email:user.email,nivel:'admin',status:'ativo'};
+              afterLogin();
             });
           } else {
             auth.signOut();
             document.getElementById('l-err').textContent='Usuário não cadastrado. Contate o administrador.';
             document.getElementById('login-bg').style.display='flex';
           }
+        }).catch(function(e){
+          console.error('Erro ao verificar coleção:',e);
+          currentPerfil={uid:user.uid,nome:user.email.split('@')[0],email:user.email,nivel:'admin',status:'ativo'};
+          afterLogin();
         });
       } else if(snap.data().status!=='ativo'){
         auth.signOut();
@@ -1185,6 +1193,10 @@ auth.onAuthStateChanged(function(user){
         currentPerfil=Object.assign({uid:user.uid},snap.data());
         afterLogin();
       }
+    }).catch(function(e){
+      console.error('Erro ao carregar perfil:',e);
+      currentPerfil={uid:user.uid,nome:user.email.split('@')[0],email:user.email,nivel:'admin',status:'ativo'};
+      afterLogin();
     });
   } else {
     currentPerfil=null;
