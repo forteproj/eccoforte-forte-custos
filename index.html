@@ -285,12 +285,20 @@ tr.tr td.tdl{background:#EDE0A0!important;text-transform:uppercase;letter-spacin
 .ln-abas{display:flex;background:var(--ds-bg2);border:1px solid var(--ds-bd);border-radius:var(--ds-r);padding:3px;margin-bottom:24px;}
 .ln-aba{flex:1;padding:7px 10px;background:none;border:none;border-radius:3px;font-family:var(--ds-font);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ds-tx3);cursor:pointer;transition:all .15s;}
 .ln-aba.sel{background:var(--ds-dark);color:var(--ds-or);}
+.ln-campo-senha{position:relative;}
+.ln-campo-senha .ln-input{padding-right:40px;}
+.ln-olho{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--ds-bd2);font-size:14px;padding:4px;transition:color .15s;}
+.ln-olho:hover{color:var(--ds-tx);}
+.ln-esqueci{text-align:center;margin-top:14px;font-size:11px;color:var(--ds-tx3);font-weight:600;}
+.ln-esqueci a{color:var(--ds-or);text-decoration:none;cursor:pointer;}
+.ln-esqueci a:hover{text-decoration:underline;}
 @media(max-width:768px){.ln-esq{display:none;}.ln-dir{width:100%;}}
 .lf{margin-bottom:16px}
 .lf label{font-family:var(--ds-font);font-weight:700;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--txs);display:block;margin-bottom:5px}
 .lf input{width:100%;background:var(--sf2);border:1px solid var(--bd2);border-radius:4px;padding:9px 12px;font-family:var(--ds-font);font-size:13px;color:var(--tx);outline:none}
 .lf input:focus{border-color:var(--ambm)}
-.login-err{font-family:var(--ds-font);font-size:11px;color:var(--ds-red);letter-spacing:.04em;margin-bottom:12px;min-height:16px}
+.login-err{font-family:var(--ds-font);font-size:11px;color:var(--ds-red);letter-spacing:.04em;font-weight:600;}
+.login-err:not(:empty){margin-bottom:12px;}
 
 /* LOADING OVERLAY */
 .loading-bg{position:fixed;inset:0;background:rgba(230,228,222,.85);z-index:900;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
@@ -549,7 +557,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
   <div class="ln-dir">
     <div class="ln-form">
       <div class="ln-titulo">Entrar no Sistema</div>
-      <div class="ln-sub">Acesso restrito — uso interno ECCOFORTE</div>
+      <div class="ln-sub">Acesso restrito — use as credenciais cadastradas pelo administrador</div>
       <div class="ln-abas">
         <button class="ln-aba sel" onclick="trocaAba('login')">Já Tenho Acesso</button>
         <button class="ln-aba" onclick="trocaAba('reset')">Redefinir Senha</button>
@@ -562,18 +570,22 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
         </div>
         <div class="ln-campo">
           <label class="ln-lbl" for="l-pass">Senha</label>
-          <input class="ln-input" type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" />
+          <div class="ln-campo-senha">
+            <input class="ln-input" type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" />
+            <button class="ln-olho" type="button" onclick="toggleOlho('l-pass',this)">👁</button>
+          </div>
         </div>
         <button class="ln-btn" onclick="doLogin()">Entrar no Sistema</button>
       </div>
       <div id="ln-painel-reset" style="display:none">
         <div class="login-err" id="l-reset-err"></div>
+        <p style="font-size:11px;color:var(--ds-tx3);margin-bottom:14px;font-weight:500;">Informe seu e-mail cadastrado para receber o link de redefinição de senha.</p>
         <div class="ln-campo">
-          <label class="ln-lbl" for="l-reset-email">E-mail</label>
+          <label class="ln-lbl" for="l-reset-email">E-mail cadastrado</label>
           <input class="ln-input" type="email" id="l-reset-email" placeholder="seu@email.com.br" autocomplete="email" />
         </div>
         <button class="ln-btn" onclick="doReset()">Enviar Link de Redefinição</button>
-        <div id="l-reset-ok" style="display:none;margin-top:12px;font-size:11px;color:var(--ds-grn);font-weight:600;">Link enviado! Verifique seu e-mail.</div>
+        <div class="ln-esqueci"><a onclick="trocaAba('login')">← Voltar ao login</a></div>
       </div>
     </div>
   </div>
@@ -1321,6 +1333,14 @@ function trocaAba(aba) {
   document.querySelector('.ln-aba[onclick="trocaAba(\''+aba+'\')"]').classList.add('sel');
   document.getElementById('ln-painel-login').style.display = aba === 'login' ? '' : 'none';
   document.getElementById('ln-painel-reset').style.display = aba === 'reset' ? '' : 'none';
+  document.getElementById('l-err').textContent = '';
+  document.getElementById('l-reset-err').textContent = '';
+}
+function toggleOlho(inputId, btn) {
+  var inp = document.getElementById(inputId);
+  var show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
 }
 function doReset(){
   var email=document.getElementById('l-reset-email').value.trim();
