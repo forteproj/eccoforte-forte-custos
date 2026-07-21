@@ -2161,7 +2161,7 @@ function bSimple(sid,key,title,sub,badgeId,hasTot,isR){
   gw.appendChild(tbl);body.appendChild(gw);
   var aa=document.createElement('div');aa.className='aa';
   var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span>＋</span> Adicionar Item';
-  ab.onclick=function(){DATA[key].push({n:'Novo Item',u:'',v:n12()});bSimple(sid,key,title,sub,badgeId,hasTot,isR);refreshTots();scheduleSave();setTimeout(function(){gw.scrollTop=gw.scrollHeight;},40);};
+  ab.onclick=function(){DATA[key].push({n:'Novo Item',u:'',v:n12()});bSimple(sid,key,title,sub,badgeId,hasTot,isR);refreshTots();scheduleSave();setTimeout(function(){var s2=document.getElementById(sid);var gw2=s2&&s2.querySelector('.gw');if(gw2)gw2.scrollTop=gw2.scrollHeight;var tdls=s2&&s2.querySelectorAll('td.tdl');var last=tdls&&tdls[tdls.length-1];if(last)last.dispatchEvent(new MouseEvent('dblclick',{bubbles:true}));},60);};
   aa.appendChild(ab);body.appendChild(aa);
   sec.appendChild(body);refreshTots();
 }
