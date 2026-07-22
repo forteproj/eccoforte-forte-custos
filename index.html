@@ -2488,7 +2488,6 @@ function renderStaffList(){
   DATA.mo.forEach(function(mo,si){
     var checked=modalStaff.indexOf(si)>=0;
     var dmi=mo.sal?displayMi(mo.sal):CUR;var sal=fabMoCalcFunc(mo,dmi).total;
-    console.log('[staff]',mo.n,'sal[]',JSON.stringify(mo.sal),'dmi',dmi,'total',sal);
     var item=document.createElement('div');item.className='staff-item'+(checked?' checked':'');
     var chk=document.createElement('div');chk.className='staff-check';chk.textContent=checked?'✓':'';
     var nm=document.createElement('span');nm.className='staff-name';nm.textContent=mo.n;
