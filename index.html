@@ -1457,6 +1457,7 @@ function cellSet(arr,mi,val,formula){
 
 function lastKnown(arr,mi){if(!arr)return null;for(var i=mi-1;i>=0;i--){var v=cellVal(arr[i]);if(v!==null&&v!==undefined)return v;}return null;}
 function lkv(arr,mi){if(!arr)return 0;var v=cellVal(arr[mi]);if(v!==null&&v!==undefined)return v;return lastKnown(arr,mi)||0;}
+function displayMi(arr){var v=lkv(arr,CUR);if(v)return CUR;for(var i=CUR+1;i<12;i++){var fv=cellVal(arr[i]);if(fv!==null&&fv!==undefined)return i;}return CUR;}
 function setHeat(td,val,arr,mi){
   td.classList.remove('hv','tdc','has-f');
   if(mi===CUR)td.classList.add('tdc');
@@ -2098,7 +2099,7 @@ function openFabStaffModal(prod){
     var item=document.createElement('div');item.className='staff-item'+(already?' checked':'');
     var chk=document.createElement('div');chk.className='staff-check';chk.textContent=already?'✓':'';
     var nmEl=document.createElement('span');nmEl.className='staff-name';nmEl.textContent=mo.n;
-    var sv=document.createElement('span');sv.className='staff-sal';sv.textContent=fR(fabMoCalcFunc(mo,0).total);
+    var dmiF=mo.sal?displayMi(mo.sal):CUR;var sv=document.createElement('span');sv.className='staff-sal';sv.textContent=fR(fabMoCalcFunc(mo,dmiF).total);
     item.appendChild(chk);item.appendChild(nmEl);item.appendChild(sv);
     item.onclick=function(){
       if(already)return;
@@ -2486,7 +2487,8 @@ function renderStaffList(){
   var list=document.getElementById('staff-list');list.innerHTML='';
   DATA.mo.forEach(function(mo,si){
     var checked=modalStaff.indexOf(si)>=0;
-    var sal=fabMoCalcFunc(mo,0).total;
+    var dmi=mo.sal?displayMi(mo.sal):CUR;var sal=fabMoCalcFunc(mo,dmi).total;
+    console.log('[staff]',mo.n,'sal[]',JSON.stringify(mo.sal),'dmi',dmi,'total',sal);
     var item=document.createElement('div');item.className='staff-item'+(checked?' checked':'');
     var chk=document.createElement('div');chk.className='staff-check';chk.textContent=checked?'✓':'';
     var nm=document.createElement('span');nm.className='staff-name';nm.textContent=mo.n;
@@ -2495,7 +2497,7 @@ function renderStaffList(){
     item.onclick=function(){var idx=modalStaff.indexOf(si);if(idx>=0)modalStaff.splice(idx,1);else modalStaff.push(si);renderStaffList();};
     list.appendChild(item);
   });
-  var tot=modalStaff.reduce(function(s,si){return s+(DATA.mo[si]?fabMoTotal(DATA.mo[si],0):0);},0);
+  var tot=modalStaff.reduce(function(s,si){var mo2=DATA.mo[si];if(!mo2)return s;var dmi2=mo2.sal?displayMi(mo2.sal):CUR;return s+fabMoTotal(mo2,dmi2);},0);
   document.getElementById('staff-total').textContent='Total MO / mês: '+fR(tot);
 }
 function selTipo(t){
@@ -3029,7 +3031,7 @@ function openMofEquipeModal(){
     var item=document.createElement('div');item.className='staff-item';
     var chk=document.createElement('div');chk.className='staff-check';
     var nmEl=document.createElement('span');nmEl.className='staff-name';nmEl.textContent=f.n;
-    var sv=document.createElement('span');sv.className='staff-sal';sv.textContent=fR(mofCalcFunc(f,0).total);
+    var dmiE=f.sal?displayMi(f.sal):CUR;var sv=document.createElement('span');sv.className='staff-sal';sv.textContent=fR(mofCalcFunc(f,dmiE).total);
     item.appendChild(chk);item.appendChild(nmEl);item.appendChild(sv);
     item.onclick=function(){
       var idx=window._mofEqSel.indexOf(fi);
@@ -3127,7 +3129,7 @@ function openMofMembroModal(equipe,cb){
     var item=document.createElement('div');item.className='staff-item'+(already?' checked':'');
     var chk=document.createElement('div');chk.className='staff-check';chk.textContent=already?'✓':'';
     var nmEl=document.createElement('span');nmEl.className='staff-name';nmEl.textContent=f.n;
-    var sv=document.createElement('span');sv.className='staff-sal';sv.textContent=fR(mofCalcFunc(f,0).total);
+    var dmiM=f.sal?displayMi(f.sal):CUR;var sv=document.createElement('span');sv.className='staff-sal';sv.textContent=fR(mofCalcFunc(f,dmiM).total);
     item.appendChild(chk);item.appendChild(nmEl);item.appendChild(sv);
     item.onclick=function(){
       if(already)return;
