@@ -696,7 +696,6 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
       <div class="den-fields" id="den-fields">
         <div class="mf-sep">Conversão Base Solvente</div>
         <div class="mf-row">
-          <div class="mf"><label>Fator Densidade (kg→lt)</label><input type="number" id="m-den" placeholder="1.5" step="0.01" value="1.5"></div>
           <div class="mf"><label>Volume Embalagem (LT)</label><input type="number" id="m-vol" placeholder="18" value="18"></div>
         </div>
       </div>
@@ -1028,7 +1027,7 @@ function defaultData(){
 function defaultComp(){
   return [
     {n:'Extrudado Branco',u:'KG',tipo:'extrudado',ex:false,
-     staff:[0,1,2,3,4],prod:p2(138000,138000),den:1,vol2:25,unit2:'SC25',
+     staff:[0,1,2,3,4],prod:p2(138000,138000),vol2:25,unit2:'SC25',
      i:[
        {n:'Resina Termoplástica',u:'KG',mid:14,fid:14,emb:false,v:p2(170,170)},
        {n:'Dioxido de Titanio',  u:'KG',mid:3, fid:3, emb:false,v:p2(25,25)},
@@ -1040,7 +1039,7 @@ function defaultComp(){
        {n:'Film Strech',         u:'KG',mid:19,fid:19,emb:true, v:p2(2,2)},
      ]},
     {n:'Base Solvente Branco',u:'LT',tipo:'solvente',ex:false,
-     staff:[0,1,2],prod:p2(82800,82800),den:1.5,vol2:18,unit2:'BD18',
+     staff:[0,1,2],prod:p2(82800,82800),vol2:18,unit2:'BD18',
      i:[
        {n:'Resina Acrílica 38%', u:'KG',mid:0, fid:0, emb:false,v:p2(230,230)},
        {n:'Lecitina de Soja',    u:'KG',mid:5, fid:5, emb:false,v:p2(10,10)},
@@ -1566,7 +1565,6 @@ function calcProduct(p,mi){
     if(ing.ind){indCostR+=val;}
     else{if(!ing.emb)totalVol+=qty;totalCostR+=val;}
   });
-  if(p.tipo==='solvente'&&p.den)totalVol=totalVol/p.den;
   var cop=p.staff.reduce(function(s,si){
     var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;
     return s+(v!==null&&v!==undefined?v:0);
@@ -2601,19 +2599,6 @@ function bComp(){
     MS.forEach(function(_,mi){prdTr.appendChild(mkCell(p.prod,mi,false,0,function(){refreshResult(pi);}));});
     var pdtd=document.createElement('td');pdtd.className='tdd';prdTr.appendChild(pdtd);
 
-    if(p.tipo==='solvente'){
-      var denTr=tbl._tbody.insertRow();denTr.className='staff-r';denTr.dataset.par=par;denTr.dataset.sg='eq';
-      denTr.style.display=(p._sg['eq']!==false)?'':'none';
-      var denL=document.createElement('td');denL.className='tdl';denL.textContent='Fator Densidade (kg→lt)';denTr.appendChild(denL);
-      MS.forEach(function(_,mi){
-        var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');
-        var inp=document.createElement('input');inp.type='text';inp.className='ci';inp.value=fN(p.den,2);
-        inp.addEventListener('focus',function(){inp.value=fN(p.den,2);});
-        inp.addEventListener('blur',function(){var r=parseFloat(inp.value.replace(',','.'));if(!isNaN(r)){p.den=r;inp.value=fN(r,2);refreshResult(pi);scheduleSave();}});
-        td.appendChild(inp);denTr.appendChild(td);
-      });
-      var ddt=document.createElement('td');ddt.className='tdd';denTr.appendChild(ddt);
-    }
 
     // ─── SUB-GRUPO: RESULTADO CALCULADO ───
     mkSgTogRow('Resultado Calculado','res','📊');
@@ -2704,7 +2689,6 @@ function openModal(){
   document.getElementById('m-unit').value='KG';
   document.getElementById('m-unit2').value='SC25';
   document.getElementById('m-prod').value='';
-  document.getElementById('m-den').value='1.5';
   document.getElementById('m-vol').value='18';
   document.getElementById('den-fields').style.display='none';
   document.getElementById('tb-ext').classList.add('sel');
@@ -2719,10 +2703,9 @@ function createProduct(){
   var unit=document.getElementById('m-unit').value;
   var unit2=document.getElementById('m-unit2').value;
   var prod=parseFloat(document.getElementById('m-prod').value)||0;
-  var den=modalTipo==='solvente'?(parseFloat(document.getElementById('m-den').value)||1.5):1;
   var vol2=modalTipo==='solvente'?(parseFloat(document.getElementById('m-vol').value)||18):25;
   var prodArr=n12();prodArr[0]=prod;
-  COMP.push({n:nome,u:unit,tipo:modalTipo,ex:true,staff:modalStaff.slice(),prod:prodArr,den:den,vol2:vol2,unit2:unit2,i:[]});
+  COMP.push({n:nome,u:unit,tipo:modalTipo,ex:true,staff:modalStaff.slice(),prod:prodArr,vol2:vol2,unit2:unit2,i:[]});
   DATA.pest.push({n:nome,u:unit,v:n12()});
   closeModal();bComp();
   bSimple('pest','pest','Produção Real do Item','Apontamento mensal de quantidade produzida por produto',null,false,false);
@@ -3524,7 +3507,6 @@ function printCompItem(p){
   html+=chip('Tipo',tipo);
   html+=chip('Unidade','R$/'+p.u);
   if(p.unit2)html+=chip('Emb. Sec.',unit2Label(p.unit2,p.vol2));
-  if(p.tipo==='solvente')html+=chip('Densidade',_fN(p.den,2)+' kg→lt');
   html+='</div>';
 
   // SECAO 1 — Ingredientes
@@ -3600,7 +3582,6 @@ function printCompItem(p){
     return admTotal>0?admTotal:null;
   },true,2);
   html+=row('Produtividade '+p.u+'/mes','#f5f4f0',function(mi){var v=cellVal(p.prod[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,0,false);
-  if(p.tipo==='solvente'){html+=row('Fator Densidade (kg→lt)','#f5f4f0',function(mi){return p.den;},null,false,2,false);}
   html+='</tbody></table></div>';
 
   // SECAO 4 — Resultado
