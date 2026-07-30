@@ -208,6 +208,8 @@ tr.ir td.tdl{padding-left:28px;color:var(--txs);font-size:11px}
 tr.ir{border-bottom:1px dashed var(--bd)}
 tr.emb td.tdl{padding-left:28px;color:var(--mu);font-size:11px;font-style:italic}
 tr.emb{border-bottom:1px dashed var(--bd)}
+tr.ind td.tdl{padding-left:28px;color:#8A5A2E;font-size:11px}
+tr.ind{border-bottom:1px dashed var(--bd)}
 tr.staff-r td.tdl{padding-left:28px;color:var(--txs);font-size:11px}
 tr.staff-r{border-bottom:1px dashed var(--bd)}
 tr.res-sub td{background:#FDF8E8!important;border-bottom:1px dashed var(--abdr)}
@@ -1553,15 +1555,16 @@ function calcProduct(p,mi){
   // Só calcula se produtividade tem valor explícito neste mês.
   // Sem produtividade, todos os custos unitários são inválidos.
   var prodRaw=cellVal(p.prod[mi]);
-  if(prodRaw===null||prodRaw===undefined) return {vol:null,costR:null,cop:null,mpUnit:null,copUnit:null,predialUnit:null,final:null,final2:null};
+  if(prodRaw===null||prodRaw===undefined) return {vol:null,costR:null,cop:null,mpUnit:null,indUnit:null,copUnit:null,predialUnit:null,final:null,final2:null};
 
-  var totalVol=0,totalCostR=0;
+  var totalVol=0,totalCostR=0,indCostR=0;
   p.i.forEach(function(ing){
     var qty=lkv(ing.v,mi);if(!qty&&qty!==0)return;
     var mpP=mpPriceByIng(ing,mi);
     var frP=frPriceByIng(ing,mi);
-    if(!ing.emb)totalVol+=qty;
-    totalCostR+=qty*(mpP+frP);
+    var val=qty*(mpP+frP);
+    if(ing.ind){indCostR+=val;}
+    else{if(!ing.emb)totalVol+=qty;totalCostR+=val;}
   });
   if(p.tipo==='solvente'&&p.den)totalVol=totalVol/p.den;
   var cop=p.staff.reduce(function(s,si){
@@ -1571,6 +1574,7 @@ function calcProduct(p,mi){
   var prod=lkv(p.prod,mi);
   var copUnit=prod>0?cop/prod:0;
   var mpUnit=totalVol>0?totalCostR/totalVol:0;
+  var indUnit=totalVol>0?indCostR/totalVol:0;
   // Custo Predial = Total ADM / Produtividade
   var admTotal=DATA.adm.reduce(function(s,r){
     if(!r.v)return s;
@@ -1578,15 +1582,16 @@ function calcProduct(p,mi){
     return s+(v!==null&&v!==undefined?v:0);
   },0);
   var predialUnit=prod>0?admTotal/prod:0;
-  var final=mpUnit+copUnit+predialUnit;
+  var final=mpUnit+indUnit+copUnit+predialUnit;
   var fac=unit2Vol(p.unit2,p.vol2);
-  return {vol:totalVol,costR:totalCostR,cop:cop,mpUnit:mpUnit,copUnit:copUnit,predialUnit:predialUnit,final:final,final2:fac?final*fac:null};
+  return {vol:totalVol,costR:totalCostR,cop:cop,mpUnit:mpUnit,indUnit:indUnit,copUnit:copUnit,predialUnit:predialUnit,final:final,final2:fac?final*fac:null};
 }
 function refreshResult(pi){
   var p=COMP[pi];if(!p)return;
   var rows=[
     {fn:function(c){return c.vol;},        isR:false,dec:2},
     {fn:function(c){return c.mpUnit;},     isR:true, dec:4},
+    {fn:function(c){return c.indUnit;},    isR:true, dec:4},
     {fn:function(c){return c.predialUnit;},isR:true, dec:4},
     {fn:function(c){return c.copUnit;},    isR:true, dec:4},
     {fn:function(c){return c.final;},      isR:true, dec:4},
@@ -1600,8 +1605,8 @@ function refreshResult(pi){
     });
   });
   MS.forEach(function(_,mi){
-    // comp-hd agora aponta para a linha "➤ Produto Final / LT" (ri:4)
-    var hd=document.getElementById('rc-'+pi+'-4-'+mi);
+    // comp-hd agora aponta para a linha "➤ Produto Final / LT" (ri:5)
+    var hd=document.getElementById('rc-'+pi+'-5-'+mi);
     if(hd){var c=calcProduct(p,mi);hd.value=(c.final!==null&&c.final>0)?fR(c.final,4):'—';}
     var el=document.getElementById('mo-'+pi+'-'+mi);if(!el)return;
     var anyData=p.staff.some(function(si){return DATA.mo[si]&&fabMoTotal(DATA.mo[si],mi)!==null;});
@@ -2351,13 +2356,15 @@ function bComp(){
 
   COMP.forEach(function(p,pi){
     var par='c'+pi;
-    if(!p._sg)p._sg={ing:false,emb:false,eq:false,res:false,ingR:false,embR:false};
+    if(!p._sg)p._sg={ing:false,emb:false,ind:false,eq:false,res:false,ingR:false,embR:false,indR:false};
     if(p._open===undefined)p._open=false;
+    if(p._detEq===undefined)p._detEq=false;
     // Sempre respeitar p._open ao renderizar
-    p._sg.ing=p._open; p._sg.emb=p._open; p._sg.eq=p._open; p._sg.res=p._open;
+    p._sg.ing=p._open; p._sg.emb=p._open; p._sg.ind=p._open; p._sg.eq=p._open; p._sg.res=p._open;
     // Migração: garantir campos novos para produtos criados antes
     if(p._sg.ingR===undefined)p._sg.ingR=false;
     if(p._sg.embR===undefined)p._sg.embR=false;
+    if(p._sg.indR===undefined)p._sg.indR=false;
 
     // ── Título completo do produto (linha separada, full-width) ──
     var titleTr=tbl._tbody.insertRow();titleTr.className='ph-title-row';
@@ -2381,7 +2388,7 @@ function bComp(){
       e.stopPropagation();
       p._open=!p._open;
       titleTog.textContent=p._open?'▼':'▶';
-      ['ing','emb','eq','res'].forEach(function(sg){p._sg[sg]=p._open;});
+      ['ing','emb','ind','eq','res'].forEach(function(sg){p._sg[sg]=p._open;});
       tbl.querySelectorAll('[data-par="'+par+'"]').forEach(function(r){
         if(r.dataset.alwaysvis==='1'){r.style.display='';return;}
         if(r.classList.contains('sg-tog-hdr')){r.style.display=p._open?'':'none';return;}
@@ -2458,12 +2465,15 @@ function bComp(){
       var tr=tbl._tbody.insertRow();tr.className=cls;tr.dataset.par=par;tr.dataset.sg=sgKey;
       tr.style.display=(p._sg[sgKey]!==false)?'':'none';
       var tl=document.createElement('td');tl.className='tdl';
-      var fl=document.createElement('button');fl.className='flag';fl.textContent=ing.emb?'📦':'✅';
-      fl.onclick=(function(theIng,theTr,theFl){return function(){
-        theIng.emb=!theIng.emb;theFl.textContent=theIng.emb?'📦':'✅';
-        theTr.className=theIng.emb?'emb':'ir';theTr.dataset.par=par;
+      var fl=document.createElement('button');fl.className='flag';fl.title='Clique para trocar categoria';
+      fl.textContent=ing.ind?'🏭':ing.emb?'📦':'✅';
+      fl.onclick=(function(theIng){return function(){
+        // Ciclo: Ingrediente → Embalagem → Industrialização → Ingrediente
+        if(!theIng.emb&&!theIng.ind)theIng.emb=true;
+        else if(theIng.emb){theIng.emb=false;theIng.ind=true;}
+        else theIng.ind=false;
         bComp();scheduleSave();
-      };})(ing,tr,fl);
+      };})(ing);
       tl.appendChild(fl);tl.appendChild(document.createTextNode(' '+ing.n+(ing.u?' · '+ing.u:'')));
       tr.appendChild(tl);
       MS.forEach(function(_,mi){tr.appendChild(mkCell(ing.v,mi,false,2,function(){refreshResult(pi);refreshIngRs(pi,ii);}));});
@@ -2505,11 +2515,15 @@ function bComp(){
 
     // ─── SUB-GRUPO: INGREDIENTES ───
     mkSgTogRow('Ingredientes','ing','🌿','ingR');
-    p.i.forEach(function(ing,ii){if(!ing.emb)ingRow(ing,ii,'ir','ing','ingR');});
+    p.i.forEach(function(ing,ii){if(!ing.emb&&!ing.ind)ingRow(ing,ii,'ir','ing','ingR');});
 
     // ─── SUB-GRUPO: EMBALAGENS ───
     mkSgTogRow('Embalagens','emb','📦','embR');
     p.i.forEach(function(ing,ii){if(ing.emb)ingRow(ing,ii,'emb','emb','embR');});
+
+    // ─── SUB-GRUPO: INDUSTRIALIZAÇÃO ───
+    mkSgTogRow('Industrialização','ind','🏭','indR');
+    p.i.forEach(function(ing,ii){if(ing.ind)ingRow(ing,ii,'ind',  'ind','indR');});
 
     // Botão adicionar ingrediente
     var aitr=tbl._tbody.insertRow();aitr.dataset.par=par;aitr.dataset.sg='emb';
@@ -2521,39 +2535,65 @@ function bComp(){
     aib.onclick=(function(prod,pidx){return function(){openIngModal(prod,pidx);};})(p,pi);
     aitd.appendChild(aib);aitr.appendChild(aitd);
 
-    // ─── SUB-GRUPO: EQUIPE OPERACIONAL ───
-    mkSgTogRow('Equipe Operacional','eq','👥');
-    p.staff.forEach(function(si,sIdx){
-      var mo=DATA.mo[si];if(!mo)return;
-      var tr=tbl._tbody.insertRow();tr.className='staff-r';tr.dataset.par=par;tr.dataset.sg='eq';
-      tr.style.display=(p._sg['eq']!==false)?'':'none';
-      var tl=document.createElement('td');tl.className='tdl';
-      tl.innerHTML='<span style="color:var(--mu);font-size:11px">👤</span> '+mo.n;
-      tr.appendChild(tl);
-      MS.forEach(function(_,mi){tr.appendChild(mkRO(fabMoTotal(mo,mi)||null,true,2,'ro'));});
-      var dtd=document.createElement('td');dtd.className='tdd';
-      var ddb=document.createElement('button');ddb.className='db';ddb.textContent='✕';
-      ddb.onclick=(function(prod,idx){return function(){prod.staff.splice(idx,1);bComp();scheduleSave();};})(p,sIdx);
-      dtd.appendChild(ddb);tr.appendChild(dtd);
-    });
-    // Botão adicionar membro da equipe
-    var staffAddTr=tbl._tbody.insertRow();staffAddTr.dataset.par=par;staffAddTr.dataset.sg='eq';
-    staffAddTr.style.display=(p._sg['eq']!==false)?'':'none';
-    var staffAddTd=document.createElement('td');staffAddTd.colSpan=14;staffAddTd.style.padding='2px 14px';
-    var staffAddBtn=document.createElement('button');staffAddBtn.className='ab';staffAddBtn.style.cssText='font-size:10px;padding:3px 10px';
-    staffAddBtn.innerHTML='＋ Membro';
-    staffAddBtn.onclick=(function(prod){return function(){openFabStaffModal(prod);};})(p);
-    staffAddTd.appendChild(staffAddBtn);staffAddTr.appendChild(staffAddTd);
+    // ─── SUB-GRUPO: CUSTO OPERACIONAL ───
+    mkSgTogRow('Custo Operacional','eq','⚙️');
 
+    // Custo Salarial (resumo — soma de todas as funções da equipe)
     var moTr=tbl._tbody.insertRow();moTr.className='res-sub';moTr.dataset.par=par;moTr.dataset.sg='eq';
     moTr.style.display=(p._sg['eq']!==false)?'':'none';
-    var moL=document.createElement('td');moL.className='tdl';moL.textContent='Total MO / mês';moTr.appendChild(moL);
+    var moL=document.createElement('td');moL.className='tdl';moL.textContent='Custo Salarial';moTr.appendChild(moL);
     MS.forEach(function(_,mi){
       var anyData=p.staff.some(function(si){return DATA.mo[si]&&fabMoTotal(DATA.mo[si],mi)!==null;});
       var cop=anyData?p.staff.reduce(function(s,si){var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;return s+(v!==null&&v!==undefined?v:0);},0):null;
       moTr.appendChild(mkRO(cop!==null&&cop>0?cop:anyData?cop:null,true,2,'ro-val','mo-'+pi+'-'+mi));
     });
     var modtd=document.createElement('td');modtd.className='tdd';moTr.appendChild(modtd);
+
+    // Custo Predial (resumo — total da tabela Predial/ADM no mês)
+    var prTr=tbl._tbody.insertRow();prTr.className='res-sub';prTr.dataset.par=par;prTr.dataset.sg='eq';
+    prTr.style.display=(p._sg['eq']!==false)?'':'none';
+    var prL=document.createElement('td');prL.className='tdl';prL.textContent='Custo Predial';prTr.appendChild(prL);
+    MS.forEach(function(_,mi){
+      var admTotal=DATA.adm.reduce(function(s,r){if(!r.v)return s;var v=cellVal(r.v[mi]);return s+(v!==null&&v!==undefined?v:0);},0);
+      prTr.appendChild(mkRO(admTotal>0?admTotal:null,true,2,'ro-val'));
+    });
+    var prdtd=document.createElement('td');prdtd.className='tdd';prTr.appendChild(prdtd);
+
+    // Toggle "Detalhar por função" — esconde/mostra o detalhamento por cargo
+    var detTr=tbl._tbody.insertRow();detTr.className='staff-r';detTr.dataset.par=par;detTr.dataset.sg='eq';
+    detTr.style.display=(p._sg['eq']!==false)?'':'none';
+    var detTd=document.createElement('td');detTd.className='tdl';
+    var detBtn=document.createElement('button');detBtn.className='sg-rs-btn'+(p._detEq?' on':'');
+    detBtn.textContent=(p._detEq?'▾':'▸')+' Detalhar por função';
+    detBtn.style.cssText='font-size:10px;';
+    detBtn.onclick=function(e){e.stopPropagation();p._detEq=!p._detEq;bComp();};
+    detTd.appendChild(detBtn);detTr.appendChild(detTd);
+    MS.forEach(function(_,mi){var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');detTr.appendChild(td);});
+    detTr.appendChild(document.createElement('td')).className='tdd';
+
+    if(p._detEq){
+      p.staff.forEach(function(si,sIdx){
+        var mo=DATA.mo[si];if(!mo)return;
+        var tr=tbl._tbody.insertRow();tr.className='staff-r';tr.dataset.par=par;tr.dataset.sg='eq';
+        tr.style.display=(p._sg['eq']!==false)?'':'none';
+        var tl=document.createElement('td');tl.className='tdl';
+        tl.innerHTML='<span style="color:var(--mu);font-size:11px">👤</span> '+mo.n;
+        tr.appendChild(tl);
+        MS.forEach(function(_,mi){tr.appendChild(mkRO(fabMoTotal(mo,mi)||null,true,2,'ro'));});
+        var dtd=document.createElement('td');dtd.className='tdd';
+        var ddb=document.createElement('button');ddb.className='db';ddb.textContent='✕';
+        ddb.onclick=(function(prod,idx){return function(){prod.staff.splice(idx,1);bComp();scheduleSave();};})(p,sIdx);
+        dtd.appendChild(ddb);tr.appendChild(dtd);
+      });
+      // Botão adicionar membro da equipe
+      var staffAddTr=tbl._tbody.insertRow();staffAddTr.dataset.par=par;staffAddTr.dataset.sg='eq';
+      staffAddTr.style.display=(p._sg['eq']!==false)?'':'none';
+      var staffAddTd=document.createElement('td');staffAddTd.colSpan=14;staffAddTd.style.padding='2px 14px';
+      var staffAddBtn=document.createElement('button');staffAddBtn.className='ab';staffAddBtn.style.cssText='font-size:10px;padding:3px 10px';
+      staffAddBtn.innerHTML='＋ Membro';
+      staffAddBtn.onclick=(function(prod){return function(){openFabStaffModal(prod);};})(p);
+      staffAddTd.appendChild(staffAddBtn);staffAddTr.appendChild(staffAddTd);
+    }
 
     var prdTr=tbl._tbody.insertRow();prdTr.className='staff-r';prdTr.dataset.par=par;prdTr.dataset.sg='eq';
     prdTr.style.display=(p._sg['eq']!==false)?'':'none';
@@ -2578,13 +2618,14 @@ function bComp(){
     // ─── SUB-GRUPO: RESULTADO CALCULADO ───
     mkSgTogRow('Resultado Calculado','res','📊');
     var resRows=[
-      {lbl:'Volume lote ('+p.u+')',   fn:function(c){return c.vol;},         isR:false,dec:2,cls:'res-sub',ri:0,av:false},
-      {lbl:'Custo MP / '+p.u,         fn:function(c){return c.mpUnit;},      isR:true, dec:4,cls:'res-sub',ri:1,av:false},
-      {lbl:'Custo Predial / '+p.u,    fn:function(c){return c.predialUnit;}, isR:true, dec:4,cls:'res-sub',ri:2,av:false},
-      {lbl:'Custo MO / '+p.u,         fn:function(c){return c.copUnit;},     isR:true, dec:4,cls:'res-sub',ri:3,av:false},
-      {lbl:'➤ Produto Final / '+p.u,  fn:function(c){return c.final;},       isR:true, dec:4,cls:'res',    ri:4,av:true},
+      {lbl:'Volume lote ('+p.u+')',        fn:function(c){return c.vol;},          isR:false,dec:2,cls:'res-sub',ri:0,av:false},
+      {lbl:'Custo MP / '+p.u,              fn:function(c){return c.mpUnit;},       isR:true, dec:4,cls:'res-sub',ri:1,av:false},
+      {lbl:'Custo Industrialização / '+p.u,fn:function(c){return c.indUnit;},      isR:true, dec:4,cls:'res-sub',ri:2,av:false},
+      {lbl:'Custo Predial / '+p.u,         fn:function(c){return c.predialUnit;},  isR:true, dec:4,cls:'res-sub',ri:3,av:false},
+      {lbl:'Custo MO / '+p.u,              fn:function(c){return c.copUnit;},      isR:true, dec:4,cls:'res-sub',ri:4,av:false},
+      {lbl:'➤ Produto Final / '+p.u,       fn:function(c){return c.final;},        isR:true, dec:4,cls:'res',    ri:5,av:true},
     ];
-    if(p.unit2)resRows.push({lbl:'➤ Produto Final / '+unit2Label(p.unit2,p.vol2),fn:function(c){return c.final2;},isR:true,dec:4,cls:'res',ri:5,av:true});
+    if(p.unit2)resRows.push({lbl:'➤ Produto Final / '+unit2Label(p.unit2,p.vol2),fn:function(c){return c.final2;},isR:true,dec:4,cls:'res',ri:6,av:true});
     resRows.forEach(function(row){
       var rtr=tbl._tbody.insertRow();rtr.className=row.cls;rtr.dataset.par=par;
       if(row.av){rtr.dataset.alwaysvis='1';}else{rtr.dataset.sg='res';}
@@ -3306,8 +3347,8 @@ function openIngModal(prod, pi){
     '<div class="mf-row">'+
     '<div class="mf"><label>Unidade</label>'+
     '<select id="ing-unit"><option value="KG">KG</option><option value="LT">LT</option><option value="UN">UN</option></select></div>'+
-    '<div class="mf"><label>É embalagem?</label>'+
-    '<select id="ing-emb"><option value="0">Não (ingrediente)</option><option value="1">Sim (embalagem)</option></select></div>'+
+    '<div class="mf"><label>Categoria</label>'+
+    '<select id="ing-cat"><option value="ing">Ingrediente</option><option value="emb">Embalagem</option><option value="ind">Industrialização</option></select></div>'+
     '</div>'+
     '</div><div class="modal-foot">'+
     '<button class="btn-cancel" onclick="closeIngModal()">Cancelar</button>'+
@@ -3332,7 +3373,8 @@ function createIng(pi){
   var mid=parseInt(document.getElementById('ing-mp-sel').value);
   var nome=document.getElementById('ing-nome').value.trim();
   var unit=document.getElementById('ing-unit').value;
-  var emb=document.getElementById('ing-emb').value==='1';
+  var cat=document.getElementById('ing-cat').value;
+  var emb=cat==='emb',ind=cat==='ind';
   // Se escolheu uma MP, vincula também ao frete correspondente (mesmo índice)
   var fid=-1;
   if(mid>=0){
@@ -3341,14 +3383,14 @@ function createIng(pi){
     if(DATA.frete[mid])fid=mid;
   }
   if(!nome){alert('Digite o nome do ingrediente.');return;}
-  p.i.push({n:nome,u:unit,mid:mid,fid:fid,emb:emb,v:n12()});
+  p.i.push({n:nome,u:unit,mid:mid,fid:fid,emb:emb,ind:ind,v:n12()});
   closeIngModal();
   bComp();
   scheduleSave();
   // Expandir o produto e o sub-grupo correto após rebuild
   setTimeout(function(){
     p._open=true;
-    var sgKey=emb?'emb':'ing';
+    var sgKey=ind?'ind':emb?'emb':'ing';
     if(p._sg[sgKey]===false)p._sg[sgKey]=true;
     bComp();
   },50);
@@ -3366,8 +3408,9 @@ function printCompItem(p){
 
   var tipo=p.tipo==='extrudado'?'Extrudado':'Solvente';
   var c0=calcProduct(p,0);
-  var ings=p.i.filter(function(i){return !i.emb;});
+  var ings=p.i.filter(function(i){return !i.emb&&!i.ind;});
   var embs=p.i.filter(function(i){return i.emb;});
+  var inds=p.i.filter(function(i){return i.ind;});
 
   // Percentual de largura: coluna label + 12 meses
   // A4 paisagem util ~277mm. Label=22%, cada mes=(78/12)=6.5%
@@ -3520,19 +3563,41 @@ function printCompItem(p){
   if(!embs.length)html+='<tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhuma embalagem cadastrada</td></tr>';
   html+='</tbody></table></div>';
 
-  // SECAO 3 — Equipe
+  // SECAO 2b — Industrialização
   html+='<div class="no-break">';
-  html+=secLabel('','EQUIPE OPERACIONAL — Custo MO / mes');
+  html+=secLabel('','INDUSTRIALIZAÇÃO — Quantidade por lote');
+  html+='<table>'+thRow()+'<tbody>';
+  inds.forEach(function(ing){
+    html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){var v=cellVal(ing.v[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,2,false);
+    html+=rowRS('↳ R$ custo',function(mi){
+      var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
+      return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
+    });
+    html+=rowPct(function(mi){
+      var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
+      return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
+    });
+  });
+  if(!inds.length)html+='<tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhum item de industrialização cadastrado</td></tr>';
+  html+='</tbody></table></div>';
+
+  // SECAO 3 — Custo Operacional
+  html+='<div class="no-break">';
+  html+=secLabel('','CUSTO OPERACIONAL — Custo MO / mes');
   html+='<table>'+thRow()+'<tbody>';
   p.staff.forEach(function(si){
     var mo=DATA.mo[si];if(!mo)return;
     html+=row(mo.n,'#f5f4f0',function(mi){return fabMoTotal(mo,mi)||null;},null,true,2,false);
   });
   html+=sepRow();
-  html+=rowSub('Total MO / mes',function(mi){
+  html+=rowSub('Custo Salarial',function(mi){
     var anyData=p.staff.some(function(si){return DATA.mo[si]&&fabMoTotal(DATA.mo[si],mi)!==null;});
     if(!anyData)return null;
     return p.staff.reduce(function(s,si){var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;return s+(v!==null?v:0);},0);
+  },true,2);
+  html+=rowSub('Custo Predial',function(mi){
+    var admTotal=DATA.adm.reduce(function(s,r){if(!r.v)return s;var v=cellVal(r.v[mi]);return s+(v!==null&&v!==undefined?v:0);},0);
+    return admTotal>0?admTotal:null;
   },true,2);
   html+=row('Produtividade '+p.u+'/mes','#f5f4f0',function(mi){var v=cellVal(p.prod[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,0,false);
   if(p.tipo==='solvente'){html+=row('Fator Densidade (kg→lt)','#f5f4f0',function(mi){return p.den;},null,false,2,false);}
@@ -3544,6 +3609,7 @@ function printCompItem(p){
   html+='<table>'+thRow()+'<tbody>';
   html+=rowSub('Volume lote ('+p.u+')',function(mi){return calcProduct(p,mi).vol;},false,2);
   html+=rowSub('Custo MP / '+p.u,function(mi){return calcProduct(p,mi).mpUnit;},true,4);
+  html+=rowSub('Custo Industrialização / '+p.u,function(mi){return calcProduct(p,mi).indUnit;},true,4);
   html+=rowSub('Custo Predial / '+p.u,function(mi){return calcProduct(p,mi).predialUnit;},true,4);
   html+=rowSub('Custo MO / '+p.u,function(mi){return calcProduct(p,mi).copUnit;},true,4);
   html+=sepRow();
