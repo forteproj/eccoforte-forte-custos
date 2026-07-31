@@ -1588,7 +1588,15 @@ function calcProduct(p,mi){
   var fac=unit2Vol(p.unit2,p.vol2);
   var custoPorSec=indQty>0?totalCusto/indQty:null;
   var custoPorPri=(custoPorSec!==null&&fac)?custoPorSec/fac:null;
-  return {vol:totalVol,costR:totalCostR,indCostR:indCostR,indQty:indQty,totalCusto:totalCusto,custoPorSec:custoPorSec,custoPorPri:custoPorPri};
+  // Preço de Venda: digitado por unidade secundária (BD/SC), unidade primária (LT/KG) é derivada
+  var pvSec=(p.pv)?lkv(p.pv,mi):null;
+  var temPv=(pvSec!==null&&pvSec!==undefined&&!isNaN(pvSec));
+  var pvPri=(temPv&&fac)?pvSec/fac:null;
+  var dedRate=deducoesRate(mi);
+  var dedSec=temPv?pvSec*dedRate:null;
+  var dedPri=(dedSec!==null&&fac)?dedSec/fac:null;
+  return {vol:totalVol,costR:totalCostR,indCostR:indCostR,indQty:indQty,totalCusto:totalCusto,custoPorSec:custoPorSec,custoPorPri:custoPorPri,
+    pvSec:pvSec,pvPri:pvPri,dedSec:dedSec,dedPri:dedPri};
 }
 function refreshCustoInd(pi){
   var p=COMP[pi];if(!p)return;
@@ -1600,6 +1608,12 @@ function refreshCustoInd(pi){
     if(elPri)elPri.value=(c.custoPorPri!==null&&c.custoPorPri!==undefined)?fR(c.custoPorPri,4):'—';
     var elSec=document.getElementById('ci-sec-'+pi+'-'+mi);
     if(elSec)elSec.value=(c.custoPorSec!==null&&c.custoPorSec!==undefined)?fR(c.custoPorSec,4):'—';
+    var elPvPri=document.getElementById('pv-pri-'+pi+'-'+mi);
+    if(elPvPri)elPvPri.value=(c.pvPri!==null&&c.pvPri!==undefined)?fR(c.pvPri,4):'—';
+    var elDedSec=document.getElementById('ded-sec-'+pi+'-'+mi);
+    if(elDedSec)elDedSec.value=(c.dedSec!==null&&c.dedSec!==undefined)?fR(c.dedSec,4):'—';
+    var elDedPri=document.getElementById('ded-pri-'+pi+'-'+mi);
+    if(elDedPri)elDedPri.value=(c.dedPri!==null&&c.dedPri!==undefined)?fR(c.dedPri,4):'—';
   });
 }
 
@@ -2436,7 +2450,7 @@ function bComp(){
     if(p._detEq===undefined)p._detEq=false;
     if(!p.pv)p.pv=n12();
     // Sempre respeitar p._open ao renderizar
-    p._sg.ing=p._open; p._sg.emb=p._open; p._sg.ind=p._open; p._sg.eq=p._open; p._sg.res=p._open;
+    p._sg.ing=p._open; p._sg.emb=p._open; p._sg.ind=p._open; p._sg.eq=p._open; p._sg.res=p._open; p._sg.pv=p._open; p._sg.ded=p._open;
     // Migração: garantir campos novos para produtos criados antes
     if(p._sg.ingR===undefined)p._sg.ingR=false;
     if(p._sg.embR===undefined)p._sg.embR=false;
@@ -2464,7 +2478,7 @@ function bComp(){
       e.stopPropagation();
       p._open=!p._open;
       titleTog.textContent=p._open?'▼':'▶';
-      ['ing','emb','ind','eq','res'].forEach(function(sg){p._sg[sg]=p._open;});
+      ['ing','emb','ind','eq','res','pv','ded'].forEach(function(sg){p._sg[sg]=p._open;});
       tbl.querySelectorAll('[data-par="'+par+'"]').forEach(function(r){
         if(r.dataset.alwaysvis==='1'){r.style.display='';return;}
         if(r.classList.contains('sg-tog-hdr')){r.style.display=p._open?'':'none';return;}
@@ -2657,6 +2671,45 @@ function bComp(){
       });
       uSecTr.appendChild(document.createElement('td')).className='tdd';
     }
+
+    // ─── SUB-GRUPO: PREÇO DE VENDA ───
+    mkSgTogRow('Preço de Venda','pv','💰');
+    if(p.unit2){
+      var pvSecTr=tbl._tbody.insertRow();pvSecTr.className='ir';pvSecTr.dataset.par=par;pvSecTr.dataset.sg='pv';
+      pvSecTr.style.display=(p._sg['pv']!==false)?'':'none';
+      var pvSecL=document.createElement('td');pvSecL.className='tdl';pvSecL.textContent='Preço de Venda / '+unit2Label(p.unit2,p.vol2);pvSecTr.appendChild(pvSecL);
+      MS.forEach(function(_,mi){pvSecTr.appendChild(mkCell(p.pv,mi,true,4,function(){refreshCustoInd(pi);}));});
+      pvSecTr.appendChild(document.createElement('td')).className='tdd';
+    }
+    var pvPriTr=tbl._tbody.insertRow();pvPriTr.className='res-sub';pvPriTr.dataset.par=par;pvPriTr.dataset.sg='pv';
+    pvPriTr.style.display=(p._sg['pv']!==false)?'':'none';
+    var pvPriL=document.createElement('td');pvPriL.className='tdl';pvPriL.textContent='Preço de Venda / '+p.u;pvPriTr.appendChild(pvPriL);
+    MS.forEach(function(_,mi){
+      var c=calcProduct(p,mi);
+      pvPriTr.appendChild(mkRO(c.pvPri,true,4,'ro-val','pv-pri-'+pi+'-'+mi));
+    });
+    pvPriTr.appendChild(document.createElement('td')).className='tdd';
+
+    // ─── SUB-GRUPO: DEDUÇÕES ───
+    mkSgTogRow('Deduções','ded','📉');
+    if(p.unit2){
+      var dedSecTr=tbl._tbody.insertRow();dedSecTr.className='res-sub';dedSecTr.dataset.par=par;dedSecTr.dataset.sg='ded';
+      dedSecTr.style.display=(p._sg['ded']!==false)?'':'none';
+      var dedSecL=document.createElement('td');dedSecL.className='tdl';dedSecL.textContent='Deduções / '+unit2Label(p.unit2,p.vol2);dedSecTr.appendChild(dedSecL);
+      MS.forEach(function(_,mi){
+        var c=calcProduct(p,mi);
+        dedSecTr.appendChild(mkRO(c.dedSec,true,4,'ro-val','ded-sec-'+pi+'-'+mi));
+      });
+      dedSecTr.appendChild(document.createElement('td')).className='tdd';
+    }
+    var dedPriTr=tbl._tbody.insertRow();dedPriTr.className='res-sub';dedPriTr.dataset.par=par;dedPriTr.dataset.sg='ded';
+    dedPriTr.style.display=(p._sg['ded']!==false)?'':'none';
+    var dedPriL=document.createElement('td');dedPriL.className='tdl';dedPriL.textContent='Deduções / '+p.u;dedPriTr.appendChild(dedPriL);
+    MS.forEach(function(_,mi){
+      var c=calcProduct(p,mi);
+      dedPriTr.appendChild(mkRO(c.dedPri,true,4,'ro-val','ded-pri-'+pi+'-'+mi));
+    });
+    dedPriTr.appendChild(document.createElement('td')).className='tdd';
 
   });
 
