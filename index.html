@@ -1577,8 +1577,15 @@ function calcProduct(p,mi){
   var dedRate=deducoesRate(p,mi);
   var dedSec=temPv?pvSec*dedRate:null;
   var dedPri=(dedSec!==null&&fac)?dedSec/fac:null;
+  // Lucro Bruto = Preço de Venda − Deduções; Lucro Líquido = Lucro Bruto − Custo por unidade
+  var lucroBrutoSec=(pvSec!==null&&dedSec!==null)?pvSec-dedSec:null;
+  var lucroBrutoPri=(pvPri!==null&&dedPri!==null)?pvPri-dedPri:null;
+  var lucroLiquidoSec=(lucroBrutoSec!==null&&custoPorSec!==null)?lucroBrutoSec-custoPorSec:null;
+  var lucroLiquidoPri=(lucroBrutoPri!==null&&custoPorPri!==null)?lucroBrutoPri-custoPorPri:null;
+  var lucroLiquidoPct=(lucroLiquidoSec!==null&&pvSec>0)?(lucroLiquidoSec/pvSec*100):null;
   return {vol:totalVol,costR:totalCostR,indCostR:indCostR,indQty:indQty,totalCusto:totalCusto,custoPorSec:custoPorSec,custoPorPri:custoPorPri,
-    pvSec:pvSec,pvPri:pvPri,dedSec:dedSec,dedPri:dedPri};
+    pvSec:pvSec,pvPri:pvPri,dedSec:dedSec,dedPri:dedPri,
+    lucroBrutoSec:lucroBrutoSec,lucroBrutoPri:lucroBrutoPri,lucroLiquidoSec:lucroLiquidoSec,lucroLiquidoPri:lucroLiquidoPri,lucroLiquidoPct:lucroLiquidoPct};
 }
 function refreshCustoInd(pi){
   var p=COMP[pi];if(!p)return;
@@ -1604,6 +1611,16 @@ function refreshCustoInd(pi){
       var v=(pvSec!==null&&pvSec!==undefined&&rate!==null&&rate!==undefined)?pvSec*rate:null;
       elItem.value=(v!==null&&v!==undefined)?fR(v,2):'—';
     });
+    var elLbSec=document.getElementById('lb-sec-'+pi+'-'+mi);
+    if(elLbSec)elLbSec.value=(c.lucroBrutoSec!==null&&c.lucroBrutoSec!==undefined)?fR(c.lucroBrutoSec,4):'—';
+    var elLbPri=document.getElementById('lb-pri-'+pi+'-'+mi);
+    if(elLbPri)elLbPri.value=(c.lucroBrutoPri!==null&&c.lucroBrutoPri!==undefined)?fR(c.lucroBrutoPri,4):'—';
+    var elLlSec=document.getElementById('ll-sec-'+pi+'-'+mi);
+    if(elLlSec)elLlSec.value=(c.lucroLiquidoSec!==null&&c.lucroLiquidoSec!==undefined)?fR(c.lucroLiquidoSec,4):'—';
+    var elLlPri=document.getElementById('ll-pri-'+pi+'-'+mi);
+    if(elLlPri)elLlPri.value=(c.lucroLiquidoPri!==null&&c.lucroLiquidoPri!==undefined)?fR(c.lucroLiquidoPri,4):'—';
+    var elLlPct=document.getElementById('ll-pct-'+pi+'-'+mi);
+    if(elLlPct)elLlPct.value=(c.lucroLiquidoPct!==null&&c.lucroLiquidoPct!==undefined)?fN(c.lucroLiquidoPct,2)+'%':'—';
   });
 }
 
@@ -2432,7 +2449,7 @@ function bComp(){
     if(!p.ded)p.ded={};
     DED_KEYS.forEach(function(d){if(!p.ded[d.k])p.ded[d.k]=n12();});
     // Sempre respeitar p._open ao renderizar
-    p._sg.ing=p._open; p._sg.emb=p._open; p._sg.ind=p._open; p._sg.eq=p._open; p._sg.res=p._open; p._sg.pv=p._open; p._sg.ded=p._open;
+    p._sg.ing=p._open; p._sg.emb=p._open; p._sg.ind=p._open; p._sg.eq=p._open; p._sg.res=p._open; p._sg.pv=p._open; p._sg.ded=p._open; p._sg.lucro=p._open;
     // Migração: garantir campos novos para produtos criados antes
     if(p._sg.ingR===undefined)p._sg.ingR=false;
     if(p._sg.embR===undefined)p._sg.embR=false;
@@ -2460,7 +2477,7 @@ function bComp(){
       e.stopPropagation();
       p._open=!p._open;
       titleTog.textContent=p._open?'▼':'▶';
-      ['ing','emb','ind','eq','res','pv','ded'].forEach(function(sg){p._sg[sg]=p._open;});
+      ['ing','emb','ind','eq','res','pv','ded','lucro'].forEach(function(sg){p._sg[sg]=p._open;});
       tbl.querySelectorAll('[data-par="'+par+'"]').forEach(function(r){
         if(r.dataset.alwaysvis==='1'){r.style.display='';return;}
         if(r.classList.contains('sg-tog-hdr')){r.style.display=p._open?'':'none';return;}
@@ -2711,6 +2728,45 @@ function bComp(){
       dedPriTr.appendChild(mkRO(c.dedPri,true,4,'ro-val','ded-pri-'+pi+'-'+mi));
     });
     dedPriTr.appendChild(document.createElement('td')).className='tdd';
+
+    // ─── SUB-GRUPO: LUCRO ───
+    mkSgTogRow('Lucro','lucro','📈');
+    var lbSecTr=tbl._tbody.insertRow();lbSecTr.className='res-sub';lbSecTr.dataset.par=par;lbSecTr.dataset.sg='lucro';
+    lbSecTr.style.display=(p._sg['lucro']!==false)?'':'none';
+    var lbSecL=document.createElement('td');lbSecL.className='tdl';lbSecL.textContent='Lucro Bruto / '+(p.unit2?unit2Label(p.unit2,p.vol2):p.u);lbSecTr.appendChild(lbSecL);
+    MS.forEach(function(_,mi){var c=calcProduct(p,mi);lbSecTr.appendChild(mkRO(c.lucroBrutoSec,true,4,'ro-val','lb-sec-'+pi+'-'+mi));});
+    lbSecTr.appendChild(document.createElement('td')).className='tdd';
+
+    var lbPriTr=tbl._tbody.insertRow();lbPriTr.className='res-sub';lbPriTr.dataset.par=par;lbPriTr.dataset.sg='lucro';
+    lbPriTr.style.display=(p._sg['lucro']!==false)?'':'none';
+    var lbPriL=document.createElement('td');lbPriL.className='tdl';lbPriL.textContent='Lucro Bruto / '+p.u;lbPriTr.appendChild(lbPriL);
+    MS.forEach(function(_,mi){var c=calcProduct(p,mi);lbPriTr.appendChild(mkRO(c.lucroBrutoPri,true,4,'ro-val','lb-pri-'+pi+'-'+mi));});
+    lbPriTr.appendChild(document.createElement('td')).className='tdd';
+
+    var llSecTr=tbl._tbody.insertRow();llSecTr.className='res';llSecTr.dataset.par=par;llSecTr.dataset.sg='lucro';
+    llSecTr.style.display=(p._sg['lucro']!==false)?'':'none';
+    var llSecL=document.createElement('td');llSecL.className='tdl';llSecL.textContent='Lucro Líquido / '+(p.unit2?unit2Label(p.unit2,p.vol2):p.u);llSecTr.appendChild(llSecL);
+    MS.forEach(function(_,mi){var c=calcProduct(p,mi);llSecTr.appendChild(mkRO(c.lucroLiquidoSec,true,4,'ro-val','ll-sec-'+pi+'-'+mi));});
+    llSecTr.appendChild(document.createElement('td')).className='tdd';
+
+    var llPriTr=tbl._tbody.insertRow();llPriTr.className='res';llPriTr.dataset.par=par;llPriTr.dataset.sg='lucro';
+    llPriTr.style.display=(p._sg['lucro']!==false)?'':'none';
+    var llPriL=document.createElement('td');llPriL.className='tdl';llPriL.textContent='Lucro Líquido / '+p.u;llPriTr.appendChild(llPriL);
+    MS.forEach(function(_,mi){var c=calcProduct(p,mi);llPriTr.appendChild(mkRO(c.lucroLiquidoPri,true,4,'ro-val','ll-pri-'+pi+'-'+mi));});
+    llPriTr.appendChild(document.createElement('td')).className='tdd';
+
+    var llPctTr=tbl._tbody.insertRow();llPctTr.className='res';llPctTr.dataset.par=par;llPctTr.dataset.sg='lucro';
+    llPctTr.style.display=(p._sg['lucro']!==false)?'':'none';
+    var llPctL=document.createElement('td');llPctL.className='tdl';llPctL.textContent='Lucro Líquido %';llPctTr.appendChild(llPctL);
+    MS.forEach(function(_,mi){
+      var c=calcProduct(p,mi);
+      var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');
+      var inp=document.createElement('input');inp.type='text';inp.className='ci';inp.readOnly=true;
+      inp.id='ll-pct-'+pi+'-'+mi;
+      inp.value=(c.lucroLiquidoPct!==null&&c.lucroLiquidoPct!==undefined)?fN(c.lucroLiquidoPct,2)+'%':'—';
+      td.appendChild(inp);llPctTr.appendChild(td);
+    });
+    llPctTr.appendChild(document.createElement('td')).className='tdd';
 
   });
 
