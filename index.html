@@ -2248,8 +2248,7 @@ function mkTheadMF(tbl){
   var la=document.createElement('th');la.className='thl';la.rowSpan=2;la.textContent='Item';tr1.appendChild(la);
   var lu=document.createElement('th');lu.className='thum';lu.rowSpan=2;lu.textContent='Un Medida';tr1.appendChild(lu);
   MS.forEach(function(m,i){
-    var t=document.createElement('th');t.className='thg';t.colSpan=2;
-    if(i===CUR)t.classList.add('thc');
+    var t=document.createElement('th');t.className='thg';t.colSpan=2;t.dataset.mi=i;
     var span=document.createElement('span');span.textContent=m;t.appendChild(span);
     if(i<11){
       var cb=document.createElement('button');cb.className='col-copy-btn';
@@ -2263,9 +2262,8 @@ function mkTheadMF(tbl){
 
   var tr2=th.insertRow();
   MS.forEach(function(m,i){
-    var tm=document.createElement('th');tm.className='th2';tm.textContent='Mat.';
-    var tf=document.createElement('th');tf.className='th2 mff';tf.textContent='Frete';
-    if(i===CUR){tm.classList.add('thc');tf.classList.add('thc');}
+    var tm=document.createElement('th');tm.className='th2';tm.textContent='Mat.';tm.dataset.mi=i;
+    var tf=document.createElement('th');tf.className='th2 mff';tf.textContent='Frete';tf.dataset.mi=i;
     tr2.appendChild(tm);tr2.appendChild(tf);
   });
 }
@@ -2318,8 +2316,8 @@ function bMpFrete(){
     umInp.addEventListener('keydown',function(e){if(e.key==='Enter')umInp.blur();});
     tu.appendChild(umInp);tr.appendChild(tu);
     MS.forEach(function(_,mi){
-      var tdMat=mkCell(row.v,mi,true,2,onEdit);tdMat.classList.add('mfm');tr.appendChild(tdMat);
-      var tdFre=mkCell(frow.v,mi,true,2,onEdit);tdFre.classList.add('mff');tr.appendChild(tdFre);
+      var tdMat=mkCell(row.v,mi,true,2,onEdit);tdMat.classList.add('mfm');tdMat.classList.remove('tdc');tdMat.dataset.mi=mi;tr.appendChild(tdMat);
+      var tdFre=mkCell(frow.v,mi,true,2,onEdit);tdFre.classList.add('mff');tdFre.classList.remove('tdc');tdFre.dataset.mi=mi;tr.appendChild(tdFre);
     });
     var td=document.createElement('td');td.className='tdd';
     var b=document.createElement('button');b.className='db';b.textContent='✕';
@@ -2332,6 +2330,23 @@ function bMpFrete(){
   });
 
   gw.appendChild(tbl);body.appendChild(gw);
+
+  // Destaque do mês segue o mouse (em vez de ficar fixo no mês corrente)
+  gw.addEventListener('mouseover',function(e){
+    var cell=e.target.closest('[data-mi]');
+    if(!cell)return;
+    var mi=cell.dataset.mi;
+    if(tbl._hoverMi===mi)return;
+    tbl._hoverMi=mi;
+    tbl.querySelectorAll('.thc,.tdc').forEach(function(el){el.classList.remove('thc','tdc');});
+    tbl.querySelectorAll('[data-mi="'+mi+'"]').forEach(function(el){
+      el.classList.add(el.tagName==='TH'?'thc':'tdc');
+    });
+  });
+  gw.addEventListener('mouseleave',function(){
+    tbl._hoverMi=null;
+    tbl.querySelectorAll('.thc,.tdc').forEach(function(el){el.classList.remove('thc','tdc');});
+  });
   var aa=document.createElement('div');aa.className='aa';
   var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span>＋</span> Adicionar Item';
   ab.onclick=function(){
