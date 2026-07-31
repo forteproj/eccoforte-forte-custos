@@ -2454,6 +2454,7 @@ function bComp(){
     if(p._sg.ingR===undefined)p._sg.ingR=false;
     if(p._sg.embR===undefined)p._sg.embR=false;
     if(p._sg.indR===undefined)p._sg.indR=false;
+    if(p._sg.dedR===undefined)p._sg.dedR=false;
 
     // ── Título completo do produto (linha separada, full-width) ──
     var titleTr=tbl._tbody.insertRow();titleTr.className='ph-title-row';
@@ -2690,7 +2691,7 @@ function bComp(){
     pvPriTr.appendChild(document.createElement('td')).className='tdd';
 
     // ─── SUB-GRUPO: DEDUÇÕES DA RECEITA BRUTA ───
-    mkSgTogRow('Deduções da Receita Bruta','ded','📉');
+    mkSgTogRow('Deduções da Receita Bruta','ded','📉','dedR');
     DED_KEYS.forEach(function(d){
       var dTr=tbl._tbody.insertRow();dTr.className='ir';dTr.dataset.par=par;dTr.dataset.sg='ded';
       dTr.style.display=(p._sg['ded']!==false)?'':'none';
@@ -2698,9 +2699,10 @@ function bComp(){
       MS.forEach(function(_,mi){dTr.appendChild(mkPctCell(p.ded[d.k],mi,function(){refreshCustoInd(pi);}));});
       dTr.appendChild(document.createElement('td')).className='tdd';
 
-      // Linha "↳ Valor R$" correspondente (Preço de Venda / unid. secundária × esta taxa)
-      var dRTr=tbl._tbody.insertRow();dRTr.className='ing-rs';dRTr.dataset.par=par;dRTr.dataset.sg='ded';
-      dRTr.style.display=(p._sg['ded']!==false)?'':'none';
+      // Linha "↳ Valor R$" correspondente (Preço de Venda / unid. secundária × esta taxa) — oculta por padrão, toggle via botão R$
+      var dRTr=tbl._tbody.insertRow();dRTr.className='ing-rs';dRTr.dataset.par=par;dRTr.dataset.rs='dedR';
+      var dedSgOpen=p._sg['ded']!==false;
+      dRTr.style.display=(dedSgOpen && p._sg['dedR'])?'':'none';
       var dRL=document.createElement('td');dRL.className='tdl';dRL.innerHTML='<span style="color:var(--mu)">↳</span> Valor R$';dRTr.appendChild(dRL);
       MS.forEach(function(_,mi){
         var pvSec=p.pv?lkv(p.pv,mi):null;
@@ -3731,20 +3733,40 @@ function printCompItem(p){
   }
   html+='</tbody></table></div>';
 
-  // SECAO 3b — Equipe (detalhamento de Mão de Obra)
+  // SECAO 4 — Preço de Venda
   html+='<div class="no-break">';
-  html+=secLabel('','EQUIPE — Custo MO / mes');
+  html+=secLabel('','PREÇO DE VENDA — por mes');
   html+='<table>'+thRow()+'<tbody>';
-  p.staff.forEach(function(si){
-    var mo=DATA.mo[si];if(!mo)return;
-    html+=row(mo.n,'#f5f4f0',function(mi){return fabMoTotal(mo,mi)||null;},null,true,2,false);
+  if(p.unit2){html+=rowSub('Preço de Venda / '+unit2Label(p.unit2,p.vol2),function(mi){return calcProduct(p,mi).pvSec;},true,4);}
+  html+=rowSub('Preço de Venda / '+p.u,function(mi){return calcProduct(p,mi).pvPri;},true,4);
+  html+='</tbody></table></div>';
+
+  // SECAO 5 — Deduções da Receita Bruta
+  html+='<div class="no-break">';
+  html+=secLabel('','DEDUÇÕES DA RECEITA BRUTA — por mes');
+  html+='<table>'+thRow()+'<tbody>';
+  DED_KEYS.forEach(function(d){
+    html+=rowPctVal(d.n,function(mi){return lkv(p.ded[d.k],mi)*100;},2);
+    html+=rowRS('↳ Valor R$',function(mi){
+      var pvSec=p.pv?lkv(p.pv,mi):null;var rate=lkv(p.ded[d.k],mi);
+      return (pvSec!==null&&pvSec!==undefined&&rate!==null&&rate!==undefined)?pvSec*rate:null;
+    });
   });
   html+=sepRow();
-  html+=rowSub('Custo MO Total / mes',function(mi){
-    var anyData=p.staff.some(function(si){return DATA.mo[si]&&fabMoTotal(DATA.mo[si],mi)!==null;});
-    if(!anyData)return null;
-    return p.staff.reduce(function(s,si){var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;return s+(v!==null?v:0);},0);
-  },true,2);
+  if(p.unit2){html+=rowSub('Deduções / '+unit2Label(p.unit2,p.vol2),function(mi){return calcProduct(p,mi).dedSec;},true,4);}
+  html+=rowSub('Deduções / '+p.u,function(mi){return calcProduct(p,mi).dedPri;},true,4);
+  html+='</tbody></table></div>';
+
+  // SECAO 6 — Lucro
+  html+='<div class="no-break">';
+  html+=secLabel('','LUCRO — por mes');
+  html+='<table>'+thRow()+'<tbody>';
+  if(p.unit2){html+=rowSub('Lucro Bruto / '+unit2Label(p.unit2,p.vol2),function(mi){return calcProduct(p,mi).lucroBrutoSec;},true,4);}
+  html+=rowSub('Lucro Bruto / '+p.u,function(mi){return calcProduct(p,mi).lucroBrutoPri;},true,4);
+  html+=sepRow();
+  if(p.unit2){html+=rowTotal('LUCRO LÍQUIDO / '+unit2Label(p.unit2,p.vol2),function(mi){return calcProduct(p,mi).lucroLiquidoSec;},true,4);}
+  html+=rowTotal('LUCRO LÍQUIDO / '+p.u,function(mi){return calcProduct(p,mi).lucroLiquidoPri;},true,4);
+  html+=rowPctVal('Lucro Líquido %',function(mi){return calcProduct(p,mi).lucroLiquidoPct;},2);
   html+='</tbody></table></div>';
 
   // Rodape
