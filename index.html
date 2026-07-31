@@ -2290,8 +2290,25 @@ function bMpFrete(){
       var inp=document.createElement('input');inp.type='text';inp.value=row.n;
       inp.style.cssText='background:transparent;border:none;outline:none;font-family:var(--mono);font-size:11.5px;width:170px';
       tl.innerHTML='';tl.appendChild(inp);inp.focus();
-      function done(){row.n=inp.value;frow.n=inp.value;bMpFrete();scheduleSave();}
-      inp.addEventListener('blur',done);inp.addEventListener('keydown',function(e){if(e.key==='Enter')inp.blur();});
+      var tabNext=false;
+      function done(){
+        row.n=inp.value;frow.n=inp.value;bMpFrete();scheduleSave();
+        if(tabNext){
+          // A reconstrução da tabela destrói o campo Un Medida no meio da navegação por Tab — refoca manualmente na linha correta (já reordenada)
+          setTimeout(function(){
+            var idx=DATA.mp.indexOf(row);
+            var s2=document.getElementById('mp');var tbl2=s2&&s2.querySelector('table');
+            var r2=tbl2&&tbl2.tBodies[0]&&tbl2.tBodies[0].rows[idx];
+            var umInp2=r2&&r2.querySelector('td.tdum input');
+            if(umInp2){umInp2.focus();umInp2.select();}
+          },0);
+        }
+      }
+      inp.addEventListener('blur',done);
+      inp.addEventListener('keydown',function(e){
+        if(e.key==='Enter')inp.blur();
+        else if(e.key==='Tab'){tabNext=true;}
+      });
     });
     tr.appendChild(tl);
     var tu=document.createElement('td');tu.className='tdum';
