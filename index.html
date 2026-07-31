@@ -1557,7 +1557,7 @@ function calcProduct(p,mi){
   // Só calcula se produtividade tem valor explícito neste mês.
   // Sem produtividade, todos os custos unitários são inválidos.
   var prodRaw=cellVal(p.prod[mi]);
-  if(prodRaw===null||prodRaw===undefined) return {vol:null,costR:null,cop:null,mpUnit:null,indUnit:null,copUnit:null,predialUnit:null,final:null,final2:null};
+  if(prodRaw===null||prodRaw===undefined) return {vol:null,costR:null,indCostR:null,cop:null,mpUnit:null,indUnit:null,copUnit:null,predialUnit:null,final:null,final2:null};
 
   var totalVol=0,totalCostR=0,indCostR=0;
   p.i.forEach(function(ing){
@@ -1585,7 +1585,7 @@ function calcProduct(p,mi){
   var predialUnit=prod>0?admTotal/prod:0;
   var final=mpUnit+indUnit+copUnit+predialUnit;
   var fac=unit2Vol(p.unit2,p.vol2);
-  return {vol:totalVol,costR:totalCostR,cop:cop,mpUnit:mpUnit,indUnit:indUnit,copUnit:copUnit,predialUnit:predialUnit,final:final,final2:fac?final*fac:null};
+  return {vol:totalVol,costR:totalCostR,indCostR:indCostR,cop:cop,mpUnit:mpUnit,indUnit:indUnit,copUnit:copUnit,predialUnit:predialUnit,final:final,final2:fac?final*fac:null};
 }
 function refreshResult(pi){
   var p=COMP[pi];if(!p)return;
@@ -1609,10 +1609,6 @@ function refreshResult(pi){
     // comp-hd agora aponta para a linha "➤ Produto Final / LT" (ri:5)
     var hd=document.getElementById('rc-'+pi+'-5-'+mi);
     if(hd){var c=calcProduct(p,mi);hd.value=(c.final!==null&&c.final>0)?fR(c.final,4):'—';}
-    var el=document.getElementById('mo-'+pi+'-'+mi);if(!el)return;
-    var anyData=p.staff.some(function(si){return DATA.mo[si]&&fabMoTotal(DATA.mo[si],mi)!==null;});
-    var cop=anyData?p.staff.reduce(function(s,si){var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;return s+(v!==null&&v!==undefined?v:0);},0):null;
-    el.value=(cop!==null&&cop>0)?fR(cop,2):'—';
   });
 }
 
@@ -2597,29 +2593,44 @@ function bComp(){
     aib.onclick=(function(prod,pidx){return function(){openIngModal(prod,pidx);};})(p,pi);
     aitd.appendChild(aib);aitr.appendChild(aitd);
 
-    // ─── SUB-GRUPO: CUSTO OPERACIONAL ───
-    mkSgTogRow('Custo Operacional','eq','⚙️');
+    // ─── SUB-GRUPO: CUSTO INDUSTRIALIZAÇÃO ───
+    mkSgTogRow('Custo Industrialização','eq','🏭');
 
-    // Custo Salarial (resumo — soma de todas as funções da equipe)
-    var moTr=tbl._tbody.insertRow();moTr.className='res-sub';moTr.dataset.par=par;moTr.dataset.sg='eq';
-    moTr.style.display=(p._sg['eq']!==false)?'':'none';
-    var moL=document.createElement('td');moL.className='tdl';moL.textContent='Custo Salarial';moTr.appendChild(moL);
+    // Total Custo (Ingredientes + Embalagens + Industrialização, R$ total do mês)
+    var totCTr=tbl._tbody.insertRow();totCTr.className='res-sub';totCTr.dataset.par=par;totCTr.dataset.sg='eq';
+    totCTr.style.display=(p._sg['eq']!==false)?'':'none';
+    var totCL=document.createElement('td');totCL.className='tdl';totCL.textContent='Total Custo';totCTr.appendChild(totCL);
     MS.forEach(function(_,mi){
-      var anyData=p.staff.some(function(si){return DATA.mo[si]&&fabMoTotal(DATA.mo[si],mi)!==null;});
-      var cop=anyData?p.staff.reduce(function(s,si){var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;return s+(v!==null&&v!==undefined?v:0);},0):null;
-      moTr.appendChild(mkRO(cop!==null&&cop>0?cop:anyData?cop:null,true,2,'ro-val','mo-'+pi+'-'+mi));
+      var c=calcProduct(p,mi);
+      var v=(c.costR!==null&&c.costR!==undefined)?(c.costR+(c.indCostR||0)):null;
+      totCTr.appendChild(mkRO(v,true,2,'ro-val'));
     });
-    var modtd=document.createElement('td');modtd.className='tdd';moTr.appendChild(modtd);
+    totCTr.appendChild(document.createElement('td')).className='tdd';
 
-    // Custo Predial (resumo — total da tabela Predial/ADM no mês)
-    var prTr=tbl._tbody.insertRow();prTr.className='res-sub';prTr.dataset.par=par;prTr.dataset.sg='eq';
-    prTr.style.display=(p._sg['eq']!==false)?'':'none';
-    var prL=document.createElement('td');prL.className='tdl';prL.textContent='Custo Predial';prTr.appendChild(prL);
+    // Custo por unidade primária (KG para Extrudado, LT para Solvente)
+    var uPriTr=tbl._tbody.insertRow();uPriTr.className='res-sub';uPriTr.dataset.par=par;uPriTr.dataset.sg='eq';
+    uPriTr.style.display=(p._sg['eq']!==false)?'':'none';
+    var uPriL=document.createElement('td');uPriL.className='tdl';uPriL.textContent='Custo por '+p.u;uPriTr.appendChild(uPriL);
     MS.forEach(function(_,mi){
-      var admTotal=DATA.adm.reduce(function(s,r){if(!r.v)return s;var v=cellVal(r.v[mi]);return s+(v!==null&&v!==undefined?v:0);},0);
-      prTr.appendChild(mkRO(admTotal>0?admTotal:null,true,2,'ro-val'));
+      var c=calcProduct(p,mi);
+      var v=(c.mpUnit!==null&&c.mpUnit!==undefined)?(c.mpUnit+(c.indUnit||0)):null;
+      uPriTr.appendChild(mkRO(v,true,4,'ro-val'));
     });
-    var prdtd=document.createElement('td');prdtd.className='tdd';prTr.appendChild(prdtd);
+    uPriTr.appendChild(document.createElement('td')).className='tdd';
+
+    // Custo por unidade secundária (SC para Extrudado, BD para Solvente), se configurada
+    if(p.unit2){
+      var uSecTr=tbl._tbody.insertRow();uSecTr.className='res-sub';uSecTr.dataset.par=par;uSecTr.dataset.sg='eq';
+      uSecTr.style.display=(p._sg['eq']!==false)?'':'none';
+      var uSecL=document.createElement('td');uSecL.className='tdl';uSecL.textContent='Custo por '+unit2Label(p.unit2,p.vol2);uSecTr.appendChild(uSecL);
+      MS.forEach(function(_,mi){
+        var c=calcProduct(p,mi);
+        var fac=unit2Vol(p.unit2,p.vol2);
+        var v=(c.mpUnit!==null&&c.mpUnit!==undefined&&fac)?(c.mpUnit+(c.indUnit||0))*fac:null;
+        uSecTr.appendChild(mkRO(v,true,4,'ro-val'));
+      });
+      uSecTr.appendChild(document.createElement('td')).className='tdd';
+    }
 
     // Toggle "Detalhar por função" — esconde/mostra o detalhamento por cargo
     var detTr=tbl._tbody.insertRow();detTr.className='staff-r';detTr.dataset.par=par;detTr.dataset.sg='eq';
@@ -3625,25 +3636,41 @@ function printCompItem(p){
   if(!inds.length)html+='<tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhum item de industrialização cadastrado</td></tr>';
   html+='</tbody></table></div>';
 
-  // SECAO 3 — Custo Operacional
+  // SECAO 3 — Custo Industrialização
   html+='<div class="no-break">';
-  html+=secLabel('','CUSTO OPERACIONAL — Custo MO / mes');
+  html+=secLabel('','CUSTO INDUSTRIALIZAÇÃO — por mes / '+p.u);
+  html+='<table>'+thRow()+'<tbody>';
+  html+=rowSub('Total Custo',function(mi){
+    var c=calcProduct(p,mi);
+    return (c.costR!==null&&c.costR!==undefined)?(c.costR+(c.indCostR||0)):null;
+  },true,2);
+  html+=rowSub('Custo por '+p.u,function(mi){
+    var c=calcProduct(p,mi);
+    return (c.mpUnit!==null&&c.mpUnit!==undefined)?(c.mpUnit+(c.indUnit||0)):null;
+  },true,4);
+  if(p.unit2){
+    html+=rowSub('Custo por '+unit2Label(p.unit2,p.vol2),function(mi){
+      var c=calcProduct(p,mi);var fac=unit2Vol(p.unit2,p.vol2);
+      return (c.mpUnit!==null&&c.mpUnit!==undefined&&fac)?(c.mpUnit+(c.indUnit||0))*fac:null;
+    },true,4);
+  }
+  html+=row('Produtividade '+p.u+'/mes','#f5f4f0',function(mi){var v=cellVal(p.prod[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,0,false);
+  html+='</tbody></table></div>';
+
+  // SECAO 3b — Equipe (detalhamento de Mão de Obra)
+  html+='<div class="no-break">';
+  html+=secLabel('','EQUIPE — Custo MO / mes');
   html+='<table>'+thRow()+'<tbody>';
   p.staff.forEach(function(si){
     var mo=DATA.mo[si];if(!mo)return;
     html+=row(mo.n,'#f5f4f0',function(mi){return fabMoTotal(mo,mi)||null;},null,true,2,false);
   });
   html+=sepRow();
-  html+=rowSub('Custo Salarial',function(mi){
+  html+=rowSub('Custo MO Total / mes',function(mi){
     var anyData=p.staff.some(function(si){return DATA.mo[si]&&fabMoTotal(DATA.mo[si],mi)!==null;});
     if(!anyData)return null;
     return p.staff.reduce(function(s,si){var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;return s+(v!==null?v:0);},0);
   },true,2);
-  html+=rowSub('Custo Predial',function(mi){
-    var admTotal=DATA.adm.reduce(function(s,r){if(!r.v)return s;var v=cellVal(r.v[mi]);return s+(v!==null&&v!==undefined?v:0);},0);
-    return admTotal>0?admTotal:null;
-  },true,2);
-  html+=row('Produtividade '+p.u+'/mes','#f5f4f0',function(mi){var v=cellVal(p.prod[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,0,false);
   html+='</tbody></table></div>';
 
   // SECAO 4 — Resultado
