@@ -1573,76 +1573,33 @@ function ingValueR(ing, mi){
   return qty*(mpP+frP);
 }
 function calcProduct(p,mi){
-  // Só calcula se produtividade tem valor explícito neste mês.
-  // Sem produtividade, todos os custos unitários são inválidos.
-  var prodRaw=cellVal(p.prod[mi]);
-  if(prodRaw===null||prodRaw===undefined) return {vol:null,costR:null,indCostR:null,cop:null,mpUnit:null,indUnit:null,copUnit:null,predialUnit:null,final:null,final2:null};
-
-  var totalVol=0,totalCostR=0,indCostR=0;
+  // Total Custo = Ingredientes + Embalagens + Industrialização (sem depender de produtividade).
+  // Custo por unidade = Total Custo ÷ quantidade industrializada (itens marcados como Industrialização).
+  var totalVol=0,totalCostR=0,indCostR=0,indQty=0;
   p.i.forEach(function(ing){
     var qty=lkv(ing.v,mi);if(!qty&&qty!==0)return;
     var mpP=mpPriceByIng(ing,mi);
     var frP=frPriceByIng(ing,mi);
     var val=qty*(mpP+frP);
-    if(ing.ind){indCostR+=val;}
+    if(ing.ind){indCostR+=val;indQty+=qty;}
     else{if(!ing.emb)totalVol+=qty;totalCostR+=val;}
   });
-  var cop=p.staff.reduce(function(s,si){
-    var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;
-    return s+(v!==null&&v!==undefined?v:0);
-  },0);
-  var prod=lkv(p.prod,mi);
-  var copUnit=prod>0?cop/prod:0;
-  var mpUnit=totalVol>0?totalCostR/totalVol:0;
-  var indUnit=totalVol>0?indCostR/totalVol:0;
-  // Custo Predial = Total ADM / Produtividade
-  var admTotal=DATA.adm.reduce(function(s,r){
-    if(!r.v)return s;
-    var v=cellVal(r.v[mi]);
-    return s+(v!==null&&v!==undefined?v:0);
-  },0);
-  var predialUnit=prod>0?admTotal/prod:0;
-  var final=mpUnit+indUnit+copUnit+predialUnit;
+  var totalCusto=totalCostR+indCostR;
   var fac=unit2Vol(p.unit2,p.vol2);
-  // Preço de Venda / Lucro Bruto / Deduções / Lucro Líquido
-  var pv=p.pv?lkv(p.pv,mi):null;
-  var temPv=(pv!==null&&pv!==undefined&&!isNaN(pv));
-  var lucroBruto=temPv?pv-final:null;
-  var dedRate=deducoesRate(mi);
-  var deducoesVal=temPv?pv*dedRate:null;
-  var lucroLiquido=(lucroBruto!==null&&deducoesVal!==null)?lucroBruto-deducoesVal:null;
-  var lucroLiquidoPct=(lucroLiquido!==null&&pv>0)?(lucroLiquido/pv*100):null;
-  return {vol:totalVol,costR:totalCostR,indCostR:indCostR,cop:cop,mpUnit:mpUnit,indUnit:indUnit,copUnit:copUnit,predialUnit:predialUnit,final:final,final2:fac?final*fac:null,
-    pv:pv,lucroBruto:lucroBruto,deducoesVal:deducoesVal,lucroLiquido:lucroLiquido,lucroLiquidoPct:lucroLiquidoPct};
+  var custoPorSec=indQty>0?totalCusto/indQty:null;
+  var custoPorPri=(custoPorSec!==null&&fac)?custoPorSec/fac:null;
+  return {vol:totalVol,costR:totalCostR,indCostR:indCostR,indQty:indQty,totalCusto:totalCusto,custoPorSec:custoPorSec,custoPorPri:custoPorPri};
 }
-function refreshResult(pi){
+function refreshCustoInd(pi){
   var p=COMP[pi];if(!p)return;
-  var rows=[
-    {fn:function(c){return c.vol;},        isR:false,dec:2},
-    {fn:function(c){return c.mpUnit;},     isR:true, dec:4},
-    {fn:function(c){return c.indUnit;},    isR:true, dec:4},
-    {fn:function(c){return c.predialUnit;},isR:true, dec:4},
-    {fn:function(c){return c.copUnit;},    isR:true, dec:4},
-    {fn:function(c){return c.final;},      isR:true, dec:4},
-    {fn:function(c){return c.final2;},     isR:true, dec:4},
-    {fn:function(c){return c.lucroBruto;}, isR:true, dec:4},
-    {fn:function(c){return c.deducoesVal;},isR:true, dec:4},
-    {fn:function(c){return c.lucroLiquido;},isR:true,dec:4},
-    {fn:function(c){return c.lucroLiquidoPct;},isR:false,dec:2,pct:true},
-  ];
-  rows.forEach(function(row,ri){
-    if(!row)return;
-    MS.forEach(function(_,mi){
-      var el=document.getElementById('rc-'+pi+'-'+ri+'-'+mi);if(!el)return;
-      var c=calcProduct(p,mi);var val=row.fn(c);
-      var txt=(val===null||val===undefined||isNaN(val))?'—':(row.pct?fN(val,row.dec)+'%':(row.isR?fR(val,row.dec):fN(val,row.dec)));
-      el.value=txt;
-    });
-  });
   MS.forEach(function(_,mi){
-    // comp-hd agora aponta para a linha "➤ Produto Final / LT" (ri:5)
-    var hd=document.getElementById('rc-'+pi+'-5-'+mi);
-    if(hd){var c=calcProduct(p,mi);hd.value=(c.final!==null&&c.final>0)?fR(c.final,4):'—';}
+    var c=calcProduct(p,mi);
+    var elTot=document.getElementById('ci-tot-'+pi+'-'+mi);
+    if(elTot)elTot.value=(c.totalCusto!==null&&c.totalCusto!==undefined)?fR(c.totalCusto,2):'—';
+    var elPri=document.getElementById('ci-pri-'+pi+'-'+mi);
+    if(elPri)elPri.value=(c.custoPorPri!==null&&c.custoPorPri!==undefined)?fR(c.custoPorPri,4):'—';
+    var elSec=document.getElementById('ci-sec-'+pi+'-'+mi);
+    if(elSec)elSec.value=(c.custoPorSec!==null&&c.custoPorSec!==undefined)?fR(c.custoPorSec,4):'—';
   });
 }
 
@@ -2103,7 +2060,7 @@ function refreshFabMo(fi){
   // refresh linha Total Geral
   refreshFabMoGrandTotal();
   // refresh comp totals
-  COMP.forEach(function(_,pi){refreshResult(pi);});
+  COMP.forEach(function(_,pi){refreshCustoInd(pi);});
 }
 
 function openFabFuncModal(){
@@ -2199,10 +2156,10 @@ function bSimple(sid,key,title,sub,badgeId,hasTot,isR){
       // Se a alteração foi em MP, Frete ou ADM, recalcular composição
       if(key==='mp'||key==='frete'){
         refreshAllCompRs();
-        COMP.forEach(function(_,pi){refreshResult(pi);});
+        COMP.forEach(function(_,pi){refreshCustoInd(pi);});
       }
       if(key==='adm'){
-        COMP.forEach(function(_,pi){refreshResult(pi);});
+        COMP.forEach(function(_,pi){refreshCustoInd(pi);});
       }
     }));});
     var td=document.createElement('td');td.className='tdd';
@@ -2305,7 +2262,7 @@ function bMpFrete(){
   var gw=document.createElement('div');gw.className='gw';
   var tbl=document.createElement('table');tbl.className='mpfrete';mkTheadMF(tbl);
 
-  function onEdit(){refreshTots();refreshAllCompRs();COMP.forEach(function(_,pi){refreshResult(pi);});}
+  function onEdit(){refreshTots();refreshAllCompRs();COMP.forEach(function(_,pi){refreshCustoInd(pi);});}
 
   DATA.mp.forEach(function(row,ri){
     var fi=findByName(DATA.frete,row.n);
@@ -2432,7 +2389,7 @@ function bDeducoes(){
   DATA.deducoes.forEach(function(row){
     var tr=tbl._tbody.insertRow();
     var tl=document.createElement('td');tl.className='tdl';tl.textContent=row.n;tr.appendChild(tl);
-    MS.forEach(function(_,mi){tr.appendChild(mkPctCell(row.v,mi,function(){COMP.forEach(function(_,pi){refreshResult(pi);});}));});
+    MS.forEach(function(_,mi){tr.appendChild(mkPctCell(row.v,mi,function(){COMP.forEach(function(_,pi){refreshCustoInd(pi);});}));});
     tr.appendChild(document.createElement('td')).className='tdd';
   });
   gw.appendChild(tbl);body.appendChild(gw);
@@ -2607,7 +2564,7 @@ function bComp(){
       });
       tl.appendChild(fl);tl.appendChild(nameSpan);
       tr.appendChild(tl);
-      MS.forEach(function(_,mi){tr.appendChild(mkCell(ing.v,mi,false,2,function(){refreshResult(pi);refreshIngRs(pi,ii);}));});
+      MS.forEach(function(_,mi){tr.appendChild(mkCell(ing.v,mi,false,2,function(){refreshCustoInd(pi);refreshIngRs(pi,ii);}));});
       var idl=document.createElement('td');idl.className='tdd';
       var idb=document.createElement('button');idb.className='db';idb.textContent='✕';
       idb.onclick=(function(arr,idx){return function(){arr.splice(idx,1);bComp();scheduleSave();};})(p.i,ii);
@@ -2675,32 +2632,28 @@ function bComp(){
     var totCL=document.createElement('td');totCL.className='tdl';totCL.textContent='Total Custo';totCTr.appendChild(totCL);
     MS.forEach(function(_,mi){
       var c=calcProduct(p,mi);
-      var v=(c.costR!==null&&c.costR!==undefined)?(c.costR+(c.indCostR||0)):null;
-      totCTr.appendChild(mkRO(v,true,2,'ro-val'));
+      totCTr.appendChild(mkRO(c.totalCusto,true,2,'ro-val','ci-tot-'+pi+'-'+mi));
     });
     totCTr.appendChild(document.createElement('td')).className='tdd';
 
-    // Custo por unidade primária (KG para Extrudado, LT para Solvente)
+    // Custo por unidade primária (KG para Extrudado, LT para Solvente) = Custo por unid. secundária ÷ fator de conversão
     var uPriTr=tbl._tbody.insertRow();uPriTr.className='res-sub';uPriTr.dataset.par=par;uPriTr.dataset.sg='eq';
     uPriTr.style.display=(p._sg['eq']!==false)?'':'none';
     var uPriL=document.createElement('td');uPriL.className='tdl';uPriL.textContent='Custo por '+p.u;uPriTr.appendChild(uPriL);
     MS.forEach(function(_,mi){
       var c=calcProduct(p,mi);
-      var v=(c.mpUnit!==null&&c.mpUnit!==undefined)?(c.mpUnit+(c.indUnit||0)):null;
-      uPriTr.appendChild(mkRO(v,true,4,'ro-val'));
+      uPriTr.appendChild(mkRO(c.custoPorPri,true,4,'ro-val','ci-pri-'+pi+'-'+mi));
     });
     uPriTr.appendChild(document.createElement('td')).className='tdd';
 
-    // Custo por unidade secundária (SC para Extrudado, BD para Solvente), se configurada
+    // Custo por unidade secundária (SC/BD) = Total Custo ÷ quantidade industrializada
     if(p.unit2){
       var uSecTr=tbl._tbody.insertRow();uSecTr.className='res-sub';uSecTr.dataset.par=par;uSecTr.dataset.sg='eq';
       uSecTr.style.display=(p._sg['eq']!==false)?'':'none';
       var uSecL=document.createElement('td');uSecL.className='tdl';uSecL.textContent='Custo por '+unit2Label(p.unit2,p.vol2);uSecTr.appendChild(uSecL);
       MS.forEach(function(_,mi){
         var c=calcProduct(p,mi);
-        var fac=unit2Vol(p.unit2,p.vol2);
-        var v=(c.mpUnit!==null&&c.mpUnit!==undefined&&fac)?(c.mpUnit+(c.indUnit||0))*fac:null;
-        uSecTr.appendChild(mkRO(v,true,4,'ro-val'));
+        uSecTr.appendChild(mkRO(c.custoPorSec,true,4,'ro-val','ci-sec-'+pi+'-'+mi));
       });
       uSecTr.appendChild(document.createElement('td')).className='tdd';
     }
@@ -3661,21 +3614,11 @@ function printCompItem(p){
   html+='<div class="no-break">';
   html+=secLabel('','CUSTO INDUSTRIALIZAÇÃO — por mes / '+p.u);
   html+='<table>'+thRow()+'<tbody>';
-  html+=rowSub('Total Custo',function(mi){
-    var c=calcProduct(p,mi);
-    return (c.costR!==null&&c.costR!==undefined)?(c.costR+(c.indCostR||0)):null;
-  },true,2);
-  html+=rowSub('Custo por '+p.u,function(mi){
-    var c=calcProduct(p,mi);
-    return (c.mpUnit!==null&&c.mpUnit!==undefined)?(c.mpUnit+(c.indUnit||0)):null;
-  },true,4);
+  html+=rowSub('Total Custo',function(mi){return calcProduct(p,mi).totalCusto;},true,2);
+  html+=rowSub('Custo por '+p.u,function(mi){return calcProduct(p,mi).custoPorPri;},true,4);
   if(p.unit2){
-    html+=rowSub('Custo por '+unit2Label(p.unit2,p.vol2),function(mi){
-      var c=calcProduct(p,mi);var fac=unit2Vol(p.unit2,p.vol2);
-      return (c.mpUnit!==null&&c.mpUnit!==undefined&&fac)?(c.mpUnit+(c.indUnit||0))*fac:null;
-    },true,4);
+    html+=rowSub('Custo por '+unit2Label(p.unit2,p.vol2),function(mi){return calcProduct(p,mi).custoPorSec;},true,4);
   }
-  html+=row('Produtividade '+p.u+'/mes','#f5f4f0',function(mi){var v=cellVal(p.prod[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,0,false);
   html+='</tbody></table></div>';
 
   // SECAO 3b — Equipe (detalhamento de Mão de Obra)
@@ -3692,26 +3635,6 @@ function printCompItem(p){
     if(!anyData)return null;
     return p.staff.reduce(function(s,si){var v=DATA.mo[si]?fabMoTotal(DATA.mo[si],mi):null;return s+(v!==null?v:0);},0);
   },true,2);
-  html+='</tbody></table></div>';
-
-  // SECAO 4 — Resultado
-  html+='<div class="no-break">';
-  html+=secLabel('','RESULTADO CALCULADO — por '+p.u);
-  html+='<table>'+thRow()+'<tbody>';
-  html+=rowSub('Volume lote ('+p.u+')',function(mi){return calcProduct(p,mi).vol;},false,2);
-  html+=rowSub('Custo MP / '+p.u,function(mi){return calcProduct(p,mi).mpUnit;},true,4);
-  html+=rowSub('Custo Industrialização / '+p.u,function(mi){return calcProduct(p,mi).indUnit;},true,4);
-  html+=rowSub('Custo Predial / '+p.u,function(mi){return calcProduct(p,mi).predialUnit;},true,4);
-  html+=rowSub('Custo MO / '+p.u,function(mi){return calcProduct(p,mi).copUnit;},true,4);
-  html+=sepRow();
-  html+=rowTotal('PRODUTO FINAL / '+p.u,function(mi){return calcProduct(p,mi).final;},true,4);
-  if(p.unit2){html+=rowTotal('PRODUTO FINAL / '+unit2Label(p.unit2,p.vol2),function(mi){return calcProduct(p,mi).final2;},true,4);}
-  html+=sepRow();
-  html+=rowSub('Preço de Venda / '+p.u,function(mi){var v=cellVal(p.pv?p.pv[mi]:null);return (v!==null&&v!==undefined)?v:null;},true,4);
-  html+=rowSub('Lucro Bruto / '+p.u,function(mi){return calcProduct(p,mi).lucroBruto;},true,4);
-  html+=rowSub('Deduções / '+p.u,function(mi){return calcProduct(p,mi).deducoesVal;},true,4);
-  html+=rowTotal('LUCRO LÍQUIDO / '+p.u,function(mi){return calcProduct(p,mi).lucroLiquido;},true,4);
-  html+=rowPctVal('Lucro Líquido %',function(mi){return calcProduct(p,mi).lucroLiquidoPct;},2);
   html+='</tbody></table></div>';
 
   // Rodape
