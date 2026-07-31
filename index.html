@@ -2524,7 +2524,19 @@ function bComp(){
         else theIng.ind=false;
         bComp();scheduleSave();
       };})(ing);
-      tl.appendChild(fl);tl.appendChild(document.createTextNode(' '+ing.n+(ing.u?' · '+ing.u:'')));
+      var nameSpan=document.createElement('span');
+      nameSpan.textContent=' '+ing.n+(ing.u?' · '+ing.u:'');
+      nameSpan.title='Clique duas vezes para editar o nome';
+      nameSpan.addEventListener('dblclick',function(e){
+        e.stopPropagation();
+        var inp=document.createElement('input');inp.type='text';inp.value=ing.n;
+        inp.style.cssText='background:transparent;border:none;outline:none;font-family:var(--mono);font-size:11px;width:160px';
+        tl.replaceChild(inp,nameSpan);inp.focus();inp.select();
+        function done(){ing.n=inp.value;bComp();scheduleSave();}
+        inp.addEventListener('blur',done);
+        inp.addEventListener('keydown',function(e2){if(e2.key==='Enter')inp.blur();});
+      });
+      tl.appendChild(fl);tl.appendChild(nameSpan);
       tr.appendChild(tl);
       MS.forEach(function(_,mi){tr.appendChild(mkCell(ing.v,mi,false,2,function(){refreshResult(pi);refreshIngRs(pi,ii);}));});
       var idl=document.createElement('td');idl.className='tdd';
@@ -3381,7 +3393,7 @@ function openIngModal(prod, pi){
     '<input type="text" id="ing-nome" placeholder="Ex: Resina Acrílica"></div>'+
     '<div class="mf-row">'+
     '<div class="mf"><label>Unidade</label>'+
-    '<select id="ing-unit"><option value="KG">KG</option><option value="LT">LT</option><option value="UN">UN</option></select></div>'+
+    '<input type="text" id="ing-unit" placeholder="KG, LT, UN, SC, BB..." value="KG"></div>'+
     '<div class="mf"><label>Categoria</label>'+
     '<select id="ing-cat"><option value="ing">Ingrediente</option><option value="emb">Embalagem</option><option value="ind">Industrialização</option></select></div>'+
     '</div>'+
@@ -3395,9 +3407,7 @@ function openIngModal(prod, pi){
     var idx=parseInt(this.value);
     if(idx>=0&&DATA.mp[idx]){
       document.getElementById('ing-nome').value=DATA.mp[idx].n;
-      var u=DATA.mp[idx].u||'KG';
-      var sel=document.getElementById('ing-unit');
-      for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===u){sel.selectedIndex=i;break;}}
+      document.getElementById('ing-unit').value=DATA.mp[idx].u||'KG';
     }
   });
   setTimeout(function(){document.getElementById('ing-mp-sel').focus();},100);
