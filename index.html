@@ -1596,6 +1596,14 @@ function refreshCustoInd(pi){
     if(elDedSec)elDedSec.value=(c.dedSec!==null&&c.dedSec!==undefined)?fR(c.dedSec,4):'—';
     var elDedPri=document.getElementById('ded-pri-'+pi+'-'+mi);
     if(elDedPri)elDedPri.value=(c.dedPri!==null&&c.dedPri!==undefined)?fR(c.dedPri,4):'—';
+    DED_KEYS.forEach(function(d){
+      var elItem=document.getElementById('ded-item-'+d.k+'-'+pi+'-'+mi);
+      if(!elItem)return;
+      var pvSec=p.pv?lkv(p.pv,mi):null;
+      var rate=lkv(p.ded[d.k],mi);
+      var v=(pvSec!==null&&pvSec!==undefined&&rate!==null&&rate!==undefined)?pvSec*rate:null;
+      elItem.value=(v!==null&&v!==undefined)?fR(v,2):'—';
+    });
   });
 }
 
@@ -2670,6 +2678,18 @@ function bComp(){
       var dL=document.createElement('td');dL.className='tdl';dL.textContent=d.n;dTr.appendChild(dL);
       MS.forEach(function(_,mi){dTr.appendChild(mkPctCell(p.ded[d.k],mi,function(){refreshCustoInd(pi);}));});
       dTr.appendChild(document.createElement('td')).className='tdd';
+
+      // Linha "↳ Valor R$" correspondente (Preço de Venda / unid. secundária × esta taxa)
+      var dRTr=tbl._tbody.insertRow();dRTr.className='ing-rs';dRTr.dataset.par=par;dRTr.dataset.sg='ded';
+      dRTr.style.display=(p._sg['ded']!==false)?'':'none';
+      var dRL=document.createElement('td');dRL.className='tdl';dRL.innerHTML='<span style="color:var(--mu)">↳</span> Valor R$';dRTr.appendChild(dRL);
+      MS.forEach(function(_,mi){
+        var pvSec=p.pv?lkv(p.pv,mi):null;
+        var rate=lkv(p.ded[d.k],mi);
+        var v=(pvSec!==null&&pvSec!==undefined&&rate!==null&&rate!==undefined)?pvSec*rate:null;
+        dRTr.appendChild(mkRO(v,true,2,'ro','ded-item-'+d.k+'-'+pi+'-'+mi));
+      });
+      dRTr.appendChild(document.createElement('td')).className='tdd';
     });
     if(p.unit2){
       var dedSecTr=tbl._tbody.insertRow();dedSecTr.className='res-sub';dedSecTr.dataset.par=par;dedSecTr.dataset.sg='ded';
