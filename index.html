@@ -764,7 +764,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
     <div class="grp-head" onclick="toggleGrp('g-deducoes')">
       <span class="grp-tog cl" id="g-deducoes-tog">▼</span>
       <span class="grp-title">Deduções da Receita Bruta</span>
-      <span class="grp-sub">Impostos · Comissões · Adm — % sobre preço de venda</span>
+      <span class="grp-sub">ICMS · PIS · COFINS · ISS · Comissões — % sobre preço de venda</span>
     </div>
     <div class="grp-body">
       <div id="deducoes" class="sec"></div>
@@ -1037,9 +1037,11 @@ function defaultData(){
       {n:'Base Solvente Branco', u:'LT',v:n12()},
     ],
     deducoes:[
-      {n:'Impostos sobre Venda',    v:n12()},
+      {n:'ICMS',                    v:n12()},
+      {n:'PIS',                     v:n12()},
+      {n:'COFINS',                  v:n12()},
+      {n:'ISS',                     v:n12()},
       {n:'Comissões sobre Vendas',  v:n12()},
-      {n:'Adm',                     v:n12()},
     ],
   };
 }
@@ -1186,7 +1188,14 @@ function loadFromFirestore(cb){
       try{if(d.mp)   DATA.mp   =JSON.parse(d.mp);}catch(e){}
       try{if(d.frete)DATA.frete=JSON.parse(d.frete);}catch(e){}
       try{if(d.pest) DATA.pest =JSON.parse(d.pest);}catch(e){}
-      try{if(d.deducoes) DATA.deducoes=JSON.parse(d.deducoes);}catch(e){}
+      try{if(d.deducoes){
+        var loadedDed=JSON.parse(d.deducoes);
+        // Migração: preserva valores de itens que já existiam pelo nome (ex: Comissões sobre Vendas)
+        DATA.deducoes.forEach(function(row){
+          var old=loadedDed.find(function(r){return r.n===row.n;});
+          if(old)row.v=old.v;
+        });
+      }}catch(e){}
       try{if(d.comp){COMP=JSON.parse(d.comp);
         COMP.forEach(function(p){
           // Reset de estado de UI — nunca persistir entre sessões
@@ -2396,7 +2405,7 @@ function deducoesRate(mi){
 }
 function bDeducoes(){
   var sec=document.getElementById('deducoes');sec.innerHTML='';
-  mkSecHead(sec,'Deduções da Receita Bruta','Impostos, comissões e administrativo — % sobre o preço de venda por unidade',null);
+  mkSecHead(sec,'Deduções da Receita Bruta','ICMS, PIS, COFINS, ISS e Comissões sobre Vendas — % sobre o preço de venda por unidade',null);
   var body=document.createElement('div');body.className='sb';
   var gw=document.createElement('div');gw.className='gw';
   var tbl=document.createElement('table');mkThead(tbl);
@@ -2691,7 +2700,7 @@ function bComp(){
     pvPriTr.appendChild(document.createElement('td')).className='tdd';
 
     // ─── SUB-GRUPO: DEDUÇÕES ───
-    mkSgTogRow('Deduções','ded','📉');
+    mkSgTogRow('Deduções da Receita Bruta','ded','📉');
     if(p.unit2){
       var dedSecTr=tbl._tbody.insertRow();dedSecTr.className='res-sub';dedSecTr.dataset.par=par;dedSecTr.dataset.sg='ded';
       dedSecTr.style.display=(p._sg['ded']!==false)?'':'none';
