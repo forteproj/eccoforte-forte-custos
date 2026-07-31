@@ -1527,7 +1527,8 @@ function showToast(msg){
 // Normaliza nome removendo sufixos de unidade para comparação tolerante
 function normName(n){
   if(!n) return '';
-  return n.trim().replace(/\s+(KG|LT|UN|G|ML)$/i,'').toLowerCase();
+  var noAccent=n.trim().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  return noAccent.replace(/\s+(KG|LT|UN|G|ML)$/i,'').toLowerCase();
 }
 
 // Busca MP e Frete pelo NOME do ingrediente (robusto a reordenação da tabela)
