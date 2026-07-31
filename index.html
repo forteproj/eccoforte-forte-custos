@@ -760,16 +760,6 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
       <div id="pest" class="sec"></div>
     </div>
   </div>
-  <div class="grp collapsed" id="g-deducoes">
-    <div class="grp-head" onclick="toggleGrp('g-deducoes')">
-      <span class="grp-tog cl" id="g-deducoes-tog">▼</span>
-      <span class="grp-title">Deduções da Receita Bruta</span>
-      <span class="grp-sub">ICMS · PIS · COFINS · ISS · Comissões — % sobre preço de venda</span>
-    </div>
-    <div class="grp-body">
-      <div id="deducoes" class="sec"></div>
-    </div>
-  </div>
 </div>
 
 <div class="page" id="page-composicao" style="display:none">
@@ -866,7 +856,6 @@ var PAGES = [
       {label:'Custos Base',  anchor:'g-custos'},
       {label:'Insumos',      anchor:'g-insumos'},
       {label:'Produção Real',anchor:'g-producao'},
-      {label:'Deduções da Receita Bruta',anchor:'g-deducoes'},
     ]
   }
   ,{
@@ -1036,13 +1025,6 @@ function defaultData(){
       {n:'Extrudado Branco',     u:'KG',v:n12()},
       {n:'Base Solvente Branco', u:'LT',v:n12()},
     ],
-    deducoes:[
-      {n:'ICMS',                    v:n12()},
-      {n:'PIS',                     v:n12()},
-      {n:'COFINS',                  v:n12()},
-      {n:'ISS',                     v:n12()},
-      {n:'Comissões sobre Vendas',  v:n12()},
-    ],
   };
 }
 function defaultComp(){
@@ -1151,7 +1133,6 @@ function scheduleSave(){
       mp:   JSON.stringify(DATA.mp),
       frete:JSON.stringify(DATA.frete),
       pest: JSON.stringify(DATA.pest),
-      deducoes:JSON.stringify(DATA.deducoes),
       comp: JSON.stringify(COMP),
       mof:  JSON.stringify(MOF),
       qexec:JSON.stringify(QEXEC),
@@ -1188,14 +1169,6 @@ function loadFromFirestore(cb){
       try{if(d.mp)   DATA.mp   =JSON.parse(d.mp);}catch(e){}
       try{if(d.frete)DATA.frete=JSON.parse(d.frete);}catch(e){}
       try{if(d.pest) DATA.pest =JSON.parse(d.pest);}catch(e){}
-      try{if(d.deducoes){
-        var loadedDed=JSON.parse(d.deducoes);
-        // Migração: preserva valores de itens que já existiam pelo nome (ex: Comissões sobre Vendas)
-        DATA.deducoes.forEach(function(row){
-          var old=loadedDed.find(function(r){return r.n===row.n;});
-          if(old)row.v=old.v;
-        });
-      }}catch(e){}
       try{if(d.comp){COMP=JSON.parse(d.comp);
         COMP.forEach(function(p){
           // Reset de estado de UI — nunca persistir entre sessões
@@ -1601,7 +1574,7 @@ function calcProduct(p,mi){
   var pvSec=(p.pv)?lkv(p.pv,mi):null;
   var temPv=(pvSec!==null&&pvSec!==undefined&&!isNaN(pvSec));
   var pvPri=(temPv&&fac)?pvSec/fac:null;
-  var dedRate=deducoesRate(mi);
+  var dedRate=deducoesRate(p,mi);
   var dedSec=temPv?pvSec*dedRate:null;
   var dedPri=(dedSec!==null&&fac)?dedSec/fac:null;
   return {vol:totalVol,costR:totalCostR,indCostR:indCostR,indQty:indQty,totalCusto:totalCusto,custoPorSec:custoPorSec,custoPorPri:custoPorPri,
@@ -2400,23 +2373,11 @@ function mkPctCell(arr,mi,cb){
   td.appendChild(inp);
   return td;
 }
-function deducoesRate(mi){
-  return DATA.deducoes.reduce(function(s,row){var v=lkv(row.v,mi);return s+(v!==null&&v!==undefined&&!isNaN(v)?v:0);},0);
-}
-function bDeducoes(){
-  var sec=document.getElementById('deducoes');sec.innerHTML='';
-  mkSecHead(sec,'Deduções da Receita Bruta','ICMS, PIS, COFINS, ISS e Comissões sobre Vendas — % sobre o preço de venda por unidade',null);
-  var body=document.createElement('div');body.className='sb';
-  var gw=document.createElement('div');gw.className='gw';
-  var tbl=document.createElement('table');mkThead(tbl);
-  DATA.deducoes.forEach(function(row){
-    var tr=tbl._tbody.insertRow();
-    var tl=document.createElement('td');tl.className='tdl';tl.textContent=row.n;tr.appendChild(tl);
-    MS.forEach(function(_,mi){tr.appendChild(mkPctCell(row.v,mi,function(){COMP.forEach(function(_,pi){refreshCustoInd(pi);});}));});
-    tr.appendChild(document.createElement('td')).className='tdd';
-  });
-  gw.appendChild(tbl);body.appendChild(gw);
-  sec.appendChild(body);
+// Taxas de dedução são por produto (p.ded), não mais globais
+var DED_KEYS=[{k:'imp',n:'Impostos Gerais'},{k:'com',n:'Comissões sobre Vendas'},{k:'adm',n:'Adm'}];
+function deducoesRate(p,mi){
+  if(!p.ded)return 0;
+  return DED_KEYS.reduce(function(s,d){var v=lkv(p.ded[d.k],mi);return s+(v!==null&&v!==undefined&&!isNaN(v)?v:0);},0);
 }
 
 // ── COMP GRID ─────────────────────────────────────────────────
@@ -2458,6 +2419,8 @@ function bComp(){
     if(p._open===undefined)p._open=false;
     if(p._detEq===undefined)p._detEq=false;
     if(!p.pv)p.pv=n12();
+    if(!p.ded)p.ded={};
+    DED_KEYS.forEach(function(d){if(!p.ded[d.k])p.ded[d.k]=n12();});
     // Sempre respeitar p._open ao renderizar
     p._sg.ing=p._open; p._sg.emb=p._open; p._sg.ind=p._open; p._sg.eq=p._open; p._sg.res=p._open; p._sg.pv=p._open; p._sg.ded=p._open;
     // Migração: garantir campos novos para produtos criados antes
@@ -2699,8 +2662,15 @@ function bComp(){
     });
     pvPriTr.appendChild(document.createElement('td')).className='tdd';
 
-    // ─── SUB-GRUPO: DEDUÇÕES ───
+    // ─── SUB-GRUPO: DEDUÇÕES DA RECEITA BRUTA ───
     mkSgTogRow('Deduções da Receita Bruta','ded','📉');
+    DED_KEYS.forEach(function(d){
+      var dTr=tbl._tbody.insertRow();dTr.className='ir';dTr.dataset.par=par;dTr.dataset.sg='ded';
+      dTr.style.display=(p._sg['ded']!==false)?'':'none';
+      var dL=document.createElement('td');dL.className='tdl';dL.textContent=d.n;dTr.appendChild(dL);
+      MS.forEach(function(_,mi){dTr.appendChild(mkPctCell(p.ded[d.k],mi,function(){refreshCustoInd(pi);}));});
+      dTr.appendChild(document.createElement('td')).className='tdd';
+    });
     if(p.unit2){
       var dedSecTr=tbl._tbody.insertRow();dedSecTr.className='res-sub';dedSecTr.dataset.par=par;dedSecTr.dataset.sg='ded';
       dedSecTr.style.display=(p._sg['ded']!==false)?'':'none';
@@ -3717,7 +3687,6 @@ function buildAll(){
   bMpFrete();
   bComp();
   bSimple('pest', 'pest', 'Produção Real do Item','Apontamento mensal de quantidade produzida',         null,  false, false);
-  bDeducoes();
   refreshTots();
   // FORTE — 4 seções
   bMofFuncoes();
@@ -3725,7 +3694,7 @@ function buildAll(){
   bForteCeq();
   bForteM2Dia();
   // Colapsar subseções ao iniciar
-  ['mo','adm','mp','frete','comp','pest','deducoes','forte-cargos','forte-comp','forte-ceq','forte-m2dia'].forEach(function(id){
+  ['mo','adm','mp','frete','comp','pest','forte-cargos','forte-comp','forte-ceq','forte-m2dia'].forEach(function(id){
     var sec=document.getElementById(id);
     if(sec){sec.classList.add('collapsed');var tog=sec.querySelector('.stog');if(tog)tog.textContent='▶';}
   });
