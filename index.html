@@ -760,6 +760,16 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
       <div id="pest" class="sec"></div>
     </div>
   </div>
+  <div class="grp collapsed" id="g-deducoes">
+    <div class="grp-head" onclick="toggleGrp('g-deducoes')">
+      <span class="grp-tog cl" id="g-deducoes-tog">▼</span>
+      <span class="grp-title">Deduções da Receita Bruta</span>
+      <span class="grp-sub">Impostos · Comissões · Adm — % sobre preço de venda</span>
+    </div>
+    <div class="grp-body">
+      <div id="deducoes" class="sec"></div>
+    </div>
+  </div>
 </div>
 
 <div class="page" id="page-composicao" style="display:none">
@@ -856,6 +866,7 @@ var PAGES = [
       {label:'Custos Base',  anchor:'g-custos'},
       {label:'Insumos',      anchor:'g-insumos'},
       {label:'Produção Real',anchor:'g-producao'},
+      {label:'Deduções da Receita Bruta',anchor:'g-deducoes'},
     ]
   }
   ,{
@@ -1025,6 +1036,11 @@ function defaultData(){
       {n:'Extrudado Branco',     u:'KG',v:n12()},
       {n:'Base Solvente Branco', u:'LT',v:n12()},
     ],
+    deducoes:[
+      {n:'Impostos sobre Venda',    v:n12()},
+      {n:'Comissões sobre Vendas',  v:n12()},
+      {n:'Adm',                     v:n12()},
+    ],
   };
 }
 function defaultComp(){
@@ -1133,6 +1149,7 @@ function scheduleSave(){
       mp:   JSON.stringify(DATA.mp),
       frete:JSON.stringify(DATA.frete),
       pest: JSON.stringify(DATA.pest),
+      deducoes:JSON.stringify(DATA.deducoes),
       comp: JSON.stringify(COMP),
       mof:  JSON.stringify(MOF),
       qexec:JSON.stringify(QEXEC),
@@ -1169,6 +1186,7 @@ function loadFromFirestore(cb){
       try{if(d.mp)   DATA.mp   =JSON.parse(d.mp);}catch(e){}
       try{if(d.frete)DATA.frete=JSON.parse(d.frete);}catch(e){}
       try{if(d.pest) DATA.pest =JSON.parse(d.pest);}catch(e){}
+      try{if(d.deducoes) DATA.deducoes=JSON.parse(d.deducoes);}catch(e){}
       try{if(d.comp){COMP=JSON.parse(d.comp);
         COMP.forEach(function(p){
           // Reset de estado de UI — nunca persistir entre sessões
@@ -1585,7 +1603,16 @@ function calcProduct(p,mi){
   var predialUnit=prod>0?admTotal/prod:0;
   var final=mpUnit+indUnit+copUnit+predialUnit;
   var fac=unit2Vol(p.unit2,p.vol2);
-  return {vol:totalVol,costR:totalCostR,indCostR:indCostR,cop:cop,mpUnit:mpUnit,indUnit:indUnit,copUnit:copUnit,predialUnit:predialUnit,final:final,final2:fac?final*fac:null};
+  // Preço de Venda / Lucro Bruto / Deduções / Lucro Líquido
+  var pv=p.pv?lkv(p.pv,mi):null;
+  var temPv=(pv!==null&&pv!==undefined&&!isNaN(pv));
+  var lucroBruto=temPv?pv-final:null;
+  var dedRate=deducoesRate(mi);
+  var deducoesVal=temPv?pv*dedRate:null;
+  var lucroLiquido=(lucroBruto!==null&&deducoesVal!==null)?lucroBruto-deducoesVal:null;
+  var lucroLiquidoPct=(lucroLiquido!==null&&pv>0)?(lucroLiquido/pv*100):null;
+  return {vol:totalVol,costR:totalCostR,indCostR:indCostR,cop:cop,mpUnit:mpUnit,indUnit:indUnit,copUnit:copUnit,predialUnit:predialUnit,final:final,final2:fac?final*fac:null,
+    pv:pv,lucroBruto:lucroBruto,deducoesVal:deducoesVal,lucroLiquido:lucroLiquido,lucroLiquidoPct:lucroLiquidoPct};
 }
 function refreshResult(pi){
   var p=COMP[pi];if(!p)return;
@@ -1597,12 +1624,18 @@ function refreshResult(pi){
     {fn:function(c){return c.copUnit;},    isR:true, dec:4},
     {fn:function(c){return c.final;},      isR:true, dec:4},
     {fn:function(c){return c.final2;},     isR:true, dec:4},
+    {fn:function(c){return c.lucroBruto;}, isR:true, dec:4},
+    {fn:function(c){return c.deducoesVal;},isR:true, dec:4},
+    {fn:function(c){return c.lucroLiquido;},isR:true,dec:4},
+    {fn:function(c){return c.lucroLiquidoPct;},isR:false,dec:2,pct:true},
   ];
   rows.forEach(function(row,ri){
+    if(!row)return;
     MS.forEach(function(_,mi){
       var el=document.getElementById('rc-'+pi+'-'+ri+'-'+mi);if(!el)return;
       var c=calcProduct(p,mi);var val=row.fn(c);
-      el.value=(val!==null&&val!==undefined&&!isNaN(val))?(row.isR?fR(val,row.dec):fN(val,row.dec)):'—';
+      var txt=(val===null||val===undefined||isNaN(val))?'—':(row.pct?fN(val,row.dec)+'%':(row.isR?fR(val,row.dec):fN(val,row.dec)));
+      el.value=txt;
     });
   });
   MS.forEach(function(_,mi){
@@ -2367,6 +2400,44 @@ function bMpFrete(){
   sec.appendChild(body);refreshTots();
 }
 
+// ── DEDUÇÕES DA RECEITA BRUTA ────────────────────────────────
+function mkPctCell(arr,mi,cb){
+  var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');else if(cellVal(arr[mi])!==null)td.classList.add('hv');
+  var inp=document.createElement('input');inp.type='text';inp.className='ci';
+  var rate=lkv(arr,mi);inp.value=(rate!==null&&rate!==undefined&&!isNaN(rate))?(rate*100)+'%':'';inp.placeholder='0%';
+  inp.addEventListener('focus',function(){
+    var fml=cellFormula(arr[mi]);
+    if(fml){inp.value=fml;}else{var r=lkv(arr,mi);inp.value=(r!==null&&r!==undefined&&!isNaN(r))?(r*100)+'':'';}
+  });
+  inp.addEventListener('blur',function(){
+    var text=inp.value.trim();
+    if(!text){arr[mi]=null;td.classList.remove('hv');if(mi===CUR)td.classList.add('tdc');if(cb)cb();scheduleSave();return;}
+    var result=isFormula(text)?evalFormula(text):parseFloat(text.replace('%','').replace(',','.'));
+    if(!isNaN(result)){var r2=result>1?result/100:result;cellSet(arr,mi,r2,isFormula(text)?text:null);inp.value=(r2*100)+'%';td.classList.add('hv');}
+    if(cb)cb();scheduleSave();
+  });
+  td.appendChild(inp);
+  return td;
+}
+function deducoesRate(mi){
+  return DATA.deducoes.reduce(function(s,row){var v=lkv(row.v,mi);return s+(v!==null&&v!==undefined&&!isNaN(v)?v:0);},0);
+}
+function bDeducoes(){
+  var sec=document.getElementById('deducoes');sec.innerHTML='';
+  mkSecHead(sec,'Deduções da Receita Bruta','Impostos, comissões e administrativo — % sobre o preço de venda por unidade',null);
+  var body=document.createElement('div');body.className='sb';
+  var gw=document.createElement('div');gw.className='gw';
+  var tbl=document.createElement('table');mkThead(tbl);
+  DATA.deducoes.forEach(function(row){
+    var tr=tbl._tbody.insertRow();
+    var tl=document.createElement('td');tl.className='tdl';tl.textContent=row.n;tr.appendChild(tl);
+    MS.forEach(function(_,mi){tr.appendChild(mkPctCell(row.v,mi,function(){COMP.forEach(function(_,pi){refreshResult(pi);});}));});
+    tr.appendChild(document.createElement('td')).className='tdd';
+  });
+  gw.appendChild(tbl);body.appendChild(gw);
+  sec.appendChild(body);
+}
+
 // ── COMP GRID ─────────────────────────────────────────────────
 // ── FÁBRICA MO HELPER ─────────────────────────────────────────
 function fabMoTotal(mo, mi){
@@ -2405,6 +2476,7 @@ function bComp(){
     if(!p._sg)p._sg={ing:false,emb:false,ind:false,eq:false,res:false,ingR:false,embR:false,indR:false};
     if(p._open===undefined)p._open=false;
     if(p._detEq===undefined)p._detEq=false;
+    if(!p.pv)p.pv=n12();
     // Sempre respeitar p._open ao renderizar
     p._sg.ing=p._open; p._sg.emb=p._open; p._sg.ind=p._open; p._sg.eq=p._open; p._sg.res=p._open;
     // Migração: garantir campos novos para produtos criados antes
@@ -2696,6 +2768,41 @@ function bComp(){
         rtr.appendChild(mkRO(val,row.isR,row.dec,row.cls==='res'?'ro-val':'ro','rc-'+pi+'-'+row.ri+'-'+mi));
       });
       var rdt=document.createElement('td');rdt.className='tdd';rtr.appendChild(rdt);
+    });
+
+    // Preço de Venda (editável) + Lucro Bruto / Deduções / Lucro Líquido
+    var pvTr=tbl._tbody.insertRow();pvTr.className='res-sub';pvTr.dataset.par=par;pvTr.dataset.sg='res';
+    pvTr.style.display=(p._sg['res']!==false)?'':'none';
+    var pvL=document.createElement('td');pvL.className='tdl';pvL.textContent='Preço de Venda / '+p.u;pvTr.appendChild(pvL);
+    MS.forEach(function(_,mi){pvTr.appendChild(mkCell(p.pv,mi,true,4,function(){refreshResult(pi);}));});
+    pvTr.appendChild(document.createElement('td')).className='tdd';
+
+    var lucroRows=[
+      {lbl:'Lucro Bruto / '+p.u,   fn:function(c){return c.lucroBruto;},     isR:true, dec:4,ri:7,res:false},
+      {lbl:'Deduções / '+p.u,      fn:function(c){return c.deducoesVal;},    isR:true, dec:4,ri:8,res:false},
+      {lbl:'➤ Lucro Líquido / '+p.u,fn:function(c){return c.lucroLiquido;},  isR:true, dec:4,ri:9,res:true},
+      {lbl:'Lucro Líquido %',      fn:function(c){return c.lucroLiquidoPct;},isR:false,dec:2,ri:10,res:true,pct:true},
+    ];
+    lucroRows.forEach(function(row){
+      var rtr=tbl._tbody.insertRow();rtr.className=row.res?'res':'res-sub';rtr.dataset.par=par;
+      if(row.res){rtr.dataset.alwaysvis='1';}else{rtr.dataset.sg='res';}
+      rtr.style.display=(row.res||p._sg['res']!==false)?'':'none';
+      var rtl=document.createElement('td');rtl.className='tdl';rtl.textContent=row.lbl;rtr.appendChild(rtl);
+      MS.forEach(function(_,mi){
+        var c=calcProduct(p,mi);var val=row.fn(c);
+        var td;
+        if(row.pct){
+          td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');
+          var inp=document.createElement('input');inp.type='text';inp.className='ci';inp.readOnly=true;
+          inp.id='rc-'+pi+'-'+row.ri+'-'+mi;
+          inp.value=(val!==null&&val!==undefined&&!isNaN(val))?fN(val,row.dec)+'%':'—';
+          td.appendChild(inp);
+        } else {
+          td=mkRO(val,row.isR,row.dec,row.res?'ro-val':'ro','rc-'+pi+'-'+row.ri+'-'+mi);
+        }
+        rtr.appendChild(td);
+      });
+      rtr.appendChild(document.createElement('td')).className='tdd';
     });
   });
 
@@ -3522,6 +3629,19 @@ function printCompItem(p){
     return row(label,'#FEFCF0',vals,null,isR,dec,false);
   }
 
+  function rowPctVal(label,vals,dec){
+    var s='<tr>';
+    s+='<td style="text-align:left;padding:2.5pt 4pt;font-size:7pt;border:1px solid #ddd;background:#FEFCF0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+label+'</td>';
+    MS.forEach(function(_,mi){
+      var bg=mi===CUR?'#FFFAE0':'#fff';
+      var v=vals(mi);
+      var txt=(v===null||v===undefined||isNaN(+v))?'—':_fN(v,dec)+'%';
+      s+='<td style="text-align:right;padding:2.5pt 3pt;font-size:7pt;border:1px solid #ddd;background:'+bg+';white-space:nowrap;">'+txt+'</td>';
+    });
+    s+='</tr>';
+    return s;
+  }
+
   function rowRS(label,vals){
     var s='<tr>';
     s+='<td style="text-align:left;padding:1.5pt 4pt 1.5pt 20pt;font-size:6pt;font-style:italic;border:1px solid #eee;background:#FAFAF6;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+label+'</td>';
@@ -3685,6 +3805,12 @@ function printCompItem(p){
   html+=sepRow();
   html+=rowTotal('PRODUTO FINAL / '+p.u,function(mi){return calcProduct(p,mi).final;},true,4);
   if(p.unit2){html+=rowTotal('PRODUTO FINAL / '+unit2Label(p.unit2,p.vol2),function(mi){return calcProduct(p,mi).final2;},true,4);}
+  html+=sepRow();
+  html+=rowSub('Preço de Venda / '+p.u,function(mi){var v=cellVal(p.pv?p.pv[mi]:null);return (v!==null&&v!==undefined)?v:null;},true,4);
+  html+=rowSub('Lucro Bruto / '+p.u,function(mi){return calcProduct(p,mi).lucroBruto;},true,4);
+  html+=rowSub('Deduções / '+p.u,function(mi){return calcProduct(p,mi).deducoesVal;},true,4);
+  html+=rowTotal('LUCRO LÍQUIDO / '+p.u,function(mi){return calcProduct(p,mi).lucroLiquido;},true,4);
+  html+=rowPctVal('Lucro Líquido %',function(mi){return calcProduct(p,mi).lucroLiquidoPct;},2);
   html+='</tbody></table></div>';
 
   // Rodape
@@ -3705,6 +3831,7 @@ function buildAll(){
   bMpFrete();
   bComp();
   bSimple('pest', 'pest', 'Produção Real do Item','Apontamento mensal de quantidade produzida',         null,  false, false);
+  bDeducoes();
   refreshTots();
   // FORTE — 4 seções
   bMofFuncoes();
@@ -3712,7 +3839,7 @@ function buildAll(){
   bForteCeq();
   bForteM2Dia();
   // Colapsar subseções ao iniciar
-  ['mo','adm','mp','frete','comp','pest','forte-cargos','forte-comp','forte-ceq','forte-m2dia'].forEach(function(id){
+  ['mo','adm','mp','frete','comp','pest','deducoes','forte-cargos','forte-comp','forte-ceq','forte-m2dia'].forEach(function(id){
     var sec=document.getElementById(id);
     if(sec){sec.classList.add('collapsed');var tog=sec.querySelector('.stog');if(tog)tog.textContent='▶';}
   });
