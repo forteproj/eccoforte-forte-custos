@@ -34,7 +34,7 @@
   --amb:var(--ds-or);--ambm:var(--ds-ord);--abg:var(--ds-or-light);--abdr:var(--ds-ord);
   --tx:var(--ds-tx);--txs:var(--ds-tx2);--mu:var(--ds-tx3);--fv:var(--ds-bg2);
   --mono:var(--ds-mono);--head:var(--ds-font);
-  --lbl:230px;--col:90px;--del:32px;--rh:34px;
+  --lbl:230px;--um:90px;--col:90px;--del:32px;--rh:34px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--tx);font-family:var(--mono);font-size:12px;min-height:100vh}
@@ -145,6 +145,7 @@ thead th:focus-within > .col-copy-btn{
 
 thead th{position:sticky;top:0;z-index:10;background:var(--sf2);font-family:var(--head);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);height:30px;padding:0 6px;border-bottom:2px solid var(--bd2);text-align:right;white-space:nowrap;width:var(--col);min-width:var(--col)}
 thead th.thl{position:sticky;top:0;left:0;z-index:20;background:var(--sf2);text-align:left;padding-left:14px;width:var(--lbl);min-width:var(--lbl);border-right:2px solid var(--bd2)}
+thead th.thum{position:sticky;top:0;left:var(--lbl);z-index:20;background:var(--sf2);text-align:left;padding-left:10px;width:var(--um);min-width:var(--um);border-right:2px solid var(--bd2)}
 thead th.thd{width:var(--del);min-width:var(--del);padding:0;border-right:none}
 thead th.thc{color:var(--amb);background:#EDE0A0!important;border-bottom-color:var(--ambm)}
 thead th.thg{text-align:center}
@@ -157,6 +158,8 @@ tbody tr:hover td.tdl{background:var(--sf2)!important}
 td{height:var(--rh);padding:0 6px;text-align:right;vertical-align:middle;white-space:nowrap;border-right:1px solid var(--bd);width:var(--col);min-width:var(--col)}
 td:last-child{border-right:none}
 td.tdl{position:sticky;left:0;z-index:5;background:var(--sf);border-right:2px solid var(--bd2);text-align:left;padding-left:14px;width:var(--lbl);min-width:var(--lbl);color:var(--tx);font-size:11.5px}
+td.tdum{position:sticky;left:var(--lbl);z-index:5;background:var(--sf);border-right:2px solid var(--bd2);text-align:left;padding-left:10px;width:var(--um);min-width:var(--um);color:var(--tx);font-size:11.5px}
+tbody tr:hover td.tdum{background:var(--sf2)!important}
 td.tdd{width:var(--del);min-width:var(--del);padding:0;text-align:center;background:var(--sf);border-right:none}
 td.tdc{background:#FFFAE0!important}td.tdc.tdl{background:#FFF7CC!important}
 td.hv{background:var(--fv)}
@@ -2206,7 +2209,7 @@ function syncMpFrete(){
 }
 function copyMonthMF(tbl,mi){
   var tbody=tbl.querySelector('tbody');if(!tbody)return;
-  var matSrc=1+mi*2,matDst=1+(mi+1)*2,freSrc=matSrc+1,freDst=matDst+1,count=0;
+  var matSrc=2+mi*2,matDst=2+(mi+1)*2,freSrc=matSrc+1,freDst=matDst+1,count=0;
   Array.from(tbody.rows).forEach(function(row){
     [[matSrc,matDst],[freSrc,freDst]].forEach(function(pair){
       var s=pair[0],d=pair[1];
@@ -2232,6 +2235,7 @@ function mkTheadMF(tbl){
   var tbody=tbl.createTBody();tbl._tbody=tbody;
   var cg=document.createElement('colgroup');
   var cl=document.createElement('col');cl.style.width='var(--lbl)';cg.appendChild(cl);
+  var cu=document.createElement('col');cu.style.width='var(--um)';cg.appendChild(cu);
   MS.forEach(function(){
     var c1=document.createElement('col');c1.style.width=MPFRETE_COLW+'px';cg.appendChild(c1);
     var c2=document.createElement('col');c2.style.width=MPFRETE_COLW+'px';cg.appendChild(c2);
@@ -2241,6 +2245,7 @@ function mkTheadMF(tbl){
 
   var tr1=th.insertRow();
   var la=document.createElement('th');la.className='thl';la.rowSpan=2;la.textContent='Item';tr1.appendChild(la);
+  var lu=document.createElement('th');lu.className='thum';lu.rowSpan=2;lu.textContent='Un Medida';tr1.appendChild(lu);
   MS.forEach(function(m,i){
     var t=document.createElement('th');t.className='thg';t.colSpan=2;
     if(i===CUR)t.classList.add('thc');
@@ -2288,6 +2293,12 @@ function bMpFrete(){
       inp.addEventListener('blur',done);inp.addEventListener('keydown',function(e){if(e.key==='Enter')inp.blur();});
     });
     tr.appendChild(tl);
+    var tu=document.createElement('td');tu.className='tdum';
+    var umInp=document.createElement('input');umInp.type='text';umInp.className='ci';umInp.style.textAlign='left';
+    umInp.placeholder='—';umInp.value=row.um||'';
+    umInp.addEventListener('blur',function(){row.um=umInp.value;scheduleSave();});
+    umInp.addEventListener('keydown',function(e){if(e.key==='Enter')umInp.blur();});
+    tu.appendChild(umInp);tr.appendChild(tu);
     MS.forEach(function(_,mi){
       var tdMat=mkCell(row.v,mi,true,2,onEdit);tdMat.classList.add('mfm');tr.appendChild(tdMat);
       var tdFre=mkCell(frow.v,mi,true,2,onEdit);tdFre.classList.add('mff');tr.appendChild(tdFre);
