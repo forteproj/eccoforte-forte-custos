@@ -2206,6 +2206,7 @@ function findByName(list,name){
 function syncMpFrete(){
   DATA.mp.forEach(function(m){if(findByName(DATA.frete,m.n)<0)DATA.frete.push({n:m.n,u:m.u,v:n12()});});
   DATA.frete.forEach(function(f){if(findByName(DATA.mp,f.n)<0)DATA.mp.push({n:f.n,u:f.u,v:n12()});});
+  DATA.mp.sort(function(a,b){return (a.n||'').localeCompare(b.n||'','pt-BR',{sensitivity:'base'});});
 }
 function copyMonthMF(tbl,mi){
   var tbody=tbl.querySelector('tbody');if(!tbody)return;
@@ -2317,13 +2318,21 @@ function bMpFrete(){
   var aa=document.createElement('div');aa.className='aa';
   var ab=document.createElement('button');ab.className='ab';ab.innerHTML='<span>＋</span> Adicionar Item';
   ab.onclick=function(){
-    DATA.mp.push({n:'Novo Item',u:'',v:n12()});
+    var newItem={n:'Novo Item',u:'',v:n12()};
+    DATA.mp.push(newItem);
     DATA.frete.push({n:'Novo Item',u:'',v:n12()});
     bMpFrete();refreshTots();scheduleSave();
+    // Após ordenar A-Z, localiza a linha do item recém-criado pela referência (não é mais sempre a última)
     setTimeout(function(){
-      var s2=document.getElementById('mp');var gw2=s2&&s2.querySelector('.gw');if(gw2)gw2.scrollTop=gw2.scrollHeight;
-      var tdls=s2&&s2.querySelectorAll('td.tdl');var last=tdls&&tdls[tdls.length-1];
-      if(last)last.dispatchEvent(new MouseEvent('dblclick',{bubbles:true}));
+      var idx=DATA.mp.indexOf(newItem);
+      var s2=document.getElementById('mp');var gw2=s2&&s2.querySelector('.gw');
+      var tbl2=s2&&s2.querySelector('table');
+      var row=tbl2&&tbl2.tBodies[0]&&tbl2.tBodies[0].rows[idx];
+      var tdl=row&&row.querySelector('td.tdl');
+      if(tdl){
+        if(gw2)tdl.scrollIntoView({block:'center'});
+        tdl.dispatchEvent(new MouseEvent('dblclick',{bubbles:true}));
+      }
     },60);
   };
   aa.appendChild(ab);body.appendChild(aa);
