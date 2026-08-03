@@ -818,6 +818,19 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
   </div>
 </div>
 
+<div class="page" id="page-resumo" style="display:none">
+  <div class="grp" id="g-resumo">
+    <div class="grp-head" onclick="toggleGrp('g-resumo')">
+      <span class="grp-tog" id="g-resumo-tog">▼</span>
+      <span class="grp-title">Resumo de Preços</span>
+      <span class="grp-sub">Custo · Preço de Venda · Lucro — por mês selecionado</span>
+    </div>
+    <div class="grp-body">
+      <div id="resumo" class="sec"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════════
 // VERSÃO: v4-nav-mi-fix
@@ -873,6 +886,13 @@ var PAGES = [
       {label:'Composição Equipe',      anchor:'g-forte-comp'},
       {label:'Custo Equipamentos',     anchor:'g-forte-ceq'},
       {label:'Custo M.O./Equip M²/Dia',anchor:'g-forte-m2dia'},
+    ]
+  }
+  ,{
+    id: 'resumo',
+    label: 'Resumo',
+    sections: [
+      {label:'Resumo de Preços', anchor:'g-resumo'},
     ]
   }
 ];
@@ -3202,6 +3222,83 @@ function refreshForteCeq(){
 }
 
 // ── SEÇÃO 4: CUSTO M.O./EQUIPAMENTO POR M²/DIA ───────────────
+// ── RESUMO DE PREÇOS (por mês selecionado, sem grade anual) ────
+var RESUMO_MES=CUR;
+function bResumo(){
+  var sec=document.getElementById('resumo');sec.innerHTML='';
+  mkSecHead(sec,'Resumo de Preços','Custo, Preço de Venda e Lucro por produto — mês selecionado',null);
+  var body=document.createElement('div');body.className='sb';
+
+  var selWrap=document.createElement('div');
+  selWrap.style.cssText='padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd);';
+  var selLbl=document.createElement('span');
+  selLbl.textContent='MÊS';
+  selLbl.style.cssText='font-family:var(--head);font-size:11px;letter-spacing:.08em;color:var(--mu);text-transform:uppercase;';
+  var sel=document.createElement('select');
+  sel.style.cssText='background:var(--sf2);color:var(--tx);border:1px solid var(--bd2);border-radius:4px;padding:6px 10px;font-family:var(--mono);font-size:12px;outline:none;cursor:pointer;';
+  MS.forEach(function(m,mi){
+    var opt=document.createElement('option');opt.value=mi;opt.textContent=m;
+    if(mi===RESUMO_MES)opt.selected=true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change',function(){RESUMO_MES=parseInt(sel.value);bResumo();});
+  selWrap.appendChild(selLbl);selWrap.appendChild(sel);
+  body.appendChild(selWrap);
+
+  var gw=document.createElement('div');gw.className='gw';gw.style.maxHeight='none';
+  var tbl=document.createElement('table');
+  var th=tbl.createTHead();var hrow=th.insertRow();
+  var tbody=tbl.createTBody();tbl._tbody=tbody;
+
+  var cols=[
+    {lbl:'Produto',        w:230, cls:'thl'},
+    {lbl:'Tipo',           w:90},
+    {lbl:'Custo / BD-SC',  w:110},
+    {lbl:'Custo / LT-KG',  w:110},
+    {lbl:'Preço Venda / BD-SC',w:120},
+    {lbl:'Preço Venda / LT-KG',w:120},
+    {lbl:'Lucro Bruto / BD-SC',w:120},
+    {lbl:'Lucro Bruto / LT-KG',w:120},
+    {lbl:'Lucro Líquido / BD-SC',w:130},
+    {lbl:'Lucro Líquido / LT-KG',w:130},
+    {lbl:'Lucro Líquido %',w:100},
+  ];
+  cols.forEach(function(c){
+    var t=document.createElement('th');t.textContent=c.lbl;if(c.cls)t.className=c.cls;
+    t.style.width=c.w+'px';t.style.minWidth=c.w+'px';
+    hrow.appendChild(t);
+  });
+
+  COMP.forEach(function(p){
+    var c=calcProduct(p,RESUMO_MES);
+    var tr=tbody.insertRow();
+    var tl=document.createElement('td');tl.className='tdl';tl.textContent=p.n;tr.appendChild(tl);
+    var tt=document.createElement('td');tt.textContent=p.tipo==='extrudado'?'Extrudado':'Solvente';tr.appendChild(tt);
+    function num(v,dec){var td=document.createElement('td');td.style.width='110px';td.style.minWidth='110px';
+      td.textContent=(v!==null&&v!==undefined&&!isNaN(v))?fR(v,dec):'—';return td;}
+    tr.appendChild(num(c.custoPorSec,4));
+    tr.appendChild(num(c.custoPorPri,4));
+    tr.appendChild(num(c.pvSec,4));
+    tr.appendChild(num(c.pvPri,4));
+    tr.appendChild(num(c.lucroBrutoSec,4));
+    tr.appendChild(num(c.lucroBrutoPri,4));
+    var llSec=num(c.lucroLiquidoSec,4);llSec.style.color='var(--amb)';llSec.style.fontWeight='700';tr.appendChild(llSec);
+    var llPri=num(c.lucroLiquidoPri,4);llPri.style.color='var(--amb)';llPri.style.fontWeight='700';tr.appendChild(llPri);
+    var pctTd=document.createElement('td');pctTd.style.color='var(--amb)';pctTd.style.fontWeight='700';
+    pctTd.textContent=(c.lucroLiquidoPct!==null&&c.lucroLiquidoPct!==undefined)?fN(c.lucroLiquidoPct,2)+'%':'—';
+    tr.appendChild(pctTd);
+  });
+  if(!COMP.length){
+    var etr=tbody.insertRow();var etd=document.createElement('td');etd.colSpan=cols.length;
+    etd.style.cssText='text-align:center;color:var(--mu);padding:20px;font-style:italic;';
+    etd.textContent='Nenhum produto cadastrado na Composição.';
+    etr.appendChild(etd);
+  }
+
+  gw.appendChild(tbl);body.appendChild(gw);
+  sec.appendChild(body);
+}
+
 function bForteM2Dia(){
   var sec=document.getElementById('forte-m2dia');sec.innerHTML='';
   mkSecHead(sec,'Custo M.O. / Equipamento por M²/Dia','R$/M² e R$/Dia — M.O. e Equipamento por equipe',null);
@@ -3793,6 +3890,7 @@ function buildAll(){
   bForteComp();
   bForteCeq();
   bForteM2Dia();
+  bResumo();
   // Colapsar subseções ao iniciar
   ['mo','adm','mp','frete','comp','pest','forte-cargos','forte-comp','forte-ceq','forte-m2dia'].forEach(function(id){
     var sec=document.getElementById(id);
