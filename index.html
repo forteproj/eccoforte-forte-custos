@@ -2392,7 +2392,7 @@ function mkPctCell(arr,mi,cb){
     var text=inp.value.trim();
     if(!text){arr[mi]=null;td.classList.remove('hv');if(mi===CUR)td.classList.add('tdc');if(cb)cb();scheduleSave();return;}
     var result=isFormula(text)?evalFormula(text):parseFloat(text.replace('%','').replace(',','.'));
-    if(!isNaN(result)){var r2=result>1?result/100:result;cellSet(arr,mi,r2,isFormula(text)?text:null);inp.value=(r2*100)+'%';td.classList.add('hv');}
+    if(!isNaN(result)){var r2=result/100;cellSet(arr,mi,r2,isFormula(text)?text:null);inp.value=(r2*100)+'%';td.classList.add('hv');}
     if(cb)cb();scheduleSave();
   });
   td.appendChild(inp);
