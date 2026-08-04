@@ -1600,19 +1600,23 @@ function calcProduct(p,mi){
   } else {
     custoPorSec=null;custoPorPri=null;
   }
-  // Preço de Venda: digitado por unidade secundária (BD/SC), unidade primária (LT/KG) é derivada
-  var pvSec=(p.pv)?lkv(p.pv,mi):null;
-  var temPv=(pvSec!==null&&pvSec!==undefined&&!isNaN(pvSec));
-  var pvPri=(temPv&&fac)?pvSec/fac:null;
+  // Preço de Venda: com unidade secundária (BD/SC), digitado por ela e a primária (LT/KG) é derivada;
+  // sem unidade secundária, digitado direto na unidade primária (não há linha "secundária" pra editar).
+  var pvRaw=(p.pv)?lkv(p.pv,mi):null;
+  var temPv=(pvRaw!==null&&pvRaw!==undefined&&!isNaN(pvRaw));
+  var pvSec=fac?(temPv?pvRaw:null):null;
+  var pvPri=fac?(temPv?pvRaw/fac:null):pvRaw;
   var dedRate=deducoesRate(p,mi);
-  var dedSec=temPv?pvSec*dedRate:null;
-  var dedPri=(dedSec!==null&&fac)?dedSec/fac:null;
+  var dedBase=temPv?pvRaw*dedRate:null;
+  var dedSec=fac?dedBase:null;
+  var dedPri=fac?(dedBase!==null?dedBase/fac:null):dedBase;
   // Lucro Bruto = Preço de Venda − Deduções; Lucro Líquido = Lucro Bruto − Custo por unidade
-  var lucroBrutoSec=(pvSec!==null&&dedSec!==null)?pvSec-dedSec:null;
-  var lucroBrutoPri=(pvPri!==null&&dedPri!==null)?pvPri-dedPri:null;
+  var lucroBrutoBase=(temPv&&dedBase!==null)?pvRaw-dedBase:null;
+  var lucroBrutoSec=fac?lucroBrutoBase:null;
+  var lucroBrutoPri=fac?(lucroBrutoBase!==null?lucroBrutoBase/fac:null):lucroBrutoBase;
   var lucroLiquidoSec=(lucroBrutoSec!==null&&custoPorSec!==null)?lucroBrutoSec-custoPorSec:null;
   var lucroLiquidoPri=(lucroBrutoPri!==null&&custoPorPri!==null)?lucroBrutoPri-custoPorPri:null;
-  var lucroLiquidoPct=(lucroLiquidoSec!==null&&pvSec>0)?(lucroLiquidoSec/pvSec*100):null;
+  var lucroLiquidoPct=(lucroLiquidoSec!==null&&pvSec>0)?(lucroLiquidoSec/pvSec*100):((lucroLiquidoPri!==null&&pvPri>0)?(lucroLiquidoPri/pvPri*100):null);
   return {vol:totalVol,costR:totalCostR,indCostR:indCostR,indQty:indQty,totalCusto:totalCusto,custoPorSec:custoPorSec,custoPorPri:custoPorPri,
     pvSec:pvSec,pvPri:pvPri,dedSec:dedSec,dedPri:dedPri,
     lucroBrutoSec:lucroBrutoSec,lucroBrutoPri:lucroBrutoPri,lucroLiquidoSec:lucroLiquidoSec,lucroLiquidoPri:lucroLiquidoPri,lucroLiquidoPct:lucroLiquidoPct};
@@ -2711,13 +2715,19 @@ function bComp(){
       MS.forEach(function(_,mi){pvSecTr.appendChild(mkCell(p.pv,mi,true,4,function(){refreshCustoInd(pi);}));});
       pvSecTr.appendChild(document.createElement('td')).className='tdd';
     }
-    var pvPriTr=tbl._tbody.insertRow();pvPriTr.className='res-sub';pvPriTr.dataset.par=par;pvPriTr.dataset.sg='pv';
+    var pvPriTr=tbl._tbody.insertRow();pvPriTr.className=p.unit2?'res-sub':'ir';pvPriTr.dataset.par=par;pvPriTr.dataset.sg='pv';
     pvPriTr.style.display=(p._sg['pv']!==false)?'':'none';
     var pvPriL=document.createElement('td');pvPriL.className='tdl';pvPriL.textContent='Preço de Venda / '+p.u;pvPriTr.appendChild(pvPriL);
-    MS.forEach(function(_,mi){
-      var c=calcProduct(p,mi);
-      pvPriTr.appendChild(mkRO(c.pvPri,true,4,'ro-val','pv-pri-'+pi+'-'+mi));
-    });
+    if(p.unit2){
+      // Com unidade secundária: linha primária é só leitura (derivada)
+      MS.forEach(function(_,mi){
+        var c=calcProduct(p,mi);
+        pvPriTr.appendChild(mkRO(c.pvPri,true,4,'ro-val','pv-pri-'+pi+'-'+mi));
+      });
+    } else {
+      // Sem unidade secundária: essa é a ÚNICA linha de Preço de Venda, precisa ser editável
+      MS.forEach(function(_,mi){pvPriTr.appendChild(mkCell(p.pv,mi,true,4,function(){refreshCustoInd(pi);}));});
+    }
     pvPriTr.appendChild(document.createElement('td')).className='tdd';
 
     // ─── SUB-GRUPO: DEDUÇÕES DA RECEITA BRUTA ───
@@ -2763,11 +2773,13 @@ function bComp(){
 
     // ─── SUB-GRUPO: LUCRO ───
     mkSgTogRow('Lucro','lucro','📈');
-    var lbSecTr=tbl._tbody.insertRow();lbSecTr.className='res-sub';lbSecTr.dataset.par=par;lbSecTr.dataset.sg='lucro';
-    lbSecTr.style.display=(p._sg['lucro']!==false)?'':'none';
-    var lbSecL=document.createElement('td');lbSecL.className='tdl';lbSecL.textContent='Lucro Bruto / '+(p.unit2?unit2Label(p.unit2,p.vol2):p.u);lbSecTr.appendChild(lbSecL);
-    MS.forEach(function(_,mi){var c=calcProduct(p,mi);lbSecTr.appendChild(mkRO(c.lucroBrutoSec,true,4,'ro-val','lb-sec-'+pi+'-'+mi));});
-    lbSecTr.appendChild(document.createElement('td')).className='tdd';
+    if(p.unit2){
+      var lbSecTr=tbl._tbody.insertRow();lbSecTr.className='res-sub';lbSecTr.dataset.par=par;lbSecTr.dataset.sg='lucro';
+      lbSecTr.style.display=(p._sg['lucro']!==false)?'':'none';
+      var lbSecL=document.createElement('td');lbSecL.className='tdl';lbSecL.textContent='Lucro Bruto / '+unit2Label(p.unit2,p.vol2);lbSecTr.appendChild(lbSecL);
+      MS.forEach(function(_,mi){var c=calcProduct(p,mi);lbSecTr.appendChild(mkRO(c.lucroBrutoSec,true,4,'ro-val','lb-sec-'+pi+'-'+mi));});
+      lbSecTr.appendChild(document.createElement('td')).className='tdd';
+    }
 
     var lbPriTr=tbl._tbody.insertRow();lbPriTr.className='res-sub';lbPriTr.dataset.par=par;lbPriTr.dataset.sg='lucro';
     lbPriTr.style.display=(p._sg['lucro']!==false)?'':'none';
@@ -2775,11 +2787,13 @@ function bComp(){
     MS.forEach(function(_,mi){var c=calcProduct(p,mi);lbPriTr.appendChild(mkRO(c.lucroBrutoPri,true,4,'ro-val','lb-pri-'+pi+'-'+mi));});
     lbPriTr.appendChild(document.createElement('td')).className='tdd';
 
-    var llSecTr=tbl._tbody.insertRow();llSecTr.className='res';llSecTr.dataset.par=par;llSecTr.dataset.sg='lucro';
-    llSecTr.style.display=(p._sg['lucro']!==false)?'':'none';
-    var llSecL=document.createElement('td');llSecL.className='tdl';llSecL.textContent='Lucro Líquido / '+(p.unit2?unit2Label(p.unit2,p.vol2):p.u);llSecTr.appendChild(llSecL);
-    MS.forEach(function(_,mi){var c=calcProduct(p,mi);llSecTr.appendChild(mkRO(c.lucroLiquidoSec,true,4,'ro-val','ll-sec-'+pi+'-'+mi));});
-    llSecTr.appendChild(document.createElement('td')).className='tdd';
+    if(p.unit2){
+      var llSecTr=tbl._tbody.insertRow();llSecTr.className='res';llSecTr.dataset.par=par;llSecTr.dataset.sg='lucro';
+      llSecTr.style.display=(p._sg['lucro']!==false)?'':'none';
+      var llSecL=document.createElement('td');llSecL.className='tdl';llSecL.textContent='Lucro Líquido / '+unit2Label(p.unit2,p.vol2);llSecTr.appendChild(llSecL);
+      MS.forEach(function(_,mi){var c=calcProduct(p,mi);llSecTr.appendChild(mkRO(c.lucroLiquidoSec,true,4,'ro-val','ll-sec-'+pi+'-'+mi));});
+      llSecTr.appendChild(document.createElement('td')).className='tdd';
+    }
 
     var llPriTr=tbl._tbody.insertRow();llPriTr.className='res';llPriTr.dataset.par=par;llPriTr.dataset.sg='lucro';
     llPriTr.style.display=(p._sg['lucro']!==false)?'':'none';
