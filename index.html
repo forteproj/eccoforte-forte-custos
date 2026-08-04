@@ -1588,8 +1588,18 @@ function calcProduct(p,mi){
   });
   var totalCusto=totalCostR+indCostR;
   var fac=unit2Vol(p.unit2,p.vol2);
-  var custoPorSec=indQty>0?totalCusto/indQty:null;
-  var custoPorPri=(custoPorSec!==null&&fac)?custoPorSec/fac:null;
+  // Divisor preferencial = quantidade industrializada (BD/SC); sem itens de Industrialização,
+  // cai para o volume dos ingredientes (KG/LT) — ex: produto composto só por um ingrediente.
+  var custoPorSec,custoPorPri;
+  if(indQty>0){
+    custoPorSec=totalCusto/indQty;
+    custoPorPri=fac?custoPorSec/fac:null;
+  } else if(totalVol>0){
+    custoPorPri=totalCusto/totalVol;
+    custoPorSec=fac?custoPorPri*fac:null;
+  } else {
+    custoPorSec=null;custoPorPri=null;
+  }
   // Preço de Venda: digitado por unidade secundária (BD/SC), unidade primária (LT/KG) é derivada
   var pvSec=(p.pv)?lkv(p.pv,mi):null;
   var temPv=(pvSec!==null&&pvSec!==undefined&&!isNaN(pvSec));
