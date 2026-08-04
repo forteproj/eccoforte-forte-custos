@@ -676,8 +676,8 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
       <div class="mf">
         <label>Tipo</label>
         <div class="tipo-btns">
-          <div class="tipo-btn sel" id="tb-ext" onclick="selTipo('extrudado')">🧱 Extrudado</div>
-          <div class="tipo-btn" id="tb-sol" onclick="selTipo('solvente')">🪣 Base Solvente</div>
+          <div class="tipo-btn sel" id="tb-ext" onclick="selTipo('extrudado')">🧱 Saco</div>
+          <div class="tipo-btn" id="tb-sol" onclick="selTipo('solvente')">🪣 Balde</div>
         </div>
       </div>
       <div class="mf-row">
@@ -697,7 +697,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
       <div class="staff-list" id="staff-list"></div>
       <div class="staff-total" id="staff-total">Total MO: R$ —</div>
       <div class="den-fields" id="den-fields">
-        <div class="mf-sep">Conversão Base Solvente</div>
+        <div class="mf-sep">Conversão Balde</div>
         <div class="mf-row">
           <div class="mf"><label>Volume Embalagem (LT)</label><input type="number" id="m-vol" placeholder="18" value="18"></div>
         </div>
@@ -2482,7 +2482,7 @@ function bComp(){
     var titleWrap=document.createElement('div');titleWrap.className='ph-title-wrap';
     var titleTog=document.createElement('button');titleTog.className='ptog';
     var titleName=document.createElement('span');titleName.className='ph-title-name';titleName.textContent=p.n;
-    var titleType=document.createElement('span');titleType.className='ph-type';titleType.textContent=p.tipo==='extrudado'?'🧱 Extrudado':'🪣 Solvente';
+    var titleType=document.createElement('span');titleType.className='ph-type';titleType.textContent=p.tipo==='extrudado'?'🧱 Saco':'🪣 Balde';
     var titleUnit=document.createElement('span');titleUnit.className='utag';titleUnit.style.marginLeft='6px';titleUnit.textContent='R$/'+p.u;
     var titleDel=document.createElement('button');titleDel.className='db';titleDel.style.cssText='opacity:1;margin-left:6px;flex-shrink:0';titleDel.textContent='✕';
     titleDel.onclick=function(){COMP.splice(pi,1);bComp();scheduleSave();};
@@ -3273,7 +3273,7 @@ function bResumo(){
     var c=calcProduct(p,RESUMO_MES);
     var tr=tbody.insertRow();
     var tl=document.createElement('td');tl.className='tdl';tl.textContent=p.n;tr.appendChild(tl);
-    var tt=document.createElement('td');tt.textContent=p.tipo==='extrudado'?'Extrudado':'Solvente';tr.appendChild(tt);
+    var tt=document.createElement('td');tt.textContent=p.tipo==='extrudado'?'Saco':'Balde';tr.appendChild(tt);
     function num(v,dec){var td=document.createElement('td');td.style.width='110px';td.style.minWidth='110px';
       td.textContent=(v!==null&&v!==undefined&&!isNaN(v))?fR(v,dec):'—';return td;}
     tr.appendChild(num(c.custoPorSec,4));
@@ -3632,7 +3632,7 @@ function printCompItem(p){
   function _fR(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v)||v===0)return '—';return 'R$ '+Number(v).toFixed(d).replace('.',',');}
   function _fN(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v))return '—';return Number(v).toFixed(d).replace('.',',');}
 
-  var tipo=p.tipo==='extrudado'?'Extrudado':'Solvente';
+  var tipo=p.tipo==='extrudado'?'Saco':'Balde';
   var c0=calcProduct(p,0);
   var ings=p.i.filter(function(i){return !i.emb&&!i.ind;});
   var embs=p.i.filter(function(i){return i.emb;});
