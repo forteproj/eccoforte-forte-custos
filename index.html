@@ -690,6 +690,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
             <option value="SC25">Saco 25 KG</option>
             <option value="BD18">Balde 18 LT</option>
             <option value="BD20">Balde 20 LT</option>
+            <option value="KG1">KG (sem embalagem)</option>
           </select>
         </div>
       </div>
@@ -1511,8 +1512,8 @@ function setHeat(td,val,arr,mi){
   // indicador de fórmula
   if(cellFormula(arr[mi]))td.classList.add('has-f');
 }
-function unit2Label(code,vol){if(!code)return '';if(code==='SC25')return 'SC 25kg';return 'BD '+(vol||18)+'lt';}
-function unit2Vol(code,vol){if(!code)return null;if(code==='SC25')return 25;return parseFloat(vol)||18;}
+function unit2Label(code,vol){if(!code)return '';if(code==='SC25')return 'SC 25kg';if(code==='KG1')return 'KG';return 'BD '+(vol||18)+'lt';}
+function unit2Vol(code,vol){if(!code)return null;if(code==='SC25')return 25;if(code==='KG1')return 1;return parseFloat(vol)||18;}
 
 // ── TOAST ─────────────────────────────────────────────────────
 var toastTimer=null;
