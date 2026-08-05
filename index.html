@@ -2487,6 +2487,8 @@ function bComp(){
   var gw=document.createElement('div');gw.className='gw';
   var tbl=document.createElement('table');mkThead(tbl);
 
+  COMP.sort(function(a,b){return (a.n||'').localeCompare(b.n||'','pt-BR',{sensitivity:'base'});});
+
   COMP.forEach(function(p,pi){
     var par='c'+pi;
     if(!p._sg)p._sg={ing:false,emb:false,ind:false,eq:false,res:false,ingR:false,embR:false,indR:false};
