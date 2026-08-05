@@ -1590,21 +1590,29 @@ function ingValueR(ing, mi){
 function calcProduct(p,mi){
   // Total Custo = Ingredientes + Embalagens + Industrialização (sem depender de produtividade).
   // Custo por unidade = Total Custo ÷ quantidade industrializada (itens marcados como Industrialização).
-  var totalVol=0,totalCostR=0,indCostR=0,indQty=0;
+  var totalVol=0,totalCostR=0,indCostR=0,indQty=0,indUnitIsPrimary=false;
   p.i.forEach(function(ing){
     var qty=lkv(ing.v,mi);if(!qty&&qty!==0)return;
     var mpP=mpPriceByIng(ing,mi);
     var frP=frPriceByIng(ing,mi);
     var val=qty*(mpP+frP);
-    if(ing.ind){indCostR+=val;indQty+=qty;}
+    if(ing.ind){
+      indCostR+=val;indQty+=qty;
+      // Detecta se o item de Industrialização foi cadastrado na unidade PRIMÁRIA (ex: KG)
+      // em vez da unidade secundária (ex: SC/BD) — muda qual lado da conta é o divisor direto.
+      if(ing.u&&p.u&&ing.u.toUpperCase()===p.u.toUpperCase())indUnitIsPrimary=true;
+    }
     else{if(!ing.emb)totalVol+=qty;totalCostR+=val;}
   });
   var totalCusto=totalCostR+indCostR;
   var fac=unit2Vol(p.unit2,p.vol2);
-  // Divisor preferencial = quantidade industrializada (BD/SC); sem itens de Industrialização,
-  // cai para o volume dos ingredientes (KG/LT) — ex: produto composto só por um ingrediente.
+  // Divisor preferencial = quantidade industrializada (na unidade em que ela foi cadastrada);
+  // sem itens de Industrialização, cai para o volume dos ingredientes (KG/LT).
   var custoPorSec,custoPorPri;
-  if(indQty>0){
+  if(indQty>0&&indUnitIsPrimary){
+    custoPorPri=totalCusto/indQty;
+    custoPorSec=fac?custoPorPri*fac:null;
+  } else if(indQty>0){
     custoPorSec=totalCusto/indQty;
     custoPorPri=fac?custoPorSec/fac:null;
   } else if(totalVol>0){
