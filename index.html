@@ -978,7 +978,7 @@ function changeYear(yr){
 
 // ── DEFAULT DATA ──────────────────────────────────────────────
 var MS=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
-var CUR=3;
+var CUR=new Date().getMonth(); // mês atual real (0=JAN … 11=DEZ), não mais fixo em Abril
 function n12(){return new Array(12).fill(null);}
 function p2(){var a=Array.from(arguments);while(a.length<12)a.push(null);return a;}
 
