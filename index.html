@@ -953,6 +953,8 @@ function switchPage(pageId){
     var el = document.getElementById('page-' + p.id);
     if(el) el.style.display = p.id === pageId ? '' : 'none';
   });
+  // Resumo é um retrato dos produtos/preços — reconstrói sempre que a página é aberta
+  if(pageId==='resumo')bResumo();
   // highlight active nav
   document.querySelectorAll('.tnav-item > a').forEach(function(a){a.classList.remove('active');});
   var navItem = document.getElementById('nav-' + pageId);
@@ -1515,6 +1517,15 @@ function setHeat(td,val,arr,mi){
 }
 function unit2Label(code,vol){if(!code)return '';if(code==='SC25')return 'SC 25kg';if(code==='KG1')return 'KG';if(code==='UN1')return 'UN';return 'BD '+(vol||18)+'lt';}
 function unit2Vol(code,vol){if(!code)return null;if(code==='SC25')return 25;if(code==='KG1')return 1;if(code==='UN1')return 1;return parseFloat(vol)||18;}
+// Rótulo de embalagem/tipo exibido pro usuário — reflete a Unidade Secundária real do produto,
+// não só o Tipo (Extrudado/Solvente), já que um produto Extrudado pode vender por KG, não só Saco.
+function pkgLabel(p){
+  if(p.unit2==='SC25')return 'Saco';
+  if(p.unit2==='BD18'||p.unit2==='BD20')return 'Balde';
+  if(p.unit2==='KG1')return 'KG';
+  if(p.unit2==='UN1')return 'UN';
+  return p.tipo==='extrudado'?'Saco':'Balde';
+}
 
 // ── TOAST ─────────────────────────────────────────────────────
 var toastTimer=null;
@@ -2498,7 +2509,7 @@ function bComp(){
     var titleWrap=document.createElement('div');titleWrap.className='ph-title-wrap';
     var titleTog=document.createElement('button');titleTog.className='ptog';
     var titleName=document.createElement('span');titleName.className='ph-title-name';titleName.textContent=p.n;
-    var titleType=document.createElement('span');titleType.className='ph-type';titleType.textContent=p.tipo==='extrudado'?'🧱 Saco':'🪣 Balde';
+    var titleType=document.createElement('span');titleType.className='ph-type';titleType.textContent=(p.tipo==='extrudado'?'🧱 ':'🪣 ')+pkgLabel(p);
     var titleUnit=document.createElement('span');titleUnit.className='utag';titleUnit.style.marginLeft='6px';titleUnit.textContent='R$/'+p.u;
     var titleDel=document.createElement('button');titleDel.className='db';titleDel.style.cssText='opacity:1;margin-left:6px;flex-shrink:0';titleDel.textContent='✕';
     titleDel.onclick=function(){COMP.splice(pi,1);bComp();scheduleSave();};
@@ -3285,7 +3296,6 @@ function bResumo(){
     {lbl:'Preço Venda / LT-KG',w:120},
     {lbl:'Lucro Bruto / BD-SC',w:120},
     {lbl:'Lucro Bruto / LT-KG',w:120},
-    {lbl:'Lucro Líquido / BD-SC',w:130},
     {lbl:'Lucro Líquido / LT-KG',w:130},
     {lbl:'Lucro Líquido %',w:100},
   ];
@@ -3299,7 +3309,7 @@ function bResumo(){
     var c=calcProduct(p,RESUMO_MES);
     var tr=tbody.insertRow();
     var tl=document.createElement('td');tl.className='tdl';tl.textContent=p.n;tr.appendChild(tl);
-    var tt=document.createElement('td');tt.textContent=p.tipo==='extrudado'?'Saco':'Balde';tr.appendChild(tt);
+    var tt=document.createElement('td');tt.textContent=pkgLabel(p);tr.appendChild(tt);
     function num(v,dec){var td=document.createElement('td');td.style.width='110px';td.style.minWidth='110px';
       td.textContent=(v!==null&&v!==undefined&&!isNaN(v))?fR(v,dec):'—';return td;}
     tr.appendChild(num(c.custoPorSec,4));
@@ -3308,7 +3318,6 @@ function bResumo(){
     tr.appendChild(num(c.pvPri,4));
     tr.appendChild(num(c.lucroBrutoSec,4));
     tr.appendChild(num(c.lucroBrutoPri,4));
-    var llSec=num(c.lucroLiquidoSec,4);llSec.style.color='var(--amb)';llSec.style.fontWeight='700';tr.appendChild(llSec);
     var llPri=num(c.lucroLiquidoPri,4);llPri.style.color='var(--amb)';llPri.style.fontWeight='700';tr.appendChild(llPri);
     var pctTd=document.createElement('td');pctTd.style.color='var(--amb)';pctTd.style.fontWeight='700';
     pctTd.textContent=(c.lucroLiquidoPct!==null&&c.lucroLiquidoPct!==undefined)?fN(c.lucroLiquidoPct,2)+'%':'—';
@@ -3658,7 +3667,7 @@ function printCompItem(p){
   function _fR(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v)||v===0)return '—';return 'R$ '+Number(v).toFixed(d).replace('.',',');}
   function _fN(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v))return '—';return Number(v).toFixed(d).replace('.',',');}
 
-  var tipo=p.tipo==='extrudado'?'Saco':'Balde';
+  var tipo=pkgLabel(p);
   var c0=calcProduct(p,0);
   var ings=p.i.filter(function(i){return !i.emb&&!i.ind;});
   var embs=p.i.filter(function(i){return i.emb;});
