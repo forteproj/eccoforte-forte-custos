@@ -670,7 +670,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
 <!-- MODAL NOVO PRODUTO -->
 <div class="modal-bg" id="modal">
   <div class="modal">
-    <div class="modal-head">Novo Produto</div>
+    <div class="modal-head" id="modal-head-title">Novo Produto</div>
     <div class="modal-body">
       <div class="mf"><label>Nome do Produto</label><input type="text" id="m-nome" placeholder="Ex: Extrudado Amarelo"></div>
       <div class="mf">
@@ -709,7 +709,7 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
     </div>
     <div class="modal-foot">
       <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-      <button class="btn-create" onclick="createProduct()">Criar Produto</button>
+      <button class="btn-create" id="modal-save-btn" onclick="createProduct()">Criar Produto</button>
     </div>
   </div>
 </div>
@@ -2521,12 +2521,14 @@ function bComp(){
     var titleName=document.createElement('span');titleName.className='ph-title-name';titleName.textContent=p.n;
     var titleType=document.createElement('span');titleType.className='ph-type';titleType.textContent=(p.tipo==='extrudado'?'🧱 ':'🪣 ')+pkgLabel(p);
     var titleUnit=document.createElement('span');titleUnit.className='utag';titleUnit.style.marginLeft='6px';titleUnit.textContent='R$/'+p.u;
+    var titleEdit=document.createElement('button');titleEdit.className='print-item-btn';titleEdit.style.marginLeft='6px';titleEdit.textContent='✎ Editar';
+    titleEdit.onclick=(function(idx){return function(e){e.stopPropagation();openEditProductModal(idx);};})(pi);
     var titleDel=document.createElement('button');titleDel.className='db';titleDel.style.cssText='opacity:1;margin-left:6px;flex-shrink:0';titleDel.textContent='✕';
     titleDel.onclick=function(){COMP.splice(pi,1);bComp();scheduleSave();};
     var titleSpacer=document.createElement('span');titleSpacer.style.flex='1';
     var titlePrint=document.createElement('button');titlePrint.className='print-item-btn';titlePrint.textContent='🖨 Imprimir';
     titlePrint.onclick=(function(prod){return function(e){e.stopPropagation();printCompItem(prod);};})(p);
-    titleWrap.appendChild(titleTog);titleWrap.appendChild(titleName);titleWrap.appendChild(titleType);titleWrap.appendChild(titleSpacer);titleWrap.appendChild(titlePrint);titleWrap.appendChild(titleDel);
+    titleWrap.appendChild(titleTog);titleWrap.appendChild(titleName);titleWrap.appendChild(titleType);titleWrap.appendChild(titleSpacer);titleWrap.appendChild(titlePrint);titleWrap.appendChild(titleEdit);titleWrap.appendChild(titleDel);
     titleTd.appendChild(titleWrap);titleTr.appendChild(titleTd);
 
     if(p._open===undefined)p._open=false;
@@ -2898,7 +2900,11 @@ function selTipo(t){
   document.getElementById('m-unit2').value=t==='extrudado'?'SC25':'BD18';
   modalStaff=STAFF_DEF[t].slice();renderStaffList();
 }
+var editProductIdx=null;
 function openModal(){
+  editProductIdx=null;
+  document.getElementById('modal-head-title').textContent='Novo Produto';
+  document.getElementById('modal-save-btn').textContent='Criar Produto';
   modalTipo='extrudado';modalStaff=STAFF_DEF.extrudado.slice();
   document.getElementById('m-nome').value='';
   document.getElementById('m-unit').value='KG';
@@ -2912,6 +2918,25 @@ function openModal(){
   document.getElementById('modal').classList.add('open');
   setTimeout(function(){document.getElementById('m-nome').focus();},100);
 }
+// Abre o mesmo modal, mas pré-preenchido pra editar Tipo/Unidade Secundária/etc. de um produto já criado
+function openEditProductModal(pi){
+  var p=COMP[pi];if(!p)return;
+  editProductIdx=pi;
+  document.getElementById('modal-head-title').textContent='Editar Produto';
+  document.getElementById('modal-save-btn').textContent='Salvar Alterações';
+  modalTipo=p.tipo;modalStaff=(p.staff||[]).slice();
+  document.getElementById('m-nome').value=p.n;
+  document.getElementById('m-unit').value=p.u;
+  document.getElementById('m-unit2').value=p.unit2||'';
+  document.getElementById('m-prod').value='';
+  document.getElementById('m-vol').value=p.vol2||18;
+  document.getElementById('den-fields').style.display=(p.tipo==='solvente')?'block':'none';
+  document.getElementById('tb-ext').classList.toggle('sel',p.tipo==='extrudado');
+  document.getElementById('tb-sol').classList.toggle('sel',p.tipo==='solvente');
+  renderStaffList();
+  document.getElementById('modal').classList.add('open');
+  setTimeout(function(){document.getElementById('m-nome').focus();},100);
+}
 function closeModal(){document.getElementById('modal').classList.remove('open');}
 function createProduct(){
   var nome=document.getElementById('m-nome').value.trim();if(!nome){alert('Digite o nome do produto.');return;}
@@ -2919,6 +2944,14 @@ function createProduct(){
   var unit2=document.getElementById('m-unit2').value;
   var prod=parseFloat(document.getElementById('m-prod').value)||0;
   var vol2=modalTipo==='solvente'?(parseFloat(document.getElementById('m-vol').value)||18):25;
+  if(editProductIdx!==null){
+    var ep=COMP[editProductIdx];
+    ep.n=nome;ep.u=unit;ep.tipo=modalTipo;ep.unit2=unit2;ep.vol2=vol2;ep.staff=modalStaff.slice();
+    editProductIdx=null;
+    closeModal();bComp();
+    scheduleSave();
+    return;
+  }
   var prodArr=n12();prodArr[0]=prod;
   COMP.push({n:nome,u:unit,tipo:modalTipo,ex:true,staff:modalStaff.slice(),prod:prodArr,vol2:vol2,unit2:unit2,i:[]});
   DATA.pest.push({n:nome,u:unit,v:n12()});
