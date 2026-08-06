@@ -1684,6 +1684,8 @@ function refreshIngRs(pi, ii){
   var p=COMP[pi];if(!p)return;
   var ing=p.i[ii];if(!ing)return;
   MS.forEach(function(_,mi){
+    var elUn=document.getElementById('ing-un-'+pi+'-'+ii+'-'+mi);
+    if(elUn){var vu=mpPriceByIng(ing,mi)+frPriceByIng(ing,mi);elUn.value=(vu>0)?fR(vu,2):'—';}
     var el=document.getElementById('ing-rs-'+pi+'-'+ii+'-'+mi);
     if(!el)return;
     var v=ingValueR(ing,mi);
@@ -2716,9 +2718,24 @@ function bComp(){
       idb.onclick=(function(arr,idx){return function(){arr.splice(idx,1);bComp();scheduleSave();};})(p.i,ii);
       idl.appendChild(idb);tr.appendChild(idl);
 
+      var sgOpen=p._sg[sgKey]!==false;
+
+      // ── Linha ↳ Valor Unitário (read-only, oculta por padrão) ──
+      var unTr=tbl._tbody.insertRow();unTr.className='ing-rs';unTr.dataset.par=par;unTr.dataset.rs=rsKey;
+      unTr.style.display=(sgOpen && p._sg[rsKey])?'':'none';
+      var unL=document.createElement('td');unL.className='tdl';unL.innerHTML='<span style="color:var(--mu)">↳</span> Valor Unitário';unTr.appendChild(unL);
+      MS.forEach(function(_,mi){
+        var td=document.createElement('td');if(mi===CUR)td.classList.add('tdc');
+        var inp=document.createElement('input');inp.type='text';inp.className='ci';inp.readOnly=true;
+        inp.id='ing-un-'+pi+'-'+ii+'-'+mi;
+        var v=mpPriceByIng(ing,mi)+frPriceByIng(ing,mi);
+        inp.value=(v>0)?fR(v,2):'—';
+        td.appendChild(inp);unTr.appendChild(td);
+      });
+      unTr.appendChild(document.createElement('td')).className='tdd';
+
       // ── Linha ↳ R$ (read-only, oculta por padrão) ──
       var rsTr=tbl._tbody.insertRow();rsTr.className='ing-rs';rsTr.dataset.par=par;rsTr.dataset.rs=rsKey;
-      var sgOpen=p._sg[sgKey]!==false;
       rsTr.style.display=(sgOpen && p._sg[rsKey])?'':'none';
       var rsL=document.createElement('td');rsL.className='tdl';rsL.innerHTML='<span style="color:var(--mu)">↳</span> Valor R$';rsTr.appendChild(rsL);
       MS.forEach(function(_,mi){
