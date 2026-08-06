@@ -2334,6 +2334,9 @@ function bMpFrete(){
   syncMpFrete();
   var sec=document.getElementById('mp');sec.innerHTML='';
   mkSecHead(sec,'Matéria-Prima/Frete','Preço de compra e frete por unidade — acompanhamento anual',null);
+  var printBtn=document.createElement('button');printBtn.className='print-item-btn';printBtn.style.marginLeft='10px';printBtn.textContent='🖨 Imprimir';
+  printBtn.onclick=function(e){e.stopPropagation();printMpFrete();};
+  sec.querySelector('.sh').appendChild(printBtn);
   var body=document.createElement('div');body.className='sb';
   var gw=document.createElement('div');gw.className='gw';
   var tbl=document.createElement('table');tbl.className='mpfrete';mkTheadMF(tbl);
@@ -2432,6 +2435,76 @@ function bMpFrete(){
   };
   aa.appendChild(ab);body.appendChild(aa);
   sec.appendChild(body);refreshTots();
+}
+
+function printMpFrete(){
+  function _fR(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v)||v===0)return '—';return 'R$ '+Number(v).toFixed(d).replace('.',',');}
+
+  syncMpFrete();
+
+  var LBL_W='13%';
+  var UM_W='5%';
+  var COL_W=((100-13-5)/24).toFixed(2)+'%';
+
+  var html='<!DOCTYPE html><html><head>';
+  html+='<meta charset="UTF-8">';
+  html+='<title>Matéria-Prima e Frete — '+ACTIVE_YEAR+'</title>';
+  html+='<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">';
+  html+='<style>';
+  html+='*{box-sizing:border-box;margin:0;padding:0;}';
+  html+='body{font-family:Montserrat,sans-serif;background:#fff;color:#1A1916;-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  html+='@page{size:A4 landscape;margin:8mm 6mm;}';
+  html+='table{border-collapse:collapse;width:100%;table-layout:fixed;}';
+  html+='</style></head><body>';
+
+  // Cabecalho
+  html+='<div style="background:#1E1C18;border-bottom:3px solid #C99200;padding:6pt 10pt;display:flex;align-items:center;gap:16pt;margin-bottom:6pt;">';
+  html+='<div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:14pt;letter-spacing:.07em;color:#C99200;">ECCOFORTE</div>';
+  html+='<div style="font-family:Montserrat,sans-serif;font-size:8pt;color:#888;letter-spacing:.05em;text-transform:uppercase;">Matéria-Prima e Frete — '+ACTIVE_YEAR+'</div>';
+  html+='</div>';
+
+  html+='<table><thead>';
+  html+='<tr>';
+  html+='<th rowspan="2" style="text-align:left;width:'+LBL_W+';background:#1E1C18;color:#C99200;padding:3pt 4pt;font-size:6.5pt;letter-spacing:.05em;border:1px solid #3A3835;">ITEM</th>';
+  html+='<th rowspan="2" style="width:'+UM_W+';background:#1E1C18;color:#C99200;padding:3pt 4pt;font-size:6.5pt;letter-spacing:.05em;border:1px solid #3A3835;">UN</th>';
+  MS.forEach(function(m,mi){
+    var bg=mi===CUR?'#3A3000':'#2A2724';
+    var cl=mi===CUR?'#FFD040':'#C99200';
+    html+='<th colspan="2" style="background:'+bg+';color:'+cl+';padding:2pt;font-size:6.5pt;text-align:center;letter-spacing:.03em;border:1px solid #3A3835;">'+m+'</th>';
+  });
+  html+='</tr><tr>';
+  MS.forEach(function(m,mi){
+    var bg=mi===CUR?'#3A3000':'#2A2724';
+    var cl=mi===CUR?'#FFD040':'#C99200';
+    html+='<th style="width:'+COL_W+'%;background:'+bg+';color:'+cl+';padding:2pt;font-size:5.5pt;text-align:center;border:1px solid #3A3835;">Mat.</th>';
+    html+='<th style="width:'+COL_W+'%;background:'+bg+';color:'+cl+';padding:2pt;font-size:5.5pt;text-align:center;border:1px solid #3A3835;">Frete</th>';
+  });
+  html+='</tr></thead><tbody>';
+
+  DATA.mp.forEach(function(row){
+    var fi=findByName(DATA.frete,row.n);
+    var frow=fi>=0?DATA.frete[fi]:{v:n12()};
+    html+='<tr>';
+    html+='<td style="text-align:left;padding:2.5pt 4pt;font-size:6.5pt;border:1px solid #ddd;background:#f9f8f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+row.n+'</td>';
+    html+='<td style="text-align:center;padding:2.5pt 2pt;font-size:6.5pt;border:1px solid #ddd;background:#f9f8f5;">'+(row.um||row.u||'—')+'</td>';
+    MS.forEach(function(_,mi){
+      var vm=cellVal(row.v[mi]);var vf=cellVal(frow.v[mi]);
+      var bg=mi===CUR?'#FFFAE0':'#fff';
+      html+='<td style="text-align:right;padding:2.5pt 2pt;font-size:6.5pt;border:1px solid #ddd;background:'+bg+';white-space:nowrap;">'+((vm!==null&&vm!==undefined)?_fR(vm,2):'—')+'</td>';
+      html+='<td style="text-align:right;padding:2.5pt 2pt;font-size:6.5pt;border:1px solid #ddd;background:'+bg+';white-space:nowrap;">'+((vf!==null&&vf!==undefined)?_fR(vf,2):'—')+'</td>';
+    });
+    html+='</tr>';
+  });
+  if(!DATA.mp.length)html+='<tr><td colspan="26" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhum item cadastrado</td></tr>';
+
+  html+='</tbody></table>';
+  html+='<div style="margin-top:10pt;font-size:6pt;color:#aaa;font-family:Montserrat,sans-serif;text-align:right;">ECCOFORTE — Gerado em '+new Date().toLocaleDateString('pt-BR')+'</div>';
+  html+='</body></html>';
+
+  var win=window.open('','_blank','width=1200,height=820');
+  win.document.write(html);
+  win.document.close();
+  win.onload=function(){win.focus();win.print();};
 }
 
 // ── DEDUÇÕES DA RECEITA BRUTA ────────────────────────────────
