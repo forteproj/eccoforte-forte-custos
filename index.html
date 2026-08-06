@@ -4057,6 +4057,9 @@ function printCompItem(p){
   html+='<table>'+thRow()+'<tbody>';
   ings.forEach(function(ing){
     html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){var v=cellVal(ing.v[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,2,false);
+    html+=rowRS('↳ Valor Unitário',function(mi){
+      return mpPriceByIng(ing,mi)+frPriceByIng(ing,mi);
+    });
     html+=rowRS('↳ R$ custo',function(mi){
       var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
       return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
@@ -4075,6 +4078,9 @@ function printCompItem(p){
   html+='<table>'+thRow()+'<tbody>';
   embs.forEach(function(ing){
     html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){var v=cellVal(ing.v[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,2,false);
+    html+=rowRS('↳ Valor Unitário',function(mi){
+      return mpPriceByIng(ing,mi)+frPriceByIng(ing,mi);
+    });
     html+=rowRS('↳ R$ custo',function(mi){
       var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
       return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
@@ -4093,6 +4099,9 @@ function printCompItem(p){
   html+='<table>'+thRow()+'<tbody>';
   inds.forEach(function(ing){
     html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){var v=cellVal(ing.v[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,2,false);
+    html+=rowRS('↳ Valor Unitário',function(mi){
+      return mpPriceByIng(ing,mi)+frPriceByIng(ing,mi);
+    });
     html+=rowRS('↳ R$ custo',function(mi){
       var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
       return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
