@@ -3518,15 +3518,20 @@ function bResumoEdit(){
   var tbody=tbl.createTBody();tbl._tbody=tbody;
 
   var cols=[
-    {lbl:'Produto',    w:220, cls:'thl'},
-    {lbl:'Un.',        w:70},
-    {lbl:'Custo',      w:110},
-    {lbl:'Margem %',   w:95},
-    {lbl:'Impostos %', w:95},
-    {lbl:'Comissão %', w:95},
-    {lbl:'Adm %',      w:95},
-    {lbl:'Preço',        w:110},
-    {lbl:'Preço / LT-KG',w:110},
+    {lbl:'Produto',        w:210, cls:'thl'},
+    {lbl:'Un.',            w:65},
+    {lbl:'Custo',          w:100},
+    {lbl:'Custo / LT-KG',  w:100},
+    {lbl:'Margem %',       w:75},
+    {lbl:'Margem R$',      w:90},
+    {lbl:'Impostos %',     w:75},
+    {lbl:'Impostos R$',    w:90},
+    {lbl:'Comissão %',     w:75},
+    {lbl:'Comissão R$',    w:90},
+    {lbl:'Adm %',          w:65},
+    {lbl:'Adm R$',         w:90},
+    {lbl:'Preço',          w:100},
+    {lbl:'Preço / LT-KG',  w:100},
   ];
   cols.forEach(function(c){
     var t=document.createElement('th');t.textContent=c.lbl;if(c.cls)t.className=c.cls;
@@ -3543,27 +3548,45 @@ function bResumoEdit(){
     var custo=p.unit2?c.custoPorSec:c.custoPorPri;
     var unLabel=p.unit2?unit2Label(p.unit2,p.vol2):p.u;
     var vol=p.unit2?unit2Vol(p.unit2,p.vol2):null;
+    var custoUnit=(custo!==null&&custo!==undefined&&!isNaN(custo)&&vol)?custo/vol:null;
 
     var tr=tbody.insertRow();
     var tl=document.createElement('td');tl.className='tdl';tl.textContent=p.n;tr.appendChild(tl);
     var tt=document.createElement('td');tt.textContent=unLabel;tr.appendChild(tt);
     var tc=document.createElement('td');tc.textContent=(custo!==null&&custo!==undefined&&!isNaN(custo))?fR(custo,4):'—';tr.appendChild(tc);
+    var tcu=document.createElement('td');tcu.textContent=(custoUnit!==null&&!isNaN(custoUnit))?fR(custoUnit,4):'—';tr.appendChild(tcu);
 
+    var tdMargemR=document.createElement('td');tdMargemR.style.color='var(--mu)';
+    var tdImpR=document.createElement('td');tdImpR.style.color='var(--mu)';
+    var tdComR=document.createElement('td');tdComR.style.color='var(--mu)';
+    var tdAdmR=document.createElement('td');tdAdmR.style.color='var(--mu)';
     var tp=document.createElement('td');tp.style.color='var(--amb)';tp.style.fontWeight='700';
     var tpu=document.createElement('td');tpu.style.color='var(--amb)';
+
     function recalcPreco(){
       var margemR=lkv(p.margem,RESUMO_MES)||0;
-      var totalRate=deducoesRate(p,RESUMO_MES)+margemR;
+      var impR=lkv(p.ded.imp,RESUMO_MES)||0;
+      var comR=lkv(p.ded.com,RESUMO_MES)||0;
+      var admR=lkv(p.ded.adm,RESUMO_MES)||0;
+      var totalRate=margemR+impR+comR+admR;
       var preco=(custo!==null&&custo!==undefined&&!isNaN(custo)&&totalRate<1)?custo/(1-totalRate):null;
       tp.textContent=(preco!==null&&!isNaN(preco))?fR(preco,4):'—';
       var precoUnit=(preco!==null&&!isNaN(preco)&&vol)?preco/vol:null;
       tpu.textContent=(precoUnit!==null&&!isNaN(precoUnit))?fR(precoUnit,4):'—';
+      tdMargemR.textContent=(preco!==null)?fR(preco*margemR,2):'—';
+      tdImpR.textContent=(preco!==null)?fR(preco*impR,2):'—';
+      tdComR.textContent=(preco!==null)?fR(preco*comR,2):'—';
+      tdAdmR.textContent=(preco!==null)?fR(preco*admR,2):'—';
     }
 
     tr.appendChild(mkPctCell(p.margem,RESUMO_MES,recalcPreco));
+    tr.appendChild(tdMargemR);
     tr.appendChild(mkPctCell(p.ded.imp,RESUMO_MES,recalcPreco));
+    tr.appendChild(tdImpR);
     tr.appendChild(mkPctCell(p.ded.com,RESUMO_MES,recalcPreco));
+    tr.appendChild(tdComR);
     tr.appendChild(mkPctCell(p.ded.adm,RESUMO_MES,recalcPreco));
+    tr.appendChild(tdAdmR);
 
     recalcPreco();
     tr.appendChild(tp);
