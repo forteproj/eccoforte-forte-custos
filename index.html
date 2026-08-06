@@ -3525,7 +3525,8 @@ function bResumoEdit(){
     {lbl:'Impostos %', w:95},
     {lbl:'Comissão %', w:95},
     {lbl:'Adm %',      w:95},
-    {lbl:'Preço',      w:110},
+    {lbl:'Preço',        w:110},
+    {lbl:'Preço / LT-KG',w:110},
   ];
   cols.forEach(function(c){
     var t=document.createElement('th');t.textContent=c.lbl;if(c.cls)t.className=c.cls;
@@ -3541,6 +3542,7 @@ function bResumoEdit(){
     var c=calcProduct(p,RESUMO_MES);
     var custo=p.unit2?c.custoPorSec:c.custoPorPri;
     var unLabel=p.unit2?unit2Label(p.unit2,p.vol2):p.u;
+    var vol=p.unit2?unit2Vol(p.unit2,p.vol2):null;
 
     var tr=tbody.insertRow();
     var tl=document.createElement('td');tl.className='tdl';tl.textContent=p.n;tr.appendChild(tl);
@@ -3548,11 +3550,14 @@ function bResumoEdit(){
     var tc=document.createElement('td');tc.textContent=(custo!==null&&custo!==undefined&&!isNaN(custo))?fR(custo,4):'—';tr.appendChild(tc);
 
     var tp=document.createElement('td');tp.style.color='var(--amb)';tp.style.fontWeight='700';
+    var tpu=document.createElement('td');tpu.style.color='var(--amb)';
     function recalcPreco(){
       var margemR=lkv(p.margem,RESUMO_MES)||0;
       var totalRate=deducoesRate(p,RESUMO_MES)+margemR;
       var preco=(custo!==null&&custo!==undefined&&!isNaN(custo)&&totalRate<1)?custo/(1-totalRate):null;
       tp.textContent=(preco!==null&&!isNaN(preco))?fR(preco,4):'—';
+      var precoUnit=(preco!==null&&!isNaN(preco)&&vol)?preco/vol:null;
+      tpu.textContent=(precoUnit!==null&&!isNaN(precoUnit))?fR(precoUnit,4):'—';
     }
 
     tr.appendChild(mkPctCell(p.margem,RESUMO_MES,recalcPreco));
@@ -3562,6 +3567,7 @@ function bResumoEdit(){
 
     recalcPreco();
     tr.appendChild(tp);
+    tr.appendChild(tpu);
   });
   if(!COMP.length){
     var eetr=tbody.insertRow();var eetd=document.createElement('td');eetd.colSpan=cols.length;
