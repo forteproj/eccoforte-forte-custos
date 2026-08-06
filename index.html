@@ -1536,7 +1536,8 @@ function setHeat(td,val,arr,mi){
   // indicador de fórmula
   if(cellFormula(arr[mi]))td.classList.add('has-f');
 }
-function unit2Label(code,vol){if(!code)return '';if(code==='SC25')return 'SC 25kg';if(code==='KG1')return 'KG';if(code==='UN1')return 'UN';return 'BD '+(vol||18)+'lt';}
+// priUnit = unidade primária do produto (p.u) — o Balde pode representar LT ou KG dependendo do produto
+function unit2Label(code,vol,priUnit){if(!code)return '';if(code==='SC25')return 'SC 25kg';if(code==='KG1')return 'KG';if(code==='UN1')return 'UN';return 'BD '+(vol||18)+(priUnit?priUnit.toLowerCase():'lt');}
 function unit2Vol(code,vol){if(!code)return null;if(code==='SC25')return 25;if(code==='KG1')return 1;if(code==='UN1')return 1;return parseFloat(vol)||18;}
 // Rótulo de embalagem/tipo exibido pro usuário — reflete a Unidade Secundária real do produto,
 // não só o Tipo (Extrudado/Solvente), já que um produto Extrudado pode vender por KG, não só Saco.
@@ -2834,7 +2835,7 @@ function bComp(){
     if(p.unit2){
       var uSecTr=tbl._tbody.insertRow();uSecTr.className='res-sub';uSecTr.dataset.par=par;uSecTr.dataset.sg='eq';
       uSecTr.style.display=(p._sg['eq']!==false)?'':'none';
-      var uSecL=document.createElement('td');uSecL.className='tdl';uSecL.textContent='Custo por '+unit2Label(p.unit2,p.vol2);uSecTr.appendChild(uSecL);
+      var uSecL=document.createElement('td');uSecL.className='tdl';uSecL.textContent='Custo por '+unit2Label(p.unit2,p.vol2,p.u);uSecTr.appendChild(uSecL);
       MS.forEach(function(_,mi){
         var c=calcProduct(p,mi);
         uSecTr.appendChild(mkRO(c.custoPorSec,true,4,'ro-val','ci-sec-'+pi+'-'+mi));
@@ -3441,7 +3442,7 @@ function bResumoEdit(){
 
     var c=calcProduct(p,RESUMO_MES);
     var custo=p.unit2?c.custoPorSec:c.custoPorPri;
-    var unLabel=p.unit2?unit2Label(p.unit2,p.vol2):p.u;
+    var unLabel=p.unit2?unit2Label(p.unit2,p.vol2,p.u):p.u;
     var vol=p.unit2?unit2Vol(p.unit2,p.vol2):null;
     var custoUnit=(custo!==null&&custo!==undefined&&!isNaN(custo)&&vol)?custo/vol:null;
 
@@ -3548,7 +3549,7 @@ function printResumoEdit(){
 
     var c=calcProduct(p,RESUMO_MES);
     var custo=p.unit2?c.custoPorSec:c.custoPorPri;
-    var unLabel=p.unit2?unit2Label(p.unit2,p.vol2):p.u;
+    var unLabel=p.unit2?unit2Label(p.unit2,p.vol2,p.u):p.u;
     var vol=p.unit2?unit2Vol(p.unit2,p.vol2):null;
     var custoUnit=(custo!==null&&custo!==undefined&&!isNaN(custo)&&vol)?custo/vol:null;
 
@@ -4048,7 +4049,7 @@ function printCompItem(p){
   html+=chip('Produto',p.n);
   html+=chip('Tipo',tipo);
   html+=chip('Unidade','R$/'+p.u);
-  if(p.unit2)html+=chip('Emb. Sec.',unit2Label(p.unit2,p.vol2));
+  if(p.unit2)html+=chip('Emb. Sec.',unit2Label(p.unit2,p.vol2,p.u));
   html+='</div>';
 
   // SECAO 1 — Ingredientes
@@ -4121,7 +4122,7 @@ function printCompItem(p){
   html+=rowSub('Total Custo',function(mi){return calcProduct(p,mi).totalCusto;},true,2);
   html+=rowSub('Custo por '+p.u,function(mi){return calcProduct(p,mi).custoPorPri;},true,4);
   if(p.unit2){
-    html+=rowSub('Custo por '+unit2Label(p.unit2,p.vol2),function(mi){return calcProduct(p,mi).custoPorSec;},true,4);
+    html+=rowSub('Custo por '+unit2Label(p.unit2,p.vol2,p.u),function(mi){return calcProduct(p,mi).custoPorSec;},true,4);
   }
   html+='</tbody></table></div>';
 
