@@ -3494,6 +3494,9 @@ function bResumo(){
 function bResumoEdit(){
   var sec=document.getElementById('resumoedit');sec.innerHTML='';
   mkSecHead(sec,'Resumo de Preços Editável','Custo + Margem/Impostos/Comissão/Adm → Preço de Venda sugerido — mês selecionado',null);
+  var printBtn=document.createElement('button');printBtn.className='print-item-btn';printBtn.style.marginLeft='10px';printBtn.textContent='🖨 Imprimir';
+  printBtn.onclick=function(e){e.stopPropagation();printResumoEdit();};
+  sec.querySelector('.sh').appendChild(printBtn);
   var body=document.createElement('div');body.className='sb';
 
   var selWrap=document.createElement('div');
@@ -3601,6 +3604,93 @@ function bResumoEdit(){
 
   gw.appendChild(tbl);body.appendChild(gw);
   sec.appendChild(body);
+}
+
+function printResumoEdit(){
+  function _fR(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v))return '—';return 'R$ '+Number(v).toFixed(d).replace('.',',');}
+  function _fP(v,d){d=d===undefined?2:d;if(v===null||v===undefined||isNaN(+v))return '—';return Number(v*100).toFixed(d).replace('.',',')+'%';}
+
+  var cols=[
+    {lbl:'Produto',      w:'16%', al:'left'},
+    {lbl:'Un.',          w:'5%'},
+    {lbl:'Custo',        w:'7%'},
+    {lbl:'Custo/LT-KG',  w:'7%'},
+    {lbl:'Margem %',     w:'6%'},
+    {lbl:'Margem R$',    w:'7%'},
+    {lbl:'Impostos %',   w:'6%'},
+    {lbl:'Impostos R$',  w:'7%'},
+    {lbl:'Comissão %',   w:'6%'},
+    {lbl:'Comissão R$',  w:'7%'},
+    {lbl:'Adm %',        w:'5%'},
+    {lbl:'Adm R$',       w:'6%'},
+    {lbl:'Preço',        w:'8%'},
+    {lbl:'Preço/LT-KG',  w:'7%'},
+  ];
+
+  var html='<!DOCTYPE html><html><head>';
+  html+='<meta charset="UTF-8">';
+  html+='<title>Resumo de Preços Editável — '+MS[RESUMO_MES]+'/'+ACTIVE_YEAR+'</title>';
+  html+='<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">';
+  html+='<style>';
+  html+='*{box-sizing:border-box;margin:0;padding:0;}';
+  html+='body{font-family:Montserrat,sans-serif;background:#fff;color:#1A1916;-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+  html+='@page{size:A4 landscape;margin:8mm 6mm;}';
+  html+='table{border-collapse:collapse;width:100%;table-layout:fixed;}';
+  html+='</style></head><body>';
+
+  html+='<div style="background:#1E1C18;border-bottom:3px solid #C99200;padding:6pt 10pt;display:flex;align-items:center;gap:16pt;margin-bottom:6pt;">';
+  html+='<div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:14pt;letter-spacing:.07em;color:#C99200;">ECCOFORTE</div>';
+  html+='<div style="font-family:Montserrat,sans-serif;font-size:8pt;color:#888;letter-spacing:.05em;text-transform:uppercase;">Resumo de Preços Editável — '+MS[RESUMO_MES]+'/'+ACTIVE_YEAR+'</div>';
+  html+='</div>';
+
+  html+='<table><thead><tr>';
+  cols.forEach(function(c){
+    html+='<th style="width:'+c.w+';text-align:'+(c.al||'center')+';background:#1E1C18;color:#C99200;padding:3pt 4pt;font-size:6.5pt;letter-spacing:.05em;border:1px solid #3A3835;">'+c.lbl.toUpperCase()+'</th>';
+  });
+  html+='</tr></thead><tbody>';
+
+  COMP.forEach(function(p){
+    if(!p.ded)p.ded={};
+    DED_KEYS.forEach(function(d){if(!p.ded[d.k])p.ded[d.k]=n12();});
+    if(!p.margem)p.margem=n12();
+
+    var c=calcProduct(p,RESUMO_MES);
+    var custo=p.unit2?c.custoPorSec:c.custoPorPri;
+    var unLabel=p.unit2?unit2Label(p.unit2,p.vol2):p.u;
+    var vol=p.unit2?unit2Vol(p.unit2,p.vol2):null;
+    var custoUnit=(custo!==null&&custo!==undefined&&!isNaN(custo)&&vol)?custo/vol:null;
+
+    var margemR=lkv(p.margem,RESUMO_MES)||0;
+    var impR=lkv(p.ded.imp,RESUMO_MES)||0;
+    var comR=lkv(p.ded.com,RESUMO_MES)||0;
+    var admR=lkv(p.ded.adm,RESUMO_MES)||0;
+    var totalRate=margemR+impR+comR+admR;
+    var preco=(custo!==null&&custo!==undefined&&!isNaN(custo)&&totalRate<1)?custo/(1-totalRate):null;
+    var precoUnit=(preco!==null&&vol)?preco/vol:null;
+
+    var vals=[p.n,unLabel,_fR(custo,4),_fR(custoUnit,4),_fP(margemR,1),_fR(preco!==null?preco*margemR:null,2),_fP(impR,1),_fR(preco!==null?preco*impR:null,2),_fP(comR,1),_fR(preco!==null?preco*comR:null,2),_fP(admR,1),_fR(preco!==null?preco*admR:null,2),_fR(preco,4),_fR(precoUnit,4)];
+
+    html+='<tr>';
+    vals.forEach(function(v,vi){
+      var isLbl=vi===0;
+      var isPreco=vi===12;
+      var bg=isPreco?'#EDE0A0':'#fff';
+      var fw=isPreco?'800':'400';
+      var cl=isPreco?'#A87600':'#1A1916';
+      html+='<td style="text-align:'+(isLbl?'left':'right')+';padding:2.5pt 4pt;font-size:6.5pt;border:1px solid #ddd;background:'+bg+';font-weight:'+fw+';color:'+cl+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+v+'</td>';
+    });
+    html+='</tr>';
+  });
+  if(!COMP.length)html+='<tr><td colspan="14" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhum produto cadastrado</td></tr>';
+
+  html+='</tbody></table>';
+  html+='<div style="margin-top:10pt;font-size:6pt;color:#aaa;font-family:Montserrat,sans-serif;text-align:right;">ECCOFORTE — Gerado em '+new Date().toLocaleDateString('pt-BR')+'</div>';
+  html+='</body></html>';
+
+  var win=window.open('','_blank','width=1200,height=820');
+  win.document.write(html);
+  win.document.close();
+  win.onload=function(){win.focus();win.print();};
 }
 
 function bForteM2Dia(){
