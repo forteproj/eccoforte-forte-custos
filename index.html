@@ -833,6 +833,19 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
   </div>
 </div>
 
+<div class="page" id="page-resumoedit" style="display:none">
+  <div class="grp" id="g-resumoedit">
+    <div class="grp-head" onclick="toggleGrp('g-resumoedit')">
+      <span class="grp-tog" id="g-resumoedit-tog">▼</span>
+      <span class="grp-title">Resumo de Preços Editável</span>
+      <span class="grp-sub">Custo → Margem/Impostos/Comissão/Adm → Preço de Venda sugerido</span>
+    </div>
+    <div class="grp-body">
+      <div id="resumoedit" class="sec"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════════
 // VERSÃO: v4-nav-mi-fix
@@ -897,6 +910,13 @@ var PAGES = [
       {label:'Resumo de Preços', anchor:'g-resumo'},
     ]
   }
+  ,{
+    id: 'resumoedit',
+    label: 'Resumo Editável',
+    sections: [
+      {label:'Resumo de Preços Editável', anchor:'g-resumoedit'},
+    ]
+  }
 ];
 
 function buildNav(){
@@ -955,6 +975,7 @@ function switchPage(pageId){
   });
   // Resumo é um retrato dos produtos/preços — reconstrói sempre que a página é aberta
   if(pageId==='resumo')bResumo();
+  if(pageId==='resumoedit')bResumoEdit();
   // highlight active nav
   document.querySelectorAll('.tnav-item > a').forEach(function(a){a.classList.remove('active');});
   var navItem = document.getElementById('nav-' + pageId);
@@ -3467,6 +3488,92 @@ function bResumo(){
   sec.appendChild(body);
 }
 
+// Preço = Custo / (1 - (Margem + Impostos + Comissão + Adm))
+// Reaproveita as mesmas taxas p.ded (Impostos/Comissão/Adm) já usadas na Composição,
+// somando uma Margem alvo pra achar o preço de venda que entrega essa margem líquida.
+function bResumoEdit(){
+  var sec=document.getElementById('resumoedit');sec.innerHTML='';
+  mkSecHead(sec,'Resumo de Preços Editável','Custo + Margem/Impostos/Comissão/Adm → Preço de Venda sugerido — mês selecionado',null);
+  var body=document.createElement('div');body.className='sb';
+
+  var selWrap=document.createElement('div');
+  selWrap.style.cssText='padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd);';
+  var selLbl=document.createElement('span');
+  selLbl.textContent='MÊS';
+  selLbl.style.cssText='font-family:var(--head);font-size:11px;letter-spacing:.08em;color:var(--mu);text-transform:uppercase;';
+  var sel=document.createElement('select');
+  sel.style.cssText='background:var(--sf2);color:var(--tx);border:1px solid var(--bd2);border-radius:4px;padding:6px 10px;font-family:var(--mono);font-size:12px;outline:none;cursor:pointer;';
+  MS.forEach(function(m,mi){
+    var opt=document.createElement('option');opt.value=mi;opt.textContent=m;
+    if(mi===RESUMO_MES)opt.selected=true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change',function(){RESUMO_MES=parseInt(sel.value);bResumoEdit();});
+  selWrap.appendChild(selLbl);selWrap.appendChild(sel);
+  body.appendChild(selWrap);
+
+  var gw=document.createElement('div');gw.className='gw';gw.style.maxHeight='none';
+  var tbl=document.createElement('table');
+  var th=tbl.createTHead();var hrow=th.insertRow();
+  var tbody=tbl.createTBody();tbl._tbody=tbody;
+
+  var cols=[
+    {lbl:'Produto',    w:220, cls:'thl'},
+    {lbl:'Un.',        w:70},
+    {lbl:'Custo',      w:110},
+    {lbl:'Margem %',   w:95},
+    {lbl:'Impostos %', w:95},
+    {lbl:'Comissão %', w:95},
+    {lbl:'Adm %',      w:95},
+    {lbl:'Preço',      w:110},
+  ];
+  cols.forEach(function(c){
+    var t=document.createElement('th');t.textContent=c.lbl;if(c.cls)t.className=c.cls;
+    t.style.width=c.w+'px';t.style.minWidth=c.w+'px';
+    hrow.appendChild(t);
+  });
+
+  COMP.forEach(function(p){
+    if(!p.ded)p.ded={};
+    DED_KEYS.forEach(function(d){if(!p.ded[d.k])p.ded[d.k]=n12();});
+    if(!p.margem)p.margem=n12();
+
+    var c=calcProduct(p,RESUMO_MES);
+    var custo=p.unit2?c.custoPorSec:c.custoPorPri;
+    var unLabel=p.unit2?unit2Label(p.unit2,p.vol2):p.u;
+
+    var tr=tbody.insertRow();
+    var tl=document.createElement('td');tl.className='tdl';tl.textContent=p.n;tr.appendChild(tl);
+    var tt=document.createElement('td');tt.textContent=unLabel;tr.appendChild(tt);
+    var tc=document.createElement('td');tc.textContent=(custo!==null&&custo!==undefined&&!isNaN(custo))?fR(custo,4):'—';tr.appendChild(tc);
+
+    var tp=document.createElement('td');tp.style.color='var(--amb)';tp.style.fontWeight='700';
+    function recalcPreco(){
+      var margemR=lkv(p.margem,RESUMO_MES)||0;
+      var totalRate=deducoesRate(p,RESUMO_MES)+margemR;
+      var preco=(custo!==null&&custo!==undefined&&!isNaN(custo)&&totalRate<1)?custo/(1-totalRate):null;
+      tp.textContent=(preco!==null&&!isNaN(preco))?fR(preco,4):'—';
+    }
+
+    tr.appendChild(mkPctCell(p.margem,RESUMO_MES,recalcPreco));
+    tr.appendChild(mkPctCell(p.ded.imp,RESUMO_MES,recalcPreco));
+    tr.appendChild(mkPctCell(p.ded.com,RESUMO_MES,recalcPreco));
+    tr.appendChild(mkPctCell(p.ded.adm,RESUMO_MES,recalcPreco));
+
+    recalcPreco();
+    tr.appendChild(tp);
+  });
+  if(!COMP.length){
+    var eetr=tbody.insertRow();var eetd=document.createElement('td');eetd.colSpan=cols.length;
+    eetd.style.cssText='text-align:center;color:var(--mu);padding:20px;font-style:italic;';
+    eetd.textContent='Nenhum produto cadastrado na Composição.';
+    eetr.appendChild(eetd);
+  }
+
+  gw.appendChild(tbl);body.appendChild(gw);
+  sec.appendChild(body);
+}
+
 function bForteM2Dia(){
   var sec=document.getElementById('forte-m2dia');sec.innerHTML='';
   mkSecHead(sec,'Custo M.O. / Equipamento por M²/Dia','R$/M² e R$/Dia — M.O. e Equipamento por equipe',null);
@@ -4059,6 +4166,7 @@ function buildAll(){
   bForteCeq();
   bForteM2Dia();
   bResumo();
+  bResumoEdit();
   // Colapsar subseções ao iniciar
   ['mo','adm','mp','frete','comp','pest','forte-cargos','forte-comp','forte-ceq','forte-m2dia'].forEach(function(id){
     var sec=document.getElementById(id);
