@@ -695,17 +695,12 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
           </select>
         </div>
       </div>
-      <div class="mf-sep">Equipe Operacional</div>
-      <div class="staff-list" id="staff-list"></div>
-      <div class="staff-total" id="staff-total">Total MO: R$ —</div>
       <div class="den-fields" id="den-fields">
         <div class="mf-sep">Conversão Balde</div>
         <div class="mf-row">
           <div class="mf"><label>Volume Embalagem (LT)</label><input type="number" id="m-vol" placeholder="18" value="18"></div>
         </div>
       </div>
-      <div class="mf-sep">Produtividade</div>
-      <div class="mf"><label>Produtividade / Mês (KG ou LT)</label><input type="number" id="m-prod" placeholder="138000"></div>
     </div>
     <div class="modal-foot">
       <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
@@ -2877,24 +2872,6 @@ function refreshTots(){
 
 // ── MODAL ─────────────────────────────────────────────────────
 var modalTipo='extrudado';
-var modalStaff=[];
-var STAFF_DEF={extrudado:[0,1,2,3,4],solvente:[0,1,2]};
-function renderStaffList(){
-  var list=document.getElementById('staff-list');list.innerHTML='';
-  DATA.mo.forEach(function(mo,si){
-    var checked=modalStaff.indexOf(si)>=0;
-    var dmi=mo.sal?displayMi(mo.sal):CUR;var sal=fabMoCalcFunc(mo,dmi).total;
-    var item=document.createElement('div');item.className='staff-item'+(checked?' checked':'');
-    var chk=document.createElement('div');chk.className='staff-check';chk.textContent=checked?'✓':'';
-    var nm=document.createElement('span');nm.className='staff-name';nm.textContent=mo.n;
-    var sv=document.createElement('span');sv.className='staff-sal';sv.textContent=fR(sal);
-    item.appendChild(chk);item.appendChild(nm);item.appendChild(sv);
-    item.onclick=function(){var idx=modalStaff.indexOf(si);if(idx>=0)modalStaff.splice(idx,1);else modalStaff.push(si);renderStaffList();};
-    list.appendChild(item);
-  });
-  var tot=modalStaff.reduce(function(s,si){var mo2=DATA.mo[si];if(!mo2)return s;var dmi2=mo2.sal?displayMi(mo2.sal):CUR;return s+fabMoTotal(mo2,dmi2);},0);
-  document.getElementById('staff-total').textContent='Total MO / mês: '+fR(tot);
-}
 function selTipo(t){
   modalTipo=t;
   document.getElementById('tb-ext').classList.toggle('sel',t==='extrudado');
@@ -2902,23 +2879,20 @@ function selTipo(t){
   document.getElementById('den-fields').style.display=t==='solvente'?'block':'none';
   document.getElementById('m-unit').value=t==='extrudado'?'KG':'LT';
   document.getElementById('m-unit2').value=t==='extrudado'?'SC25':'BD18';
-  modalStaff=STAFF_DEF[t].slice();renderStaffList();
 }
 var editProductIdx=null;
 function openModal(){
   editProductIdx=null;
   document.getElementById('modal-head-title').textContent='Novo Produto';
   document.getElementById('modal-save-btn').textContent='Criar Produto';
-  modalTipo='extrudado';modalStaff=STAFF_DEF.extrudado.slice();
+  modalTipo='extrudado';
   document.getElementById('m-nome').value='';
   document.getElementById('m-unit').value='KG';
   document.getElementById('m-unit2').value='SC25';
-  document.getElementById('m-prod').value='';
   document.getElementById('m-vol').value='18';
   document.getElementById('den-fields').style.display='none';
   document.getElementById('tb-ext').classList.add('sel');
   document.getElementById('tb-sol').classList.remove('sel');
-  renderStaffList();
   document.getElementById('modal').classList.add('open');
   setTimeout(function(){document.getElementById('m-nome').focus();},100);
 }
@@ -2928,16 +2902,14 @@ function openEditProductModal(pi){
   editProductIdx=pi;
   document.getElementById('modal-head-title').textContent='Editar Produto';
   document.getElementById('modal-save-btn').textContent='Salvar Alterações';
-  modalTipo=p.tipo;modalStaff=(p.staff||[]).slice();
+  modalTipo=p.tipo;
   document.getElementById('m-nome').value=p.n;
   document.getElementById('m-unit').value=p.u;
   document.getElementById('m-unit2').value=p.unit2||'';
-  document.getElementById('m-prod').value='';
   document.getElementById('m-vol').value=p.vol2||18;
   document.getElementById('den-fields').style.display=(p.tipo==='solvente')?'block':'none';
   document.getElementById('tb-ext').classList.toggle('sel',p.tipo==='extrudado');
   document.getElementById('tb-sol').classList.toggle('sel',p.tipo==='solvente');
-  renderStaffList();
   document.getElementById('modal').classList.add('open');
   setTimeout(function(){document.getElementById('m-nome').focus();},100);
 }
@@ -2946,18 +2918,16 @@ function createProduct(){
   var nome=document.getElementById('m-nome').value.trim();if(!nome){alert('Digite o nome do produto.');return;}
   var unit=document.getElementById('m-unit').value;
   var unit2=document.getElementById('m-unit2').value;
-  var prod=parseFloat(document.getElementById('m-prod').value)||0;
   var vol2=modalTipo==='solvente'?(parseFloat(document.getElementById('m-vol').value)||18):25;
   if(editProductIdx!==null){
     var ep=COMP[editProductIdx];
-    ep.n=nome;ep.u=unit;ep.tipo=modalTipo;ep.unit2=unit2;ep.vol2=vol2;ep.staff=modalStaff.slice();
+    ep.n=nome;ep.u=unit;ep.tipo=modalTipo;ep.unit2=unit2;ep.vol2=vol2;
     editProductIdx=null;
     closeModal();bComp();
     scheduleSave();
     return;
   }
-  var prodArr=n12();prodArr[0]=prod;
-  COMP.push({n:nome,u:unit,tipo:modalTipo,ex:true,staff:modalStaff.slice(),prod:prodArr,vol2:vol2,unit2:unit2,i:[]});
+  COMP.push({n:nome,u:unit,tipo:modalTipo,ex:true,vol2:vol2,unit2:unit2,i:[]});
   DATA.pest.push({n:nome,u:unit,v:n12()});
   closeModal();bComp();
   bSimple('pest','pest','Produção Real do Item','Apontamento mensal de quantidade produzida por produto',null,false,false);
