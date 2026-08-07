@@ -1158,35 +1158,49 @@ var CEQ = defaultCEQ();
 
 // ── FIRESTORE SAVE / LOAD ─────────────────────────────────────
 var saveTimer = null;
+var savePending = false;
 function setSaveStatus(s,msg){
   var el=document.getElementById('save-status');
   el.className='save-status '+s;
   el.textContent=msg;
 }
+function doSaveNow(){
+  clearTimeout(saveTimer);
+  saveTimer=null;
+  savePending=false;
+  DOC.set({
+    mo:   JSON.stringify(DATA.mo),
+    adm:  JSON.stringify(DATA.adm),
+    mp:   JSON.stringify(DATA.mp),
+    frete:JSON.stringify(DATA.frete),
+    pest: JSON.stringify(DATA.pest),
+    comp: JSON.stringify(COMP),
+    mof:  JSON.stringify(MOF),
+    qexec:JSON.stringify(QEXEC),
+    ceq:  JSON.stringify(CEQ),
+    saved:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    setSaveStatus('saved','✓ Salvo');
+    setTimeout(function(){setSaveStatus('','');},3000);
+  }).catch(function(e){
+    setSaveStatus('error','✕ Erro ao salvar');
+    console.error(e);
+  });
+}
 function scheduleSave(){
   setSaveStatus('saving','● Salvando...');
+  savePending=true;
   clearTimeout(saveTimer);
-  saveTimer=setTimeout(function(){
-    DOC.set({
-      mo:   JSON.stringify(DATA.mo),
-      adm:  JSON.stringify(DATA.adm),
-      mp:   JSON.stringify(DATA.mp),
-      frete:JSON.stringify(DATA.frete),
-      pest: JSON.stringify(DATA.pest),
-      comp: JSON.stringify(COMP),
-      mof:  JSON.stringify(MOF),
-      qexec:JSON.stringify(QEXEC),
-      ceq:  JSON.stringify(CEQ),
-      saved:firebase.firestore.FieldValue.serverTimestamp()
-    }).then(function(){
-      setSaveStatus('saved','✓ Salvo');
-      setTimeout(function(){setSaveStatus('','');},3000);
-    }).catch(function(e){
-      setSaveStatus('error','✕ Erro ao salvar');
-      console.error(e);
-    });
-  },1800);
+  saveTimer=setTimeout(doSaveNow,1800);
 }
+// Se o usuário sair/atualizar/fechar a aba antes do autosave (debounce de 1,8s) completar,
+// força o salvamento imediato pra não perder a última alteração.
+window.addEventListener('beforeunload',function(){
+  if(savePending)doSaveNow();
+});
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='hidden'&&savePending)doSaveNow();
+});
 function loadFromFirestore(cb){
   document.getElementById('loading-bg').classList.add('show');
   DOC.get().then(function(doc){
