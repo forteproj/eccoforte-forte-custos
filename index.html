@@ -498,10 +498,9 @@ table.pt th.cur{background:#3A3000;color:#FFD040;}
 /* PRINT MEDIA — paisagem, todas as colunas em 1 pagina */
 @media print{
   @page{size:A4 landscape;margin:8mm 6mm;}
-  body *{visibility:hidden;}
-  #print-modal,#print-modal *{visibility:visible;}
-  #print-modal-bg{display:block!important;padding:0;background:none;}
-  #print-modal{position:fixed;inset:0;border-radius:0;box-shadow:none;width:100%;max-width:none;overflow:visible;}
+  body>*:not(#print-modal-bg){display:none!important;}
+  #print-modal-bg{display:block!important;position:static;padding:0;background:none;overflow:visible;}
+  #print-modal{position:static;border-radius:0;box-shadow:none;width:100%;max-width:none;overflow:visible;}
   #print-modal-head{padding:5px 8px;}
   #print-modal-head .pm-btn{display:none;}
   #print-modal-title{font-size:11px;}
@@ -3942,68 +3941,48 @@ function printCompItem(p){
   if(p.unit2)html+=chip('Emb. Sec.',unit2Label(p.unit2,p.vol2,p.u));
   html+='</div>';
 
-  // SECAO 1 — Ingredientes
-  html+='<div class="no-break">';
-  html+=secLabel('','INGREDIENTES — Quantidade por lote');
-  html+='<table>'+thRow()+'<tbody>';
-  ings.forEach(function(ing){
-    html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){var v=cellVal(ing.v[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,2,false);
-    html+=rowRS('↳ Valor Unitário',function(mi){
+  // Cada grupo (item + suas 3 linhas de detalhe) fica num <tbody> proprio com
+  // page-break-inside:avoid — assim a tabela flui normalmente entre paginas
+  // (nada de pagina em branco por causa de "avoid" na secao inteira), mas um
+  // mesmo item nunca fica com linhas partidas entre duas paginas.
+  function grupoLinhas(ing){
+    var s='<tbody style="page-break-inside:avoid;">';
+    s+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){var v=cellVal(ing.v[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,2,false);
+    s+=rowRS('↳ Valor Unitário',function(mi){
       return mpPriceByIng(ing,mi)+frPriceByIng(ing,mi);
     });
-    html+=rowRS('↳ R$ custo',function(mi){
+    s+=rowRS('↳ R$ custo',function(mi){
       var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
       return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
     });
-    html+=rowPct(function(mi){
+    s+=rowPct(function(mi){
       var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
       return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
     });
-  });
-  if(!ings.length)html+='<tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhum ingrediente cadastrado</td></tr>';
-  html+='</tbody></table></div>';
+    s+='</tbody>';
+    return s;
+  }
+
+  // SECAO 1 — Ingredientes
+  html+=secLabel('','INGREDIENTES — Quantidade por lote');
+  html+='<table>'+thRow();
+  ings.forEach(function(ing){html+=grupoLinhas(ing);});
+  if(!ings.length)html+='<tbody><tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhum ingrediente cadastrado</td></tr></tbody>';
+  html+='</table>';
 
   // SECAO 2 — Embalagens
-  html+='<div class="no-break">';
   html+=secLabel('','EMBALAGENS — Quantidade por lote');
-  html+='<table>'+thRow()+'<tbody>';
-  embs.forEach(function(ing){
-    html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){var v=cellVal(ing.v[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,2,false);
-    html+=rowRS('↳ Valor Unitário',function(mi){
-      return mpPriceByIng(ing,mi)+frPriceByIng(ing,mi);
-    });
-    html+=rowRS('↳ R$ custo',function(mi){
-      var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
-      return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
-    });
-    html+=rowPct(function(mi){
-      var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
-      return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
-    });
-  });
-  if(!embs.length)html+='<tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhuma embalagem cadastrada</td></tr>';
-  html+='</tbody></table></div>';
+  html+='<table>'+thRow();
+  embs.forEach(function(ing){html+=grupoLinhas(ing);});
+  if(!embs.length)html+='<tbody><tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhuma embalagem cadastrada</td></tr></tbody>';
+  html+='</table>';
 
   // SECAO 2b — Industrialização
-  html+='<div class="no-break">';
   html+=secLabel('','INDUSTRIALIZAÇÃO — Quantidade por lote');
-  html+='<table>'+thRow()+'<tbody>';
-  inds.forEach(function(ing){
-    html+=row(ing.n+(ing.u?' · '+ing.u:''),'#f5f4f0',function(mi){var v=cellVal(ing.v[mi]);return (v!==null&&v!==undefined)?v:null;},null,false,2,false);
-    html+=rowRS('↳ Valor Unitário',function(mi){
-      return mpPriceByIng(ing,mi)+frPriceByIng(ing,mi);
-    });
-    html+=rowRS('↳ R$ custo',function(mi){
-      var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
-      return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
-    });
-    html+=rowPct(function(mi){
-      var qty=cellVal(ing.v[mi]);if(qty===null||qty===undefined)return null;
-      return qty*(mpPriceByIng(ing,mi)+frPriceByIng(ing,mi));
-    });
-  });
-  if(!inds.length)html+='<tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhum item de industrialização cadastrado</td></tr>';
-  html+='</tbody></table></div>';
+  html+='<table>'+thRow();
+  inds.forEach(function(ing){html+=grupoLinhas(ing);});
+  if(!inds.length)html+='<tbody><tr><td colspan="13" style="text-align:center;color:#aaa;padding:6pt;font-style:italic;font-size:7pt;">Nenhum item de industrialização cadastrado</td></tr></tbody>';
+  html+='</table>';
 
   // SECAO 3 — Custo Industrialização
   html+='<div class="no-break">';
