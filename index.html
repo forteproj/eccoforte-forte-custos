@@ -1884,6 +1884,10 @@ function mkThead(tbl){
 function copyColumn(tbl,srcColIdx,dstColIdx){
   var tbody=tbl.querySelector('tbody');if(!tbody)return;
   var count=0;
+  // Mesmo callback pode se repetir em várias linhas (ex.: onEdit() da tabela
+  // inteira) — dispara cada um só 1x no final, não por linha, senão um
+  // recálculo pesado repetido dezenas de vezes trava a aba.
+  var cbs=[];
   Array.from(tbody.rows).forEach(function(row){
     if(srcColIdx>=row.cells.length||dstColIdx>=row.cells.length)return;
     var srcInp=row.cells[srcColIdx].querySelector('.ci:not([readonly])');
@@ -1895,9 +1899,10 @@ function copyColumn(tbl,srcColIdx,dstColIdx){
     var val=cellVal(raw);
     dstInp.value=dstInp._isR?fR(val,dstInp._dec):fN(val,dstInp._dec);
     setHeat(dstInp.parentElement,val,dstInp._arr,dstInp._mi);
-    if(dstInp._cb)dstInp._cb();
+    if(dstInp._cb&&cbs.indexOf(dstInp._cb)<0)cbs.push(dstInp._cb);
     count++;
   });
+  cbs.forEach(function(cb){cb();});
   if(count>0){
     scheduleSave();
     var srcName=MS[srcColIdx-1];
@@ -2285,6 +2290,10 @@ function syncMpFrete(){
 function copyMonthMF(tbl,mi){
   var tbody=tbl.querySelector('tbody');if(!tbody)return;
   var matSrc=2+mi*2,matDst=2+(mi+1)*2,freSrc=matSrc+1,freDst=matDst+1,count=0;
+  // Callbacks únicos — o mesmo onEdit() é reaproveitado por todas as linhas da
+  // tabela, então chamá-lo por linha (dezenas de vezes num recálculo pesado de
+  // todos os produtos) travava a aba. Guarda e dispara cada um só 1x no final.
+  var cbs=[];
   Array.from(tbody.rows).forEach(function(row){
     [[matSrc,matDst],[freSrc,freDst]].forEach(function(pair){
       var s=pair[0],d=pair[1];
@@ -2298,10 +2307,11 @@ function copyMonthMF(tbl,mi){
       var val=cellVal(raw);
       dstInp.value=dstInp._isR?fR(val,dstInp._dec):fN(val,dstInp._dec);
       setHeat(dstInp.parentElement,val,dstInp._arr,dstInp._mi);
-      if(dstInp._cb)dstInp._cb();
+      if(dstInp._cb&&cbs.indexOf(dstInp._cb)<0)cbs.push(dstInp._cb);
       count++;
     });
   });
+  cbs.forEach(function(cb){cb();});
   if(count>0){scheduleSave();showToast('✓ '+count+' células copiadas: '+MS[mi]+' → '+MS[mi+1]);}
   else showToast('Nenhum valor para copiar em '+MS[mi]);
 }
