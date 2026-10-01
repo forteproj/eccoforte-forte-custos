@@ -1688,8 +1688,8 @@ function refreshCustoInd(pi){
   });
 }
 
-// Atualiza as células "↳ R$" de um ingrediente específico nos 12 meses
-function refreshIngRs(pi, ii){
+// Atualiza "↳ Valor Unitário" e "↳ R$" de UM ingrediente (O(meses) — barato)
+function refreshIngOwnCells(pi, ii){
   var p=COMP[pi];if(!p)return;
   var ing=p.i[ii];if(!ing)return;
   MS.forEach(function(_,mi){
@@ -1700,24 +1700,42 @@ function refreshIngRs(pi, ii){
     var v=ingValueR(ing,mi);
     el.value=(v>0)?fR(v,2):'—';
   });
-  // Atualiza % de TODOS os ingredientes do produto (denominador pode ter mudado)
-  var p2=COMP[pi];if(!p2)return;
-  p2.i.forEach(function(x,xi){
+}
+
+// Atualiza "% na fórmula" de TODOS os ingredientes de UM produto — O(ingredientes × meses).
+// O total do produto é calculado 1x (por mês) e reaproveitado pra todos os ingredientes,
+// em vez de recalculado a cada um (era O(ingredientes²), travava com muitos itens cadastrados).
+function refreshIngPct(pi){
+  var p=COMP[pi];if(!p)return;
+  var totaisPorMes=MS.map(function(_,mi){
+    return p.i.reduce(function(s,y){return s+ingValueR(y,mi);},0);
+  });
+  p.i.forEach(function(x,xi){
     MS.forEach(function(_,mi){
       var el=document.getElementById('ing-pct-'+pi+'-'+xi+'-'+mi);
       if(!el)return;
-      var totalCusto=p2.i.reduce(function(s,y){return s+ingValueR(y,mi);},0);
       var v=ingValueR(x,mi);
+      var totalCusto=totaisPorMes[mi];
       el.value=(v>0&&totalCusto>0)?fN(v/totalCusto*100,1)+' %':'—';
     });
   });
 }
 
+// Atualiza as células "↳ R$" de um ingrediente específico (edição individual —
+// mantido por compatibilidade: atualiza ele mesmo + o "%" de todos os ingredientes do produto)
+function refreshIngRs(pi, ii){
+  refreshIngOwnCells(pi, ii);
+  refreshIngPct(pi);
+}
+
 // Atualiza TODAS as linhas "↳ R$" de TODOS os produtos
 // (usado quando o usuário edita preços de MP ou frete, que afetam todos os produtos que usam aqueles insumos)
+// refreshIngPct roda só 1x por produto aqui, não 1x por ingrediente — é o que evitava travar
+// com muitos produtos/ingredientes/itens de matéria-prima cadastrados.
 function refreshAllCompRs(){
   COMP.forEach(function(p,pi){
-    p.i.forEach(function(_,ii){refreshIngRs(pi,ii);});
+    p.i.forEach(function(_,ii){refreshIngOwnCells(pi,ii);});
+    refreshIngPct(pi);
   });
 }
 
