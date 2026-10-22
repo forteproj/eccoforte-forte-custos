@@ -1556,7 +1556,13 @@ function normName(n){
 }
 
 // Busca MP e Frete pelo NOME do ingrediente (robusto a reordenação da tabela)
-// Fallback para mid/fid numérico se nome não encontrar (compatibilidade legada)
+// Fallback para mid/fid numérico SÓ quando o ingrediente não tem nome salvo
+// (dado legado anterior à busca por nome). Se tem nome mas não bate com nada,
+// NÃO cai pro índice numérico — a lista é reordenada (sort alfabético) toda vez
+// que um item é adicionado/renomeado em Matéria-Prima/Frete, então um mid/fid
+// salvo antigo pode hoje apontar pra um item totalmente diferente e puxar um
+// preço errado silenciosamente. Melhor mostrar "sem preço" (0) e deixar visível
+// que o nome do ingrediente não bate com nenhum item cadastrado.
 function mpPriceByIng(ing, mi){
   if(ing.n){
     var norm=normName(ing.n);
@@ -1568,6 +1574,7 @@ function mpPriceByIng(ing, mi){
     for(var i=0;i<DATA.mp.length;i++){
       if(normName(DATA.mp[i].n)===norm) return lkv(DATA.mp[i].v,mi);
     }
+    return 0;
   }
   if(ing.mid>=0&&DATA.mp[ing.mid]) return lkv(DATA.mp[ing.mid].v,mi);
   return 0;
@@ -1583,6 +1590,7 @@ function frPriceByIng(ing, mi){
     for(var i=0;i<DATA.frete.length;i++){
       if(normName(DATA.frete[i].n)===norm) return lkv(DATA.frete[i].v,mi);
     }
+    return 0;
   }
   if(ing.fid>=0&&DATA.frete[ing.fid]) return lkv(DATA.frete[ing.fid].v,mi);
   return 0;
