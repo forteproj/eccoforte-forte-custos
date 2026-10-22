@@ -1596,6 +1596,18 @@ function frPriceByIng(ing, mi){
   return 0;
 }
 
+// Ingrediente tem nome mas não bate (nem exato nem tolerante) com NENHUM item
+// de Matéria-Prima OU Frete — usado pra avisar na tela em vez de deixar o
+// usuário adivinhar por que um ingrediente usado não está puxando preço.
+function ingSemCorrespondencia(ing){
+  if(!ing.n) return false; // legado sem nome — usa mid/fid, não dá pra avisar por nome
+  var norm=normName(ing.n);
+  var temMp=DATA.mp.some(function(r){return r.n===ing.n||normName(r.n)===norm;});
+  if(temMp) return false;
+  var temFr=DATA.frete.some(function(r){return r.n===ing.n||normName(r.n)===norm;});
+  return !temFr;
+}
+
 function ingValueR(ing, mi){
   if(!ing) return 0;
   var qty=lkv(ing.v,mi);
@@ -2756,6 +2768,13 @@ function bComp(){
         inp.addEventListener('keydown',function(e2){if(e2.key==='Enter')inp.blur();});
       });
       tl.appendChild(fl);tl.appendChild(nameSpan);
+      if(ingSemCorrespondencia(ing)){
+        var warnTag=document.createElement('span');
+        warnTag.textContent='⚠ sem correspondência em Custos';
+        warnTag.title='O nome "'+ing.n+'" não bate com nenhum item de Matéria-Prima/Frete — dê dois cliques no nome pra corrigir';
+        warnTag.style.cssText='margin-left:6px;font-size:9px;font-weight:700;color:#C0392B;background:#FDECEA;border:1px solid #F0C5C3;border-radius:3px;padding:1px 5px;white-space:nowrap;';
+        tl.appendChild(warnTag);
+      }
       tr.appendChild(tl);
       MS.forEach(function(_,mi){tr.appendChild(mkCell(ing.v,mi,false,2,function(){refreshCustoInd(pi);refreshIngRs(pi,ii);}));});
       var idl=document.createElement('td');idl.className='tdd';
