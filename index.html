@@ -2769,46 +2769,40 @@ function bComp(){
         else theIng.ind=false;
         bComp();scheduleSave();
       };})(ing);
-      var nameSpan=document.createElement('span');
-      nameSpan.textContent=' '+ing.n+(ing.u?' · '+ing.u:'');
-      nameSpan.title='Clique duas vezes para escolher o insumo';
-      nameSpan.addEventListener('dblclick',function(e){
-        e.stopPropagation();
-        // Lista suspensa com os itens já cadastrados em Matéria-Prima/Frete —
-        // elimina o risco de digitar um nome que não bate com nada em Custos
-        // (a causa dos avisos "sem correspondência").
-        var sel=document.createElement('select');
-        sel.style.cssText='background:var(--sf2);border:1px solid var(--bd2);outline:none;font-family:var(--mono);font-size:11px;width:220px;color:var(--tx);padding:2px 4px;';
-        var optBlank=document.createElement('option');optBlank.value='';optBlank.textContent='— selecione um insumo —';sel.appendChild(optBlank);
-        var temMatch=false;
-        DATA.mp.forEach(function(r){
-          var o=document.createElement('option');o.value=r.n;o.textContent=r.n+(r.um?' · '+r.um:'');
-          if(r.n===ing.n){o.selected=true;temMatch=true;}
-          sel.appendChild(o);
-        });
-        // Nome atual não bate com nenhum insumo — mantém visível como opção própria,
-        // senão o dropdown trocaria o valor silenciosamente só de abrir
-        if(!temMatch&&ing.n){
-          var optAtual=document.createElement('option');
-          optAtual.value=ing.n;optAtual.textContent=ing.n+' (sem correspondência)';optAtual.selected=true;
-          sel.insertBefore(optAtual,sel.children[1]);
-        }
-        tl.replaceChild(sel,nameSpan);sel.focus();
-        function done(){
-          var mpItem=null;
-          for(var mi2=0;mi2<DATA.mp.length;mi2++){if(DATA.mp[mi2].n===sel.value){mpItem=DATA.mp[mi2];break;}}
-          ing.n=sel.value;
-          if(mpItem&&mpItem.um)ing.u=mpItem.um;
-          bComp();scheduleSave();
-        }
-        sel.addEventListener('change',done);
-        sel.addEventListener('blur',function(){if(document.body.contains(sel))bComp();});
+      // Lista suspensa sempre visível com os itens já cadastrados em
+      // Matéria-Prima/Frete — elimina o risco de digitar um nome que não bate
+      // com nada em Custos (a causa dos avisos "sem correspondência").
+      var sel=document.createElement('select');
+      sel.title='Escolha o insumo correspondente em Custos';
+      sel.style.cssText='background:transparent;border:1px solid var(--bd);border-radius:3px;outline:none;font-family:var(--mono);font-size:11px;color:inherit;max-width:230px;padding:1px 3px;cursor:pointer;';
+      var optBlank=document.createElement('option');optBlank.value='';optBlank.textContent='— selecione um insumo —';sel.appendChild(optBlank);
+      var temMatch=false;
+      DATA.mp.forEach(function(r){
+        var o=document.createElement('option');o.value=r.n;o.textContent=r.n+(r.um?' · '+r.um:'');
+        if(r.n===ing.n){o.selected=true;temMatch=true;}
+        sel.appendChild(o);
       });
-      tl.appendChild(fl);tl.appendChild(nameSpan);
+      // Nome atual não bate com nenhum insumo — mantém visível como opção própria,
+      // senão o dropdown trocaria o valor silenciosamente só de carregar a tela
+      if(!temMatch&&ing.n){
+        var optAtual=document.createElement('option');
+        optAtual.value=ing.n;optAtual.textContent=ing.n+' (sem correspondência)';optAtual.selected=true;
+        sel.insertBefore(optAtual,sel.children[1]);
+      }
+      sel.addEventListener('click',function(e){e.stopPropagation();});
+      sel.addEventListener('change',function(e){
+        e.stopPropagation();
+        var mpItem=null;
+        for(var mi2=0;mi2<DATA.mp.length;mi2++){if(DATA.mp[mi2].n===sel.value){mpItem=DATA.mp[mi2];break;}}
+        ing.n=sel.value;
+        if(mpItem&&mpItem.um)ing.u=mpItem.um;
+        bComp();scheduleSave();
+      });
+      tl.appendChild(fl);tl.appendChild(sel);
       if(ingSemCorrespondencia(ing)){
         var warnTag=document.createElement('span');
         warnTag.textContent='⚠ sem correspondência em Custos';
-        warnTag.title='O nome "'+ing.n+'" não bate com nenhum item de Matéria-Prima/Frete — dê dois cliques no nome pra corrigir';
+        warnTag.title='O nome "'+ing.n+'" não bate com nenhum item de Matéria-Prima/Frete — escolha o item certo no dropdown ao lado';
         warnTag.style.cssText='margin-left:6px;font-size:9px;font-weight:700;color:#C0392B;background:#FDECEA;border:1px solid #F0C5C3;border-radius:3px;padding:1px 5px;white-space:nowrap;';
         tl.appendChild(warnTag);
       }
