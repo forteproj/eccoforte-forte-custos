@@ -1579,20 +1579,23 @@ function mpPriceByIng(ing, mi){
   if(ing.mid>=0&&DATA.mp[ing.mid]) return lkv(DATA.mp[ing.mid].v,mi);
   return 0;
 }
+// Frete NÃO propaga de mês anterior (cellVal, não lkv) — célula vazia significa
+// "sem frete nesse mês" (ex.: entrega sem custo de frete naquela compra), não
+// "mesmo frete do mês passado". MAT continua propagando normalmente.
 function frPriceByIng(ing, mi){
   if(ing.n){
     var norm=normName(ing.n);
     // Busca exata primeiro
     for(var i=0;i<DATA.frete.length;i++){
-      if(DATA.frete[i].n===ing.n) return lkv(DATA.frete[i].v,mi);
+      if(DATA.frete[i].n===ing.n) return cellVal(DATA.frete[i].v[mi])||0;
     }
     // Busca tolerante (ignora sufixo de unidade)
     for(var i=0;i<DATA.frete.length;i++){
-      if(normName(DATA.frete[i].n)===norm) return lkv(DATA.frete[i].v,mi);
+      if(normName(DATA.frete[i].n)===norm) return cellVal(DATA.frete[i].v[mi])||0;
     }
     return 0;
   }
-  if(ing.fid>=0&&DATA.frete[ing.fid]) return lkv(DATA.frete[ing.fid].v,mi);
+  if(ing.fid>=0&&DATA.frete[ing.fid]) return cellVal(DATA.frete[ing.fid].v[mi])||0;
   return 0;
 }
 
