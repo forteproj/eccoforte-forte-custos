@@ -2768,15 +2768,38 @@ function bComp(){
       };})(ing);
       var nameSpan=document.createElement('span');
       nameSpan.textContent=' '+ing.n+(ing.u?' · '+ing.u:'');
-      nameSpan.title='Clique duas vezes para editar o nome';
+      nameSpan.title='Clique duas vezes para escolher o insumo';
       nameSpan.addEventListener('dblclick',function(e){
         e.stopPropagation();
-        var inp=document.createElement('input');inp.type='text';inp.value=ing.n;
-        inp.style.cssText='background:transparent;border:none;outline:none;font-family:var(--mono);font-size:11px;width:160px';
-        tl.replaceChild(inp,nameSpan);inp.focus();inp.select();
-        function done(){ing.n=inp.value;bComp();scheduleSave();}
-        inp.addEventListener('blur',done);
-        inp.addEventListener('keydown',function(e2){if(e2.key==='Enter')inp.blur();});
+        // Lista suspensa com os itens já cadastrados em Matéria-Prima/Frete —
+        // elimina o risco de digitar um nome que não bate com nada em Custos
+        // (a causa dos avisos "sem correspondência").
+        var sel=document.createElement('select');
+        sel.style.cssText='background:var(--sf2);border:1px solid var(--bd2);outline:none;font-family:var(--mono);font-size:11px;width:220px;color:var(--tx);padding:2px 4px;';
+        var optBlank=document.createElement('option');optBlank.value='';optBlank.textContent='— selecione um insumo —';sel.appendChild(optBlank);
+        var temMatch=false;
+        DATA.mp.forEach(function(r){
+          var o=document.createElement('option');o.value=r.n;o.textContent=r.n+(r.um?' · '+r.um:'');
+          if(r.n===ing.n){o.selected=true;temMatch=true;}
+          sel.appendChild(o);
+        });
+        // Nome atual não bate com nenhum insumo — mantém visível como opção própria,
+        // senão o dropdown trocaria o valor silenciosamente só de abrir
+        if(!temMatch&&ing.n){
+          var optAtual=document.createElement('option');
+          optAtual.value=ing.n;optAtual.textContent=ing.n+' (sem correspondência)';optAtual.selected=true;
+          sel.insertBefore(optAtual,sel.children[1]);
+        }
+        tl.replaceChild(sel,nameSpan);sel.focus();
+        function done(){
+          var mpItem=null;
+          for(var mi2=0;mi2<DATA.mp.length;mi2++){if(DATA.mp[mi2].n===sel.value){mpItem=DATA.mp[mi2];break;}}
+          ing.n=sel.value;
+          if(mpItem&&mpItem.um)ing.u=mpItem.um;
+          bComp();scheduleSave();
+        }
+        sel.addEventListener('change',done);
+        sel.addEventListener('blur',function(){if(document.body.contains(sel))bComp();});
       });
       tl.appendChild(fl);tl.appendChild(nameSpan);
       if(ingSemCorrespondencia(ing)){
